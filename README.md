@@ -39,8 +39,7 @@ This separation allows each part of the system to use the architectural style be
 ## High-Level Architecture Diagram
 
 > The following diagram illustrates the major components of the system and how data flows between them.
-
-![High-Level Architecture Diagram](./docs/architecture-diagram.png)
+![High Level Architecture Image](./docs/architecture/HighLevelArchitecture.png)
 
 ### Components Shown
 **React Native Client**
