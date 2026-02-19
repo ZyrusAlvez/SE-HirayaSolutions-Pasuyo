@@ -6,9 +6,31 @@ export default function Index() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const handleLogin = () => {
-    console.log('Login:', { email, password });
+    setEmailError('');
+    setPasswordError('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email.trim()) {
+      setEmailError('Must not be empty');
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email');
+    }
+    if (!password.trim()) {
+      setPasswordError('Must not be empty');
+    }
+
+    if (email.trim() && emailRegex.test(email) && password.trim()) {
+      console.log('Login:', { email, password });
+    }
+  };
+
+  const handleSignUp = () => {
+    console.log('Navigate to sign up');
   };
 
   return (
@@ -25,6 +47,7 @@ export default function Index() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
+        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
       </View>
 
       <View style={styles.inputContainer}>
@@ -38,6 +61,8 @@ export default function Index() {
           autoCapitalize="none"
           textContentType="none"
           autoComplete="off"
+          passwordRules=""
+          importantForAutofill="no"
         />
         <TouchableOpacity 
           style={styles.showButton}
@@ -50,11 +75,19 @@ export default function Index() {
             color="#DC143C" 
           />
         </TouchableOpacity>
+        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
       </View>
 
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Login</Text>
       </TouchableOpacity>
+
+      <View style={styles.signUpContainer}>
+        <Text style={styles.signUpText}>Don't have an account? </Text>
+        <TouchableOpacity onPress={handleSignUp}>
+          <Text style={styles.signUpLink}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -105,5 +138,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  errorText: {
+    color: '#DC143C',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  signUpText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  signUpLink: {
+    fontSize: 14,
+    color: '#DC143C',
+    fontWeight: 'bold',
   },
 });
