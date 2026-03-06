@@ -29,7 +29,7 @@ export default function LoginScreen() {
     if (error) {
       Alert.alert('Login Failed', error.message);
     } else if (data.user) {
-      router.replace('/welcome');
+      router.replace('/home');
     }
   };
 
