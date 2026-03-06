@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
@@ -12,12 +12,14 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Pasuyo</Text>
+    <View className="flex-1 bg-white justify-center p-6">
+      <Text className="text-3xl font-bold text-[#DC143C] mb-10 text-center">
+        Welcome to Pasuyo
+      </Text>
       
-      <View style={styles.inputContainer}>
+      <View className="mb-4">
         <TextInput
-          style={styles.input}
+          className="border border-gray-300 rounded-lg p-3.5 text-base"
           placeholder="Email"
           placeholderTextColor="#999"
           value={email}
@@ -27,9 +29,9 @@ export default function LoginScreen() {
         />
       </View>
 
-      <View style={styles.inputContainer}>
+      <View className="mb-4 relative">
         <TextInput
-          style={[styles.input, styles.passwordInput]}
+          className="border border-gray-300 rounded-lg p-3.5 pr-12 text-base"
           placeholder="Password"
           placeholderTextColor="#999"
           value={password}
@@ -38,7 +40,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
         />
         <TouchableOpacity 
-          style={styles.showButton}
+          className="absolute right-3 top-3 p-1"
           onPress={() => setShowPassword(!showPassword)}
         >
           <Ionicons 
@@ -49,57 +51,14 @@ export default function LoginScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Login</Text>
+      <TouchableOpacity 
+        className="bg-[#DC143C] p-4 rounded-lg mt-6"
+        onPress={handleLogin}
+      >
+        <Text className="text-white text-base font-bold text-center">
+          Login
+        </Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#DC143C',
-    marginBottom: 40,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 16,
-    position: 'relative',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 16,
-  },
-  passwordInput: {
-    paddingRight: 50,
-  },
-  showButton: {
-    position: 'absolute',
-    right: 12,
-    top: 12,
-    padding: 4,
-  },
-  loginButton: {
-    backgroundColor: '#DC143C',
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 24,
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-});
