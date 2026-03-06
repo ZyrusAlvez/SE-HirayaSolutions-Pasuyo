@@ -1,14 +1,30 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    console.log('Login:', { email, password });
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Login Failed', error.message);
+    }
   };
 
   return (
@@ -54,9 +70,10 @@ export default function LoginScreen() {
       <TouchableOpacity 
         className="bg-[#DC143C] p-4 rounded-lg mt-6"
         onPress={handleLogin}
+        disabled={loading}
       >
         <Text className="text-white text-base font-bold text-center">
-          Login
+          {loading ? 'Logging in...' : 'Login'}
         </Text>
       </TouchableOpacity>
     </View>
