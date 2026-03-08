@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import { signInWithGoogle } from '../lib/authService';
 import { useRouter } from 'expo-router';
 
 export default function SignupScreen() {
@@ -36,6 +37,18 @@ export default function SignupScreen() {
       Alert.alert('Signup Failed', error.message);
     } else if (data.user) {
       router.replace('/welcome');
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+      router.replace('/welcome');
+    } catch (error: any) {
+      Alert.alert('Google Signup Failed', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,6 +122,24 @@ export default function SignupScreen() {
           >
             <Text className="text-white text-base font-semibold text-center">
               {loading ? 'Creating Account...' : 'Sign Up'}
+            </Text>
+          </TouchableOpacity>
+
+          <View className="flex-row items-center my-6">
+            <View className="flex-1 h-px bg-gray-200" />
+            <Text className="mx-4 text-gray-400 text-sm">OR</Text>
+            <View className="flex-1 h-px bg-gray-200" />
+          </View>
+
+          <TouchableOpacity 
+            className="bg-white border border-gray-200 py-4 rounded-2xl flex-row items-center justify-center"
+            onPress={handleGoogleSignup}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="logo-google" size={20} color="#DB4437" />
+            <Text className="text-gray-700 text-base font-semibold ml-2">
+              Continue with Google
             </Text>
           </TouchableOpacity>
 
