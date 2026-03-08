@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useRouter } from 'expo-router';
 
-export default function LoginScreen() {
+export default function SignupScreen() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -13,23 +14,28 @@ export default function LoginScreen() {
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
-  const handleLogin = async () => {
-    if (!email || !password) {
+  const handleSignup = async () => {
+    if (!name || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          name,
+        },
+      },
     });
     setLoading(false);
 
     if (error) {
-      Alert.alert('Login Failed', error.message);
+      Alert.alert('Signup Failed', error.message);
     } else if (data.user) {
-      router.replace('/home');
+      router.replace('/welcome');
     }
   };
 
@@ -44,10 +50,21 @@ export default function LoginScreen() {
               resizeMode="contain"
             />
             <Text className="text-base text-gray-500 mt-2">
-              Your errands, simplified
+              Start earning or get help today
             </Text>
           </View>
           
+          <View className="mb-4">
+            <TextInput
+              className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base"
+              placeholder="Display Name"
+              placeholderTextColor="#9CA3AF"
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
+
           <View className="mb-4">
             <TextInput
               className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base"
@@ -86,22 +103,22 @@ export default function LoginScreen() {
 
           <TouchableOpacity 
             className="bg-[#FEA405] py-4 rounded-2xl"
-            onPress={handleLogin}
+            onPress={handleSignup}
             disabled={loading}
             activeOpacity={0.8}
           >
             <Text className="text-white text-base font-semibold text-center">
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Creating Account...' : 'Sign Up'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             className="mt-6"
-            onPress={() => router.push('/signup')}
+            onPress={() => router.push('/login')}
             activeOpacity={0.7}
           >
             <Text className="text-center text-sm text-gray-600">
-              Don't have an account? <Text className="text-[#FEA405] font-semibold">Sign Up</Text>
+              Already have an account? <Text className="text-[#FEA405] font-semibold">Login</Text>
             </Text>
           </TouchableOpacity>
         </View>
