@@ -36,7 +36,7 @@ export default function SignupScreen() {
     if (error) {
       Alert.alert('Signup Failed', error.message);
     } else if (data.user) {
-      router.replace('/welcome');
+      router.replace('/home');
     }
   };
 
@@ -44,7 +44,7 @@ export default function SignupScreen() {
     try {
       setLoading(true);
       await signInWithGoogle();
-      router.replace('/welcome');
+      router.replace('/home');
     } catch (error: any) {
       Alert.alert('Google Signup Failed', error.message);
     } finally {
