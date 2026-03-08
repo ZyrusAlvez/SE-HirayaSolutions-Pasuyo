@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.98.0",
     "@types/leaflet": "^1.9.21",
     "expo": "~54.0.33",
+    "expo-auth-session": "^55.0.7",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",
