@@ -30,7 +30,7 @@ export default function LoginScreen() {
     if (error) {
       Alert.alert('Login Failed', error.message);
     } else if (data.user) {
-      router.replace('/home');
+      router.replace('/');
     }
   };
 
@@ -38,7 +38,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       await signInWithGoogle();
-      router.replace('/home');
+      router.replace('/');
     } catch (error: any) {
       Alert.alert('Google Login Failed', error.message);
     } finally {

@@ -1,23 +1,47 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { useColorScheme } from "nativewind";
 import * as SplashScreen from "expo-splash-screen";
+import { supabase } from "../lib/supabase";
+import { Session } from "@supabase/supabase-js";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [appReady, setAppReady] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const segments = useSegments();
+  const router = useRouter();
   const { colorScheme } = useColorScheme();
 
   useEffect(() => {
-    setTimeout(() => {
-      setAppReady(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
       SplashScreen.hideAsync();
-    }, 100);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  if (!appReady) return null;
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup';
+
+    if (!session && !inAuthGroup) {
+      router.replace('/login');
+    } else if (session && inAuthGroup) {
+      router.replace('/');
+    }
+  }, [session, segments, loading]);
+
+  if (loading) return null;
 
   return <Stack screenOptions={{ headerShown: false }}/>;
 }
