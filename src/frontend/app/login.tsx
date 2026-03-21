@@ -121,7 +121,11 @@ export default function LoginScreen() {
             disabled={loading}
             activeOpacity={0.8}
           >
-            <Ionicons name="logo-google" size={20} color="#DB4437" />
+            <Image 
+              source={require('../assets/images/google-logo.png')}
+              style={{ width: 20, height: 20 }}
+              resizeMode="contain"
+            />
             <Text className="text-gray-700 text-base font-semibold ml-2">
               Continue with Google
             </Text>
