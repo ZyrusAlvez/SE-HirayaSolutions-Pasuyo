@@ -29,6 +29,7 @@ export default function SignupScreen() {
       options: {
         data: {
           name,
+          avatar_url: 'https://avatar.iran.liara.run/public/boy',
         },
       },
     });
