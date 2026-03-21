@@ -49,6 +49,7 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - Final system testing
 - Prepare demo and presentation
 - Deploy system
+
 ## Realistic Timeline to Final Release
 
 **Project Start Date: February 1**
@@ -65,11 +66,9 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - Mar 13 – Mar 26
 
 **MVP Release (Version 1.0)**
-
 - March 26
 
 **Feature Expansion**
-
 **Verification & Uploads**
 - Mar 27 – Apr 9
 
@@ -77,19 +76,15 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - Apr 10 – Apr 20
 
 **Version 1.5 Release**
-
 - April 20
 
 **Testing and Debugging Phase**
-
 - Apr 21 – Apr 30
 
 **Finalization and Preparation**
-
 - May 1 – May 5
 
 **Final Release (Version 2.0)**
-
 - May 5
 
 ---
