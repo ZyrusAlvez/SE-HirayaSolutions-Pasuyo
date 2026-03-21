@@ -24,26 +24,31 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - Create wireframes (UI design)
 - Design database structure
 - Decide technology stack
+  
 **Phase 2: Core Development (MVP)**
 - User authentication (register, login, roles)
 - Profile system
 - Errand posting system
 - Errand acceptance (runner side)
 - Task status tracking
+  
 **Phase 3: System Integration**
 - Connect client and runner workflow
 - Implement basic chat system
 - Add notification system
+  
 **Phase 4: Feature Expansion**
 - File upload (documents/images)
 - ID verification system
 - Admin approval/rejection
 - Ratings and feedback system
+  
 **Phase 5: Testing and Debugging**
 - Perform system testing
 - Fix bugs and errors
 - Validate user flows
 - Improve performance
+  
 **Phase 6: Finalization and Deployment**
 - UI/UX improvements
 - Final system testing
