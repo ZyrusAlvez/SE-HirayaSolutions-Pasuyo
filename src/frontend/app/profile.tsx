@@ -17,6 +17,7 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<'verified' | 'pending' | 'not_verified'>('not_verified');
 
   const isDirty = displayName !== originalName || !!pendingImageUri;
   useEffect(() => { loadProfile(); }, []);
@@ -31,6 +32,17 @@ export default function ProfileScreen() {
         setEmail(user.email || '');
         const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
         if (url && url !== 'default') setAvatarUrl({ uri: url });
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('verified, pending_verification')
+          .eq('id', user.id)
+          .single();
+        if (profile) {
+          if (profile.verified) setVerificationStatus('verified');
+          else if (profile.pending_verification) setVerificationStatus('pending');
+          else setVerificationStatus('not_verified');
+        }
       }
     } catch {
       toast({ title: 'Failed to load profile', preset: 'error' });
@@ -147,6 +159,22 @@ export default function ProfileScreen() {
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-800 mt-3">{displayName || 'No name set'}</Text>
         <Text className="text-sm text-gray-400 mt-0.5">{email}</Text>
+        <View className={`mt-2 px-3 py-1 rounded-full flex-row items-center gap-1 ${
+          verificationStatus === 'verified' ? 'bg-green-100' :
+          verificationStatus === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
+        }`}>
+          <Ionicons
+            name={verificationStatus === 'verified' ? 'checkmark-circle' : verificationStatus === 'pending' ? 'time-outline' : 'close-circle-outline'}
+            size={14}
+            color={verificationStatus === 'verified' ? '#16a34a' : verificationStatus === 'pending' ? '#d97706' : '#6b7280'}
+          />
+          <Text className={`text-xs font-semibold ${
+            verificationStatus === 'verified' ? 'text-green-700' :
+            verificationStatus === 'pending' ? 'text-yellow-700' : 'text-gray-500'
+          }`}>
+            {verificationStatus === 'verified' ? 'Verified' : verificationStatus === 'pending' ? 'Pending Verification' : 'Not Verified'}
+          </Text>
+        </View>
       </View>
 
       {/* Form card */}
