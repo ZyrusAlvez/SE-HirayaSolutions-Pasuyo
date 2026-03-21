@@ -14,6 +14,7 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
+  const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [isGoogleUser, setIsGoogleUser] = useState(false);
 
   useEffect(() => {
@@ -56,8 +57,25 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled) {
-      setAvatarUrl({ uri: result.assets[0].uri });
+      const uri = result.assets[0].uri;
+      setPendingImageUri(uri);
+      setAvatarUrl({ uri });
     }
+  };
+
+  const uploadAvatar = async (uri: string, name: string, email: string): Promise<string> => {
+    const safeName = name.trim().replace(/\s+/g, '_');
+    const safeEmail = email.replace(/[@.]/g, '_');
+    const path = `profile image/${safeName}_${safeEmail}.jpg`;
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const { error } = await supabase.storage.from('avatars').upload(path, blob, {
+      contentType: 'image/jpeg',
+      upsert: true,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    return `${data.publicUrl}?t=${Date.now()}`;
   };
 
   const handleSave = async () => {
@@ -68,12 +86,20 @@ export default function ProfileScreen() {
 
     setSaving(true);
     try {
-      const avatarValue = avatarUrl?.uri || 'default';
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user');
+
+      let finalAvatarUrl = avatarUrl?.uri || 'default';
+
+      if (pendingImageUri) {
+        finalAvatarUrl = await uploadAvatar(pendingImageUri, displayName, user.email || '');
+        setPendingImageUri(null);
+        setAvatarUrl({ uri: finalAvatarUrl });
+      }
+
       const { error } = await supabase.auth.updateUser({
-        data: {
-          name: displayName,
-          avatar_url: avatarValue,
-        },
+        data: { name: displayName, avatar_url: finalAvatarUrl },
+
       });
 
       if (error) throw error;
