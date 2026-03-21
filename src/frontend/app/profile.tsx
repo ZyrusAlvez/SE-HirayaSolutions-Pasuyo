@@ -6,14 +6,14 @@ import { supabase } from '../lib/supabase';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'burnt';
 
-const DEFAULT_AVATAR = 'https://avatar.iran.liara.run/public/boy';
+const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [isGoogleUser, setIsGoogleUser] = useState(false);
 
   useEffect(() => {
@@ -29,9 +29,9 @@ export default function ProfileScreen() {
         setDisplayName(user.user_metadata.name || user.user_metadata.full_name || '');
         
         if (isGoogle && user.user_metadata.avatar_url) {
-          setAvatarUrl(user.user_metadata.avatar_url);
-        } else if (user.user_metadata.avatar_url) {
-          setAvatarUrl(user.user_metadata.avatar_url);
+          setAvatarUrl({ uri: user.user_metadata.avatar_url });
+        } else if (user.user_metadata.avatar_url && user.user_metadata.avatar_url !== 'default') {
+          setAvatarUrl({ uri: user.user_metadata.avatar_url });
         }
       }
     } catch (error) {
@@ -56,7 +56,7 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled) {
-      setAvatarUrl(result.assets[0].uri);
+      setAvatarUrl({ uri: result.assets[0].uri });
     }
   };
 
@@ -68,10 +68,11 @@ export default function ProfileScreen() {
 
     setSaving(true);
     try {
+      const avatarValue = avatarUrl?.uri || 'default';
       const { error } = await supabase.auth.updateUser({
         data: {
           name: displayName,
-          avatar_url: avatarUrl,
+          avatar_url: avatarValue,
         },
       });
 
@@ -115,8 +116,9 @@ export default function ProfileScreen() {
           <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
             <View className="relative">
               <Image
-                source={{ uri: avatarUrl }}
-                className="w-32 h-32 rounded-full"
+                source={avatarUrl}
+                style={{ width: 128, height: 128, borderRadius: 64 }}
+                resizeMode="cover"
               />
               <View className="absolute bottom-0 right-0 bg-[#FEA405] rounded-full p-2">
                 <Ionicons name="camera" size={20} color="white" />
