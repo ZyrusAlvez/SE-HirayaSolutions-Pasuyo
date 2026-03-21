@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Image, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle } from '../lib/authService';
 import { useRouter } from 'expo-router';
+import { toast } from 'burnt';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      toast({ title: 'Please fill in all fields', preset: 'error' });
       return;
     }
 
@@ -28,7 +29,7 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Login Failed', error.message);
+      toast({ title: 'Invalid email or password', preset: 'error' });
     } else if (data.user) {
       router.replace('/');
     }
@@ -40,7 +41,7 @@ export default function LoginScreen() {
       await signInWithGoogle();
       router.replace('/');
     } catch (error: any) {
-      Alert.alert('Google Login Failed', error.message);
+      toast({ title: 'Google login failed', preset: 'error' });
     } finally {
       setLoading(false);
     }

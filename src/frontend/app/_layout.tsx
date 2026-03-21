@@ -4,7 +4,13 @@ import { useColorScheme } from "nativewind";
 import * as SplashScreen from "expo-splash-screen";
 import { supabase } from "../lib/supabase";
 import { Session } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 import "../global.css";
+
+let Toaster: any = null;
+if (Platform.OS === 'web') {
+  Toaster = require('burnt/web').Toaster;
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,5 +49,10 @@ export default function RootLayout() {
 
   if (loading) return null;
 
-  return <Stack screenOptions={{ headerShown: false }}/>;
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }}/>
+      {Platform.OS === 'web' && Toaster && <Toaster position="top-right" />}
+    </>
+  );
 }
