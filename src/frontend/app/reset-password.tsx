@@ -29,6 +29,14 @@ export default function ResetPasswordScreen() {
 
   const sendCode = async (target: string) => {
     setLoading(true);
+
+    const { data: exists, error: rpcError } = await supabase.rpc('check_email_exists', { email_input: target });
+    if (rpcError || !exists) {
+      setLoading(false);
+      toast({ title: 'No account found with that email', preset: 'error' });
+      return;
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(target);
     setLoading(false);
     if (error) {
