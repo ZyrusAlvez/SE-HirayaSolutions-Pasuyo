@@ -1,33 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from 'burnt';
 
 type Step = 'email' | 'code' | 'password';
 
 export default function ResetPasswordScreen() {
+  const { from, email: paramEmail } = useLocalSearchParams<{ from?: string; email?: string }>();
+  const fromProfile = from === 'profile';
   const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(paramEmail || '');
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [autoSent, setAutoSent] = useState(false);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
+  useEffect(() => {
+    if (fromProfile && paramEmail && !autoSent) {
+      setAutoSent(true);
+      sendEmail(paramEmail);
+    }
+  }, []);
+
+  const sendEmail = async (target: string) => {
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(target);
+    setLoading(false);
+    if (error) {
+      toast({ title: 'Failed to send reset email', preset: 'error' });
+    } else {
+      toast({ title: 'Code sent! Check your inbox.', preset: 'done' });
+      setStep('code');
+    }
+  };
+
   const handleSendEmail = async () => {
     if (!email) { toast({ title: 'Please enter your email', preset: 'error' }); return; }
-    setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    setLoading(false);
-    if (error) { toast({ title: 'Failed to send reset email', preset: 'error' }); return; }
-    toast({ title: 'Code sent! Check your inbox.', preset: 'done' });
-    setStep('code');
+    await sendEmail(email);
   };
 
   const handleVerifyCode = () => {
@@ -58,7 +75,7 @@ export default function ResetPasswordScreen() {
     }
     setLoading(false);
     toast({ title: 'Password updated!', preset: 'done' });
-    router.replace('/');
+    router.replace(fromProfile ? '/profile' : '/');
   };
 
   const stepConfig = {
@@ -99,6 +116,7 @@ export default function ResetPasswordScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={!fromProfile}
             />
           )}
 
@@ -151,7 +169,7 @@ export default function ResetPasswordScreen() {
           <TouchableOpacity
             className="bg-[#FEA405] py-4 rounded-2xl"
             onPress={step === 'email' ? handleSendEmail : step === 'code' ? handleVerifyCode : handleUpdatePassword}
-            disabled={loading}
+            disabled={loading || (fromProfile && step === 'email' && !autoSent)}
             activeOpacity={0.8}
           >
             <Text className="text-white text-base font-semibold text-center">
@@ -159,9 +177,9 @@ export default function ResetPasswordScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="mt-6" onPress={() => router.replace('/login')} activeOpacity={0.7}>
+          <TouchableOpacity className="mt-6" onPress={() => router.replace(fromProfile ? '/profile' : '/login')} activeOpacity={0.7}>
             <Text className="text-center text-sm text-gray-600">
-              Back to <Text className="text-[#FEA405] font-semibold">Login</Text>
+              Back to <Text className="text-[#FEA405] font-semibold">{fromProfile ? 'Profile' : 'Login'}</Text>
             </Text>
           </TouchableOpacity>
 
