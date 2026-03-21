@@ -3,6 +3,9 @@ import { View, TouchableOpacity, Alert, Platform, Image, Text } from 'react-nati
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { supabase } from '../lib/supabase';
+
+const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
 
 let WebView: any;
 if (Platform.OS !== 'web') {
@@ -13,6 +16,15 @@ export default function HomeScreen() {
   const router = useRouter();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [WebMap, setWebMap] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata?.avatar_url && user.user_metadata.avatar_url !== 'default') {
+        setAvatarUrl({ uri: user.user_metadata.avatar_url });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -74,11 +86,14 @@ export default function HomeScreen() {
           resizeMode="contain"
         />
         <TouchableOpacity 
-          className="p-2" 
           onPress={() => router.push('/profile')}
           activeOpacity={0.7}
         >
-          <Ionicons name="person-circle-outline" size={28} color="#FEA405" />
+          <Image
+            source={avatarUrl}
+            style={{ width: 36, height: 36, borderRadius: 18 }}
+            resizeMode="cover"
+          />
         </TouchableOpacity>
       </View>
 

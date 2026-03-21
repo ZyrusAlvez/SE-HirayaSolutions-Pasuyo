@@ -105,7 +105,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="bg-[#FEA405] pt-12 pb-6 px-6">
-        <TouchableOpacity onPress={() => router.back()} className="mb-4">
+        <TouchableOpacity onPress={() => router.replace('/')} className="mb-4">
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold">Profile Settings</Text>
