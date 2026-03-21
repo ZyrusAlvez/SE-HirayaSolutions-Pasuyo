@@ -10,7 +10,6 @@ type Step = 'email' | 'code' | 'password';
 export default function ResetPasswordScreen() {
   const { from, email: paramEmail } = useLocalSearchParams<{ from?: string; email?: string }>();
   const fromProfile = from === 'profile';
-
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState(paramEmail || '');
   const [token, setToken] = useState('');
@@ -19,6 +18,7 @@ export default function ResetPasswordScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [autoSent, setAutoSent] = useState(false);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
@@ -165,7 +165,7 @@ export default function ResetPasswordScreen() {
           <TouchableOpacity
             className="bg-[#FEA405] py-4 rounded-2xl"
             onPress={step === 'email' ? handleSendEmail : step === 'code' ? handleVerifyCode : handleUpdatePassword}
-            disabled={loading}
+            disabled={loading || (fromProfile && step === 'email' && !autoSent)}
             activeOpacity={0.8}
           >
             <Text className="text-white text-base font-semibold text-center">
