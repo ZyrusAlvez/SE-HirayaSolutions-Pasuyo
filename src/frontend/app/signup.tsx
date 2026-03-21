@@ -21,6 +21,10 @@ export default function SignupScreen() {
       toast({ title: 'Please fill in all fields', preset: 'error' });
       return;
     }
+    if (password.length < 6) {
+      toast({ title: 'Password must be at least 6 characters', preset: 'error' });
+      return;
+    }
 
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
@@ -29,6 +33,7 @@ export default function SignupScreen() {
       options: {
         data: {
           name,
+          avatar_url: 'default',
         },
       },
     });
