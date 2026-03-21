@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Image, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle } from '../lib/authService';
 import { useRouter } from 'expo-router';
+import { toast } from 'burnt';
 
 export default function SignupScreen() {
   const [name, setName] = useState('');
@@ -17,7 +18,7 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!name || !email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      toast({ title: 'Please fill in all fields', preset: 'error' });
       return;
     }
 
@@ -34,9 +35,9 @@ export default function SignupScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Signup Failed', error.message);
+      toast({ title: 'Invalid email or password', preset: 'error' });
     } else if (data.user) {
-      router.replace('/home');
+      router.replace('/');
     }
   };
 
@@ -44,9 +45,9 @@ export default function SignupScreen() {
     try {
       setLoading(true);
       await signInWithGoogle();
-      router.replace('/home');
+      router.replace('/');
     } catch (error: any) {
-      Alert.alert('Google Signup Failed', error.message);
+      toast({ title: 'Google signup failed', preset: 'error' });
     } finally {
       setLoading(false);
     }
@@ -137,7 +138,11 @@ export default function SignupScreen() {
             disabled={loading}
             activeOpacity={0.8}
           >
-            <Ionicons name="logo-google" size={20} color="#DB4437" />
+            <Image 
+              source={require('../assets/images/google-logo.png')}
+              style={{ width: 20, height: 20 }}
+              resizeMode="contain"
+            />
             <Text className="text-gray-700 text-base font-semibold ml-2">
               Continue with Google
             </Text>
