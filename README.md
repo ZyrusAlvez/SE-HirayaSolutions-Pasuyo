@@ -15,6 +15,84 @@ Pasuyo bridges the gap between:
 
 The platform focuses on convenience, flexibility, and empowering local communities.
 
+---
+
+## Project Roadmap (Pasuyo System)
+
+**Phase 1: Planning and Design**
+- Define system features (backlog)
+- Create wireframes (UI design)
+- Design database structure
+- Decide technology stack
+**Phase 2: Core Development (MVP)**
+- User authentication (register, login, roles)
+- Profile system
+- Errand posting system
+- Errand acceptance (runner side)
+- Task status tracking
+**Phase 3: System Integration**
+- Connect client and runner workflow
+- Implement basic chat system
+- Add notification system
+**Phase 4: Feature Expansion**
+- File upload (documents/images)
+- ID verification system
+- Admin approval/rejection
+- Ratings and feedback system
+**Phase 5: Testing and Debugging**
+- Perform system testing
+- Fix bugs and errors
+- Validate user flows
+- Improve performance
+**Phase 6: Finalization and Deployment**
+- UI/UX improvements
+- Final system testing
+- Prepare demo and presentation
+- Deploy system
+## Realistic Timeline to Final Release
+
+**Project Start Date: February 1**
+**Planning and Design**
+- Feb 1 – Feb 10
+
+**Core Development (MVP)**
+**Authentication & Profiles**
+- Feb 11 – Feb 24
+**Errand System**
+- Feb 25 – Mar 12
+
+**Workflow & Communication**
+- Mar 13 – Mar 26
+
+**MVP Release (Version 1.0)**
+
+- March 26
+
+**Feature Expansion**
+
+**Verification & Uploads**
+- Mar 27 – Apr 9
+
+**Enhancements & UI Improvements**
+- Apr 10 – Apr 20
+
+**Version 1.5 Release**
+
+- April 20
+
+**Testing and Debugging Phase**
+
+- Apr 21 – Apr 30
+
+**Finalization and Preparation**
+
+- May 1 – May 5
+
+**Final Release (Version 2.0)**
+
+- May 5
+
+---
 
 ## Architectural Style
 
