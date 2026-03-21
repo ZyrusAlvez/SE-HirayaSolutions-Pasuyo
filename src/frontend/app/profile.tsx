@@ -125,9 +125,6 @@ export default function ProfileScreen() {
               </View>
             </View>
           </TouchableOpacity>
-          {isGoogleUser && (
-            <Text className="text-gray-500 text-xs mt-2">Google Account</Text>
-          )}
         </View>
 
         <View className="mb-6">

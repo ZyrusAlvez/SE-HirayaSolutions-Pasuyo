@@ -98,17 +98,6 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <TouchableOpacity 
-            className="bg-[#FEA405] py-4 rounded-2xl"
-            onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.8}
-          >
-            <Text className="text-white text-base font-semibold text-center">
-              {loading ? 'Logging in...' : 'Login'}
-            </Text>
-          </TouchableOpacity>
-
           <View className="flex-row items-center my-6">
             <View className="flex-1 h-px bg-gray-200" />
             <Text className="mx-4 text-gray-400 text-sm">OR</Text>
@@ -128,6 +117,25 @@ export default function LoginScreen() {
             />
             <Text className="text-gray-700 text-base font-semibold ml-2">
               Continue with Google
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="mt-4 self-end"
+            onPress={() => router.push('/reset-password')}
+            activeOpacity={0.7}
+          >
+            <Text className="text-sm text-[#FEA405] font-semibold">Forgot Password?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            className="mt-6 bg-[#FEA405] py-4 rounded-2xl"
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <Text className="text-white text-base font-semibold text-center">
+              {loading ? 'Logging in...' : 'Login'}
             </Text>
           </TouchableOpacity>
 
