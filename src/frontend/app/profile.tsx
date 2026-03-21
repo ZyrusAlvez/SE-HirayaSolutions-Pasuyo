@@ -29,7 +29,7 @@ export default function ProfileScreen() {
         setDisplayName(name);
         setOriginalName(name);
         setEmail(user.email || '');
-        const url = user.user_metadata.avatar_url;
+        const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
         if (url && url !== 'default') setAvatarUrl({ uri: url });
       }
     } catch {
@@ -92,7 +92,7 @@ export default function ProfileScreen() {
         setPendingImageUri(null);
         setAvatarUrl({ uri: finalAvatarUrl });
       }
-      const { error } = await supabase.auth.updateUser({ data: { name: displayName, avatar_url: finalAvatarUrl } });
+      const { error } = await supabase.auth.updateUser({ data: { name: displayName, avatar_url: finalAvatarUrl, custom_avatar_url: finalAvatarUrl } });
       if (error) throw error;
       toast({ title: 'Profile updated', preset: 'done' });
       setOriginalName(displayName);

@@ -20,8 +20,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.user_metadata?.avatar_url && user.user_metadata.avatar_url !== 'default') {
-        setAvatarUrl({ uri: user.user_metadata.avatar_url });
+      if (user) {
+        const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
+        if (url && url !== 'default') setAvatarUrl({ uri: url });
       }
     });
   }, []);
