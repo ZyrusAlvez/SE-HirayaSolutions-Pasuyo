@@ -168,7 +168,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View>
+        <View className="mb-4">
           <Text className="text-xs text-gray-500 mb-1 ml-1">Email</Text>
           <View className="flex-row items-center bg-gray-100 border border-gray-200 rounded-2xl px-4">
             <Ionicons name="mail-outline" size={18} color="#9CA3AF" />
@@ -176,6 +176,18 @@ export default function ProfileScreen() {
             <Ionicons name="lock-closed-outline" size={14} color="#D1D5DB" />
           </View>
         </View>
+
+        <TouchableOpacity
+          className="flex-row items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4"
+          onPress={() => router.push({ pathname: '/reset-password', params: { from: 'profile', email } })}
+          activeOpacity={0.7}
+        >
+          <View className="flex-row items-center">
+            <Ionicons name="key-outline" size={18} color="#9CA3AF" />
+            <Text className="ml-2 text-base text-gray-700">Change Password</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+        </TouchableOpacity>
       </View>
 
       </ScrollView>

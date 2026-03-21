@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from 'burnt';
 
 type Step = 'email' | 'code' | 'password';
 
 export default function ResetPasswordScreen() {
+  const { from, email: paramEmail } = useLocalSearchParams<{ from?: string; email?: string }>();
+  const fromProfile = from === 'profile';
+
   const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(paramEmail || '');
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,14 +23,25 @@ export default function ResetPasswordScreen() {
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
+  useEffect(() => {
+    if (fromProfile && paramEmail) sendCode(paramEmail);
+  }, []);
+
+  const sendCode = async (target: string) => {
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(target);
+    setLoading(false);
+    if (error) {
+      toast({ title: 'Failed to send reset email', preset: 'error' });
+    } else {
+      toast({ title: 'Code sent! Check your inbox.', preset: 'done' });
+      setStep('code');
+    }
+  };
+
   const handleSendEmail = async () => {
     if (!email) { toast({ title: 'Please enter your email', preset: 'error' }); return; }
-    setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    setLoading(false);
-    if (error) { toast({ title: 'Failed to send reset email', preset: 'error' }); return; }
-    toast({ title: 'Code sent! Check your inbox.', preset: 'done' });
-    setStep('code');
+    await sendCode(email);
   };
 
   const handleVerifyCode = () => {
@@ -58,13 +72,13 @@ export default function ResetPasswordScreen() {
     }
     setLoading(false);
     toast({ title: 'Password updated!', preset: 'done' });
-    router.replace('/');
+    router.replace(fromProfile ? '/profile' : '/');
   };
 
   const stepConfig = {
-    email:    { title: 'Forgot Password',   subtitle: 'Enter your email to receive a reset code.' },
-    code:     { title: 'Enter Code',        subtitle: `We sent a code to ${email}` },
-    password: { title: 'New Password',      subtitle: 'Choose a strong new password.' },
+    email:    { title: 'Forgot Password',  subtitle: 'Enter your email to receive a reset code.' },
+    code:     { title: 'Enter Code',       subtitle: `We sent a code to ${email}` },
+    password: { title: 'New Password',     subtitle: 'Choose a strong new password.' },
   };
 
   return (
@@ -80,7 +94,6 @@ export default function ResetPasswordScreen() {
             />
           </View>
 
-          {/* Step indicator */}
           <View className="flex-row justify-center mb-8 gap-2">
             {(['email', 'code', 'password'] as Step[]).map((s, i) => (
               <View key={s} className={`h-2 rounded-full flex-1 ${step === s || (i < ['email','code','password'].indexOf(step)) ? 'bg-[#FEA405]' : 'bg-gray-200'}`} />
@@ -92,13 +105,14 @@ export default function ResetPasswordScreen() {
 
           {step === 'email' && (
             <TextInput
-              className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base mb-6"
+              className={`border border-gray-200 rounded-2xl px-4 py-4 text-base mb-6 ${fromProfile ? 'bg-gray-100 text-gray-400' : 'bg-gray-50'}`}
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={!fromProfile}
             />
           )}
 
@@ -159,9 +173,9 @@ export default function ResetPasswordScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="mt-6" onPress={() => router.replace('/login')} activeOpacity={0.7}>
+          <TouchableOpacity className="mt-6" onPress={() => router.replace(fromProfile ? '/profile' : '/login')} activeOpacity={0.7}>
             <Text className="text-center text-sm text-gray-600">
-              Back to <Text className="text-[#FEA405] font-semibold">Login</Text>
+              Back to <Text className="text-[#FEA405] font-semibold">{fromProfile ? 'Profile' : 'Login'}</Text>
             </Text>
           </TouchableOpacity>
 
