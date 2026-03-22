@@ -18,6 +18,7 @@ export default function ProfileScreen() {
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'verified' | 'pending' | 'not_verified'>('not_verified');
+  const [profileInfo, setProfileInfo] = useState<{ gender?: string; date_of_birth?: string; address_province?: string; address_city?: string; address_barangay?: string } | null>(null);
 
   const isDirty = displayName !== originalName || !!pendingImageUri;
   useEffect(() => { loadProfile(); }, []);
@@ -35,12 +36,23 @@ export default function ProfileScreen() {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('verified, pending_verification')
+          .select('verified, pending_verification, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name')
           .eq('id', user.id)
           .single();
         if (profile) {
-          if (profile.verified) setVerificationStatus('verified');
-          else if (profile.pending_verification) setVerificationStatus('pending');
+          if (profile.verified) {
+            setVerificationStatus('verified');
+            const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
+            setDisplayName(fullName);
+            setOriginalName(fullName);
+            setProfileInfo({
+              gender: profile.gender,
+              date_of_birth: profile.date_of_birth,
+              address_province: profile.address_province,
+              address_city: profile.address_city,
+              address_barangay: profile.address_barangay,
+            });
+          } else if (profile.pending_verification) setVerificationStatus('pending');
           else setVerificationStatus('not_verified');
         }
       }
@@ -181,20 +193,36 @@ export default function ProfileScreen() {
       <View className="mx-4 bg-white rounded-3xl p-6 mb-4" style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }}>
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Account Info</Text>
 
-        <View className="mb-4">
-          <Text className="text-xs text-gray-500 mb-1 ml-1">Display Name</Text>
-          <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-2xl px-4">
-            <Ionicons name="person-outline" size={18} color="#9CA3AF" />
-            <TextInput
-              className="flex-1 py-4 ml-2 text-base"
-              placeholder="Enter your display name"
-              placeholderTextColor="#9CA3AF"
-              value={displayName}
-              onChangeText={setDisplayName}
-              autoCapitalize="words"
-            />
+        {verificationStatus === 'verified' && profileInfo ? (
+          <View className="mb-4 gap-3">
+            {([
+              { label: 'Name', value: displayName },
+              { label: 'Gender', value: profileInfo.gender },
+              { label: 'Date of Birth', value: profileInfo.date_of_birth },
+              { label: 'Address', value: [profileInfo.address_barangay, profileInfo.address_city, profileInfo.address_province].filter(Boolean).join(', ') },
+            ] as { label: string; value?: string }[]).map(({ label, value }) => (
+              <View key={label} className="flex-row justify-between py-2 border-b border-gray-100">
+                <Text className="text-sm text-gray-400">{label}</Text>
+                <Text className="text-sm font-medium text-gray-700 flex-shrink-0 ml-4 text-right" numberOfLines={2}>{value || '—'}</Text>
+              </View>
+            ))}
           </View>
-        </View>
+        ) : (
+          <View className="mb-4">
+            <Text className="text-xs text-gray-500 mb-1 ml-1">Display Name</Text>
+            <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-2xl px-4">
+              <Ionicons name="person-outline" size={18} color="#9CA3AF" />
+              <TextInput
+                className="flex-1 py-4 ml-2 text-base"
+                placeholder="Enter your display name"
+                placeholderTextColor="#9CA3AF"
+                value={displayName}
+                onChangeText={setDisplayName}
+                autoCapitalize="words"
+              />
+            </View>
+          </View>
+        )}
 
         <View className="mb-4">
           <Text className="text-xs text-gray-500 mb-1 ml-1">Email</Text>
