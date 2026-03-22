@@ -206,7 +206,7 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity
-          className="flex-row items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4"
+          className="flex-row items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 mb-3"
           onPress={() => router.push({ pathname: '/reset-password', params: { from: 'profile', email } })}
           activeOpacity={0.7}
         >
@@ -216,6 +216,20 @@ export default function ProfileScreen() {
           </View>
           <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
         </TouchableOpacity>
+
+        {verificationStatus === 'not_verified' && (
+          <TouchableOpacity
+            className="flex-row items-center justify-between bg-[#FEA405] rounded-2xl px-4 py-4"
+            onPress={() => router.push('/verify')}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="shield-checkmark-outline" size={18} color="white" />
+              <Text className="ml-2 text-base text-white font-semibold">Verify Account</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="white" />
+          </TouchableOpacity>
+        )}
       </View>
 
       </ScrollView>
