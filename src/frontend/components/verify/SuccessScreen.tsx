@@ -7,19 +7,19 @@ export default function SuccessScreen() {
 
   return (
     <View className="flex-1 bg-white justify-center items-center px-6">
-      <View className="bg-green-100 rounded-full p-6 mb-6">
-        <Ionicons name="checkmark-circle" size={80} color="#16a34a" />
+      <View className="bg-orange-100 rounded-full p-6 mb-6">
+        <Ionicons name="checkmark-circle" size={80} color="#FEA405" />
       </View>
-      <Text className="text-2xl font-bold text-gray-800 mb-2">Verification Submitted!</Text>
-      <Text className="text-center text-gray-600 mb-8">
-        Your verification request has been submitted. We'll review it and notify you soon.
+      <Text className="text-2xl font-bold text-gray-800 mb-3">Verification Submitted!</Text>
+      <Text className="text-center text-gray-500 mb-10 leading-6">
+        We'll review your documents and notify you once verified. This usually takes 1–3 business days.
       </Text>
       <TouchableOpacity
-        className="bg-[#FEA405] py-4 px-8 rounded-2xl"
+        className="bg-[#FEA405] py-4 px-10 rounded-2xl"
         onPress={() => router.replace('/profile')}
         activeOpacity={0.8}
       >
-        <Text className="text-white text-base font-semibold">Back to Profile</Text>
+        <Text className="text-white text-base font-semibold">Go to Profile</Text>
       </TouchableOpacity>
     </View>
   );
