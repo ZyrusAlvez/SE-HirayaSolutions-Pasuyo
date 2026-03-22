@@ -19,6 +19,17 @@ export default function VerifyScreen() {
   const [gender, setGender] = useState<'Male' | 'Female' | 'Prefer not' | ''>('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [idNumber, setIdNumber] = useState('');
+  const [addressType, setAddressType] = useState<'House' | 'Apartment' | 'Building'>('House');
+  const [province, setProvince] = useState<{ code: string; name: string } | null>(null);
+  const [city, setCity] = useState<{ code: string; name: string } | null>(null);
+  const [barangay, setBarangay] = useState<{ code: string; name: string } | null>(null);
+  const [houseNo, setHouseNo] = useState('');
+  const [street, setStreet] = useState('');
+  const [buildingName, setBuildingName] = useState('');
+  const [unitNo, setUnitNo] = useState('');
+  const [floor, setFloor] = useState('');
+  const [blockLot, setBlockLot] = useState('');
+  const [phase, setPhase] = useState('');
   const [idImage, setIdImage] = useState<string | null>(null);
   const [selfieImage, setSelfieImage] = useState<string | null>(null);
 
@@ -41,9 +52,65 @@ export default function VerifyScreen() {
         return;
       }
     }
-    if (step === 2 && !idNumber.trim()) {
-      toast({ title: 'ID number is required', preset: 'error' });
-      return;
+    if (step === 2) {
+      if (!idNumber.trim()) {
+        toast({ title: 'ID number is required', preset: 'error' });
+        return;
+      }
+      if (!province) {
+        toast({ title: 'Province is required', preset: 'error' });
+        return;
+      }
+      if (!city) {
+        toast({ title: 'City is required', preset: 'error' });
+        return;
+      }
+      if (!barangay) {
+        toast({ title: 'Barangay is required', preset: 'error' });
+        return;
+      }
+      if (addressType === 'House') {
+        if (!houseNo.trim()) {
+          toast({ title: 'House number is required', preset: 'error' });
+          return;
+        }
+        if (!street.trim()) {
+          toast({ title: 'Street is required', preset: 'error' });
+          return;
+        }
+      }
+      if (addressType === 'Apartment') {
+        if (!buildingName.trim()) {
+          toast({ title: 'Building name is required', preset: 'error' });
+          return;
+        }
+        if (!unitNo.trim()) {
+          toast({ title: 'Unit number is required', preset: 'error' });
+          return;
+        }
+        if (!street.trim()) {
+          toast({ title: 'Street is required', preset: 'error' });
+          return;
+        }
+      }
+      if (addressType === 'Building') {
+        if (!buildingName.trim()) {
+          toast({ title: 'Building name is required', preset: 'error' });
+          return;
+        }
+        if (!floor.trim()) {
+          toast({ title: 'Floor is required', preset: 'error' });
+          return;
+        }
+        if (!unitNo.trim()) {
+          toast({ title: 'Unit number is required', preset: 'error' });
+          return;
+        }
+        if (!street.trim()) {
+          toast({ title: 'Street is required', preset: 'error' });
+          return;
+        }
+      }
     }
     if (step === 3 && !idImage) {
       toast({ title: 'ID photo is required', preset: 'error' });
@@ -100,7 +167,34 @@ export default function VerifyScreen() {
           />
         )}
 
-        {step === 2 && <Step2 idNumber={idNumber} setIdNumber={setIdNumber} />}
+        {step === 2 && (
+          <Step2
+            idNumber={idNumber}
+            setIdNumber={setIdNumber}
+            addressType={addressType}
+            setAddressType={setAddressType}
+            province={province}
+            setProvince={setProvince}
+            city={city}
+            setCity={setCity}
+            barangay={barangay}
+            setBarangay={setBarangay}
+            houseNo={houseNo}
+            setHouseNo={setHouseNo}
+            street={street}
+            setStreet={setStreet}
+            buildingName={buildingName}
+            setBuildingName={setBuildingName}
+            unitNo={unitNo}
+            setUnitNo={setUnitNo}
+            floor={floor}
+            setFloor={setFloor}
+            blockLot={blockLot}
+            setBlockLot={setBlockLot}
+            phase={phase}
+            setPhase={setPhase}
+          />
+        )}
 
         {step === 3 && <Step3 idImage={idImage} setIdImage={setIdImage} />}
 
