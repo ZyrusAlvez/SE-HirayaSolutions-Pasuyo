@@ -5,14 +5,10 @@ import { toast } from 'burnt';
 import { validateImageAsset } from '../../lib/imageValidation';
 
 const ID_TYPES = [
-  { label: 'Passport',          recommended: false },
   { label: "Driver's License",  recommended: true  },
   { label: 'National ID',       recommended: true  },
-  { label: "Voter's ID",        recommended: false },
+  { label: 'Passport',          recommended: false },
   { label: 'SSS ID',            recommended: false },
-  { label: 'GSIS ID',           recommended: false },
-  { label: 'PRC ID',            recommended: false },
-  { label: 'Postal ID',         recommended: false },
   { label: 'Student ID',        recommended: false },
 ];
 
@@ -88,7 +84,7 @@ export default function Step4({
 
   return (
     <View>
-      <Text className="text-xl font-bold text-gray-800 mb-2">Government ID</Text>
+      <Text className="text-xl font-bold text-gray-800 mb-2">Identification Card</Text>
       <Text className="text-gray-600 mb-6">Select your ID type and upload a photo</Text>
 
       <View className="gap-2 mb-2">
