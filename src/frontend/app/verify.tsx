@@ -18,7 +18,6 @@ export default function VerifyScreen() {
   const [suffix, setSuffix] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Prefer not' | ''>('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-  const [idNumber, setIdNumber] = useState('');
   const [addressType, setAddressType] = useState<'House' | 'Apartment' | 'Building'>('House');
   const [province, setProvince] = useState<{ code: string; name: string } | null>(null);
   const [city, setCity] = useState<{ code: string; name: string } | null>(null);
@@ -30,7 +29,9 @@ export default function VerifyScreen() {
   const [floor, setFloor] = useState('');
   const [blockLot, setBlockLot] = useState('');
   const [phase, setPhase] = useState('');
-  const [idImage, setIdImage] = useState<string | null>(null);
+  const [utilityBillType, setUtilityBillType] = useState<'Water' | 'Electricity' | 'Internet' | ''>('');
+  const [utilityBillFrontUri, setUtilityBillFrontUri] = useState<string | null>(null);
+  const [utilityBillBackUri, setUtilityBillBackUri] = useState<string | null>(null);
   const [selfieImage, setSelfieImage] = useState<string | null>(null);
 
   const handleNext = () => {
@@ -53,10 +54,6 @@ export default function VerifyScreen() {
       }
     }
     if (step === 2) {
-      if (!idNumber.trim()) {
-        toast({ title: 'ID number is required', preset: 'error' });
-        return;
-      }
       if (!province) {
         toast({ title: 'Province is required', preset: 'error' });
         return;
@@ -112,9 +109,19 @@ export default function VerifyScreen() {
         }
       }
     }
-    if (step === 3 && !idImage) {
-      toast({ title: 'ID photo is required', preset: 'error' });
-      return;
+    if (step === 3) {
+      if (!utilityBillType) {
+        toast({ title: 'Please select a bill type', preset: 'error' });
+        return;
+      }
+      if (!utilityBillFrontUri) {
+        toast({ title: 'Front photo is required', preset: 'error' });
+        return;
+      }
+      if (!utilityBillBackUri) {
+        toast({ title: 'Back photo is required', preset: 'error' });
+        return;
+      }
     }
     if (step === 4 && !selfieImage) {
       toast({ title: 'Selfie is required', preset: 'error' });
@@ -169,8 +176,6 @@ export default function VerifyScreen() {
 
         {step === 2 && (
           <Step2
-            idNumber={idNumber}
-            setIdNumber={setIdNumber}
             addressType={addressType}
             setAddressType={setAddressType}
             province={province}
@@ -196,7 +201,16 @@ export default function VerifyScreen() {
           />
         )}
 
-        {step === 3 && <Step3 idImage={idImage} setIdImage={setIdImage} />}
+        {step === 3 && (
+          <Step3
+            utilityBillType={utilityBillType}
+            setUtilityBillType={setUtilityBillType}
+            utilityBillFrontUri={utilityBillFrontUri}
+            setUtilityBillFrontUri={setUtilityBillFrontUri}
+            utilityBillBackUri={utilityBillBackUri}
+            setUtilityBillBackUri={setUtilityBillBackUri}
+          />
+        )}
 
         {step === 4 && <Step4 selfieImage={selfieImage} setSelfieImage={setSelfieImage} />}
       </ScrollView>
