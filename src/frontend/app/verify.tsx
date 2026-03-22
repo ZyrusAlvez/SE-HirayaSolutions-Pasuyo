@@ -32,7 +32,9 @@ export default function VerifyScreen() {
   const [utilityBillType, setUtilityBillType] = useState<'Water' | 'Electricity' | 'Internet' | ''>('');
   const [utilityBillFrontUri, setUtilityBillFrontUri] = useState<string | null>(null);
   const [utilityBillBackUri, setUtilityBillBackUri] = useState<string | null>(null);
-  const [selfieImage, setSelfieImage] = useState<string | null>(null);
+  const [idType, setIdType] = useState('');
+  const [idFrontUri, setIdFrontUri] = useState<string | null>(null);
+  const [idBackUri, setIdBackUri] = useState<string | null>(null);
 
   const handleNext = () => {
     if (step === 1) {
@@ -123,9 +125,19 @@ export default function VerifyScreen() {
         return;
       }
     }
-    if (step === 4 && !selfieImage) {
-      toast({ title: 'Selfie is required', preset: 'error' });
-      return;
+    if (step === 4) {
+      if (!idType) {
+        toast({ title: 'Please select an ID type', preset: 'error' });
+        return;
+      }
+      if (!idFrontUri) {
+        toast({ title: 'Front photo is required', preset: 'error' });
+        return;
+      }
+      if (!idBackUri) {
+        toast({ title: 'Back photo is required', preset: 'error' });
+        return;
+      }
     }
 
     if (step < 4) setStep(step + 1);
@@ -212,7 +224,16 @@ export default function VerifyScreen() {
           />
         )}
 
-        {step === 4 && <Step4 selfieImage={selfieImage} setSelfieImage={setSelfieImage} />}
+        {step === 4 && (
+          <Step4
+            idType={idType}
+            setIdType={setIdType}
+            idFrontUri={idFrontUri}
+            setIdFrontUri={setIdFrontUri}
+            idBackUri={idBackUri}
+            setIdBackUri={setIdBackUri}
+          />
+        )}
       </ScrollView>
 
       <View className="px-6 pb-8 pt-4">

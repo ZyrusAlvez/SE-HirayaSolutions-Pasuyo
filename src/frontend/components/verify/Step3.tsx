@@ -2,8 +2,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'burnt';
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+import { validateImageAsset } from '../../lib/imageValidation';
 
 type UtilityBillType = 'Water' | 'Electricity' | 'Internet';
 
@@ -29,13 +28,9 @@ export default function Step3({
       });
       if (!result.canceled) {
         const asset = result.assets[0];
-        const ext = asset.uri.split('.').pop()?.toLowerCase() ?? '';
-        if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-          toast({ title: 'Unsupported file type. Use JPG, PNG, or WebP.', preset: 'error' });
-          return;
-        }
-        if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE) {
-          toast({ title: 'File too large. Maximum size is 5MB.', preset: 'error' });
+        const validation = await validateImageAsset(asset);
+        if (!validation.ok) {
+          toast({ title: validation.error, preset: 'error' });
           return;
         }
         if (side === 'front') setUtilityBillFrontUri(asset.uri);
@@ -117,7 +112,7 @@ export default function Step3({
           <Text className="text-sm font-semibold text-gray-700 mb-1">
             Upload your {utilityBillType} bill
           </Text>
-          <Text className="text-xs text-gray-400 mb-4">Image must be clear and legible · JPG, PNG, or WebP · Max 5MB</Text>
+          <Text className="text-xs text-gray-400 mb-4">Image must be clear and legible · JPG, PNG, or WebP</Text>
 
           <View className="flex-row gap-3">
             <UploadSlot
