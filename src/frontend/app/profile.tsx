@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
@@ -19,6 +19,10 @@ export default function ProfileScreen() {
   const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'verified' | 'pending' | 'not_verified'>('not_verified');
   const [profileInfo, setProfileInfo] = useState<{ gender?: string; date_of_birth?: string; address_province?: string; address_city?: string; address_barangay?: string } | null>(null);
+
+  const { width } = useWindowDimensions();
+  const isLarge = width >= 768;
+  const contentWidth = isLarge ? Math.min(width * 0.55, 640) : undefined;
 
   const isDirty = displayName !== originalName || !!pendingImageUri;
   useEffect(() => { loadProfile(); }, []);
@@ -144,20 +148,22 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120, alignItems: isLarge ? 'center' : undefined }}>
       {/* Orange header */}
-      <View className="bg-[#FEA405] pt-12 pb-20 px-6 flex-row items-center">
-        <TouchableOpacity onPress={() => router.replace('/')} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-white text-2xl font-bold">Profile Settings</Text>
+      <View style={{ width: isLarge ? '100%' : undefined }} className="bg-[#FEA405] pt-12 pb-20 px-6 flex-row items-center">
+        <View style={{ width: contentWidth, flexDirection: 'row', alignItems: 'center', alignSelf: isLarge ? 'center' : undefined }}>
+          <TouchableOpacity onPress={() => router.replace('/')} className="mr-3">
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <Text className="text-white text-2xl font-bold">Profile Settings</Text>
+        </View>
       </View>
 
       {/* Avatar — overlaps header */}
-      <View className="items-center -mt-14 mb-6">
+      <View style={{ width: contentWidth }} className="items-center -mt-14 mb-6">
         <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
           <View className="relative">
-            <View style={{ width: 112, height: 112, borderRadius: 56, borderWidth: 4, borderColor: '#fff', backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
+            <View style={{ width: isLarge ? 140 : 112, height: isLarge ? 140 : 112, borderRadius: isLarge ? 70 : 56, borderWidth: 4, borderColor: '#fff', backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
               <Image
                 source={avatarUrl}
                 style={{ width: '100%', height: '100%' }}
@@ -190,7 +196,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Form card */}
-      <View className="mx-4 bg-white rounded-3xl p-6 mb-4" style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }}>
+      <View style={{ width: contentWidth, alignSelf: isLarge ? 'center' : undefined, marginHorizontal: isLarge ? 0 : 16, backgroundColor: '#fff', borderRadius: 24, padding: 24, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }}>
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Account Info</Text>
 
         {verificationStatus === 'verified' && profileInfo ? (
@@ -263,7 +269,8 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Logout — pinned to bottom */}
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-gray-50">
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 32, paddingTop: 12, backgroundColor: '#F9FAFB', alignItems: isLarge ? 'center' : undefined }}>
+        <View style={{ width: contentWidth ?? '100%' }}>
         {isDirty && (
           <TouchableOpacity
             className="bg-[#FEA405] py-4 rounded-2xl mb-3"
@@ -284,6 +291,7 @@ export default function ProfileScreen() {
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
           <Text className="text-red-500 text-base font-semibold ml-2">Logout</Text>
         </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
