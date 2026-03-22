@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
@@ -18,6 +18,11 @@ export default function ProfileScreen() {
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'verified' | 'pending' | 'not_verified'>('not_verified');
+  const [profileInfo, setProfileInfo] = useState<{ gender?: string; date_of_birth?: string; address_province?: string; address_city?: string; address_barangay?: string } | null>(null);
+
+  const { width } = useWindowDimensions();
+  const isLarge = width >= 768;
+  const contentWidth = isLarge ? Math.min(width * 0.55, 640) : undefined;
 
   const isDirty = displayName !== originalName || !!pendingImageUri;
   useEffect(() => { loadProfile(); }, []);
@@ -35,12 +40,23 @@ export default function ProfileScreen() {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('verified, pending_verification')
+          .select('verified, pending_verification, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name')
           .eq('id', user.id)
           .single();
         if (profile) {
-          if (profile.verified) setVerificationStatus('verified');
-          else if (profile.pending_verification) setVerificationStatus('pending');
+          if (profile.verified) {
+            setVerificationStatus('verified');
+            const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
+            setDisplayName(fullName);
+            setOriginalName(fullName);
+            setProfileInfo({
+              gender: profile.gender,
+              date_of_birth: profile.date_of_birth,
+              address_province: profile.address_province,
+              address_city: profile.address_city,
+              address_barangay: profile.address_barangay,
+            });
+          } else if (profile.pending_verification) setVerificationStatus('pending');
           else setVerificationStatus('not_verified');
         }
       }
@@ -132,20 +148,22 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120, alignItems: isLarge ? 'center' : undefined }}>
       {/* Orange header */}
-      <View className="bg-[#FEA405] pt-12 pb-20 px-6 flex-row items-center">
-        <TouchableOpacity onPress={() => router.replace('/')} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-white text-2xl font-bold">Profile Settings</Text>
+      <View style={{ width: isLarge ? '100%' : undefined }} className="bg-[#FEA405] pt-12 pb-20 px-6 flex-row items-center">
+        <View style={{ width: contentWidth, flexDirection: 'row', alignItems: 'center', alignSelf: isLarge ? 'center' : undefined }}>
+          <TouchableOpacity onPress={() => router.replace('/')} className="mr-3">
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <Text className="text-white text-2xl font-bold">Profile Settings</Text>
+        </View>
       </View>
 
       {/* Avatar — overlaps header */}
-      <View className="items-center -mt-14 mb-6">
+      <View style={{ width: contentWidth }} className="items-center -mt-14 mb-6">
         <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
           <View className="relative">
-            <View style={{ width: 112, height: 112, borderRadius: 56, borderWidth: 4, borderColor: '#fff', backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
+            <View style={{ width: isLarge ? 140 : 112, height: isLarge ? 140 : 112, borderRadius: isLarge ? 70 : 56, borderWidth: 4, borderColor: '#fff', backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
               <Image
                 source={avatarUrl}
                 style={{ width: '100%', height: '100%' }}
@@ -178,23 +196,39 @@ export default function ProfileScreen() {
       </View>
 
       {/* Form card */}
-      <View className="mx-4 bg-white rounded-3xl p-6 mb-4" style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }}>
+      <View style={{ width: contentWidth, alignSelf: isLarge ? 'center' : undefined, marginHorizontal: isLarge ? 0 : 16, backgroundColor: '#fff', borderRadius: 24, padding: 24, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }}>
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Account Info</Text>
 
-        <View className="mb-4">
-          <Text className="text-xs text-gray-500 mb-1 ml-1">Display Name</Text>
-          <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-2xl px-4">
-            <Ionicons name="person-outline" size={18} color="#9CA3AF" />
-            <TextInput
-              className="flex-1 py-4 ml-2 text-base"
-              placeholder="Enter your display name"
-              placeholderTextColor="#9CA3AF"
-              value={displayName}
-              onChangeText={setDisplayName}
-              autoCapitalize="words"
-            />
+        {verificationStatus === 'verified' && profileInfo ? (
+          <View className="mb-4 gap-3">
+            {([
+              { label: 'Name', value: displayName },
+              { label: 'Gender', value: profileInfo.gender },
+              { label: 'Date of Birth', value: profileInfo.date_of_birth },
+              { label: 'Address', value: [profileInfo.address_barangay, profileInfo.address_city, profileInfo.address_province].filter(Boolean).join(', ') },
+            ] as { label: string; value?: string }[]).map(({ label, value }) => (
+              <View key={label} className="flex-row justify-between py-2 border-b border-gray-100">
+                <Text className="text-sm text-gray-400">{label}</Text>
+                <Text className="text-sm font-medium text-gray-700 flex-shrink-0 ml-4 text-right" numberOfLines={2}>{value || '—'}</Text>
+              </View>
+            ))}
           </View>
-        </View>
+        ) : (
+          <View className="mb-4">
+            <Text className="text-xs text-gray-500 mb-1 ml-1">Display Name</Text>
+            <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-2xl px-4">
+              <Ionicons name="person-outline" size={18} color="#9CA3AF" />
+              <TextInput
+                className="flex-1 py-4 ml-2 text-base"
+                placeholder="Enter your display name"
+                placeholderTextColor="#9CA3AF"
+                value={displayName}
+                onChangeText={setDisplayName}
+                autoCapitalize="words"
+              />
+            </View>
+          </View>
+        )}
 
         <View className="mb-4">
           <Text className="text-xs text-gray-500 mb-1 ml-1">Email</Text>
@@ -206,7 +240,7 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity
-          className="flex-row items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4"
+          className="flex-row items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 mb-3"
           onPress={() => router.push({ pathname: '/reset-password', params: { from: 'profile', email } })}
           activeOpacity={0.7}
         >
@@ -216,12 +250,27 @@ export default function ProfileScreen() {
           </View>
           <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
         </TouchableOpacity>
+
+        {verificationStatus === 'not_verified' && (
+          <TouchableOpacity
+            className="flex-row items-center justify-between bg-[#FEA405] rounded-2xl px-4 py-4"
+            onPress={() => router.push('/verify')}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="shield-checkmark-outline" size={18} color="white" />
+              <Text className="ml-2 text-base text-white font-semibold">Verify Account</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="white" />
+          </TouchableOpacity>
+        )}
       </View>
 
       </ScrollView>
 
       {/* Logout — pinned to bottom */}
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-gray-50">
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 32, paddingTop: 12, backgroundColor: '#F9FAFB', alignItems: isLarge ? 'center' : undefined }}>
+        <View style={{ width: contentWidth ?? '100%' }}>
         {isDirty && (
           <TouchableOpacity
             className="bg-[#FEA405] py-4 rounded-2xl mb-3"
@@ -242,6 +291,7 @@ export default function ProfileScreen() {
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
           <Text className="text-red-500 text-base font-semibold ml-2">Logout</Text>
         </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
