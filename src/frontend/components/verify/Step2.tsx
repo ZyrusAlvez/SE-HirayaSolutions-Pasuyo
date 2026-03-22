@@ -6,8 +6,6 @@ import { toast } from 'burnt';
 import TextInput from '../ui/TextInput';
 
 interface Step2Props {
-  idNumber: string;
-  setIdNumber: (value: string) => void;
   addressType: 'House' | 'Apartment' | 'Building';
   setAddressType: (value: 'House' | 'Apartment' | 'Building') => void;
   province: { code: string; name: string } | null;
@@ -103,16 +101,8 @@ export default function Step2(props: Step2Props) {
   };
   return (
     <View>
-      <Text className="text-xl font-bold text-gray-800 mb-2">ID & Address</Text>
-      <Text className="text-gray-600 mb-6">Enter your ID number and complete address</Text>
-      
-      <TextInput
-        label="ID Number"
-        required
-        placeholder="1234-5678-9012"
-        value={props.idNumber}
-        onChangeText={props.setIdNumber}
-      />
+      <Text className="text-xl font-bold text-gray-800 mb-2">Address</Text>
+      <Text className="text-gray-600 mb-6">Enter your complete address</Text>
 
       <View className="mb-4">
         <Text className="text-xs text-gray-500 mb-1 ml-1">Address Type *</Text>
