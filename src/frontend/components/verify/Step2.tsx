@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { fetchProvinces, fetchCities, fetchBarangays, Province, City, Barangay } from '../../lib/psgc';
 import AddressDropdown from './AddressDropdown';
 import { toast } from 'burnt';
+import TextInput from '../ui/TextInput';
 
 interface Step2Props {
   idNumber: string;
@@ -105,18 +106,13 @@ export default function Step2(props: Step2Props) {
       <Text className="text-xl font-bold text-gray-800 mb-2">ID & Address</Text>
       <Text className="text-gray-600 mb-6">Enter your ID number and complete address</Text>
       
-      <View className="mb-4">
-        <Text className="text-xs text-gray-500 mb-1 ml-1">ID Number *</Text>
-        <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-          <TextInput
-            className="py-4 text-base"
-            placeholder="1234-5678-9012"
-            placeholderTextColor="#9CA3AF"
-            value={props.idNumber}
-            onChangeText={props.setIdNumber}
-          />
-        </View>
-      </View>
+      <TextInput
+        label="ID Number"
+        required
+        placeholder="1234-5678-9012"
+        value={props.idNumber}
+        onChangeText={props.setIdNumber}
+      />
 
       <View className="mb-4">
         <Text className="text-xs text-gray-500 mb-1 ml-1">Address Type *</Text>
@@ -169,184 +165,109 @@ export default function Step2(props: Step2Props) {
 
       {props.addressType === 'House' && (
         <>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">House No. *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="123"
-                placeholderTextColor="#9CA3AF"
-                value={props.houseNo}
-                onChangeText={props.setHouseNo}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Street *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Main Street"
-                placeholderTextColor="#9CA3AF"
-                value={props.street}
-                onChangeText={props.setStreet}
-              />
-            </View>
-          </View>
+          <TextInput
+            label="House No."
+            required
+            placeholder="123"
+            value={props.houseNo}
+            onChangeText={props.setHouseNo}
+          />
+          <TextInput
+            label="Street"
+            required
+            placeholder="Main Street"
+            value={props.street}
+            onChangeText={props.setStreet}
+          />
         </>
       )}
 
       {props.addressType === 'Apartment' && (
         <>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Building Name *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Sunrise Apartments"
-                placeholderTextColor="#9CA3AF"
-                value={props.buildingName}
-                onChangeText={props.setBuildingName}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Unit No. *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Unit 101"
-                placeholderTextColor="#9CA3AF"
-                value={props.unitNo}
-                onChangeText={props.setUnitNo}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Floor</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="1st Floor"
-                placeholderTextColor="#9CA3AF"
-                value={props.floor}
-                onChangeText={props.setFloor}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Block/Lot</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Block 1, Lot 2"
-                placeholderTextColor="#9CA3AF"
-                value={props.blockLot}
-                onChangeText={props.setBlockLot}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Phase</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Phase 1"
-                placeholderTextColor="#9CA3AF"
-                value={props.phase}
-                onChangeText={props.setPhase}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Street *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Main Street"
-                placeholderTextColor="#9CA3AF"
-                value={props.street}
-                onChangeText={props.setStreet}
-              />
-            </View>
-          </View>
+          <TextInput
+            label="Building Name"
+            required
+            placeholder="Sunrise Apartments"
+            value={props.buildingName}
+            onChangeText={props.setBuildingName}
+          />
+          <TextInput
+            label="Unit No."
+            required
+            placeholder="Unit 101"
+            value={props.unitNo}
+            onChangeText={props.setUnitNo}
+          />
+          <TextInput
+            label="Floor"
+            placeholder="1st Floor"
+            value={props.floor}
+            onChangeText={props.setFloor}
+          />
+          <TextInput
+            label="Block/Lot"
+            placeholder="Block 1, Lot 2"
+            value={props.blockLot}
+            onChangeText={props.setBlockLot}
+          />
+          <TextInput
+            label="Phase"
+            placeholder="Phase 1"
+            value={props.phase}
+            onChangeText={props.setPhase}
+          />
+          <TextInput
+            label="Street"
+            required
+            placeholder="Main Street"
+            value={props.street}
+            onChangeText={props.setStreet}
+          />
         </>
       )}
 
       {props.addressType === 'Building' && (
         <>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Building Name *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Corporate Tower"
-                placeholderTextColor="#9CA3AF"
-                value={props.buildingName}
-                onChangeText={props.setBuildingName}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Floor *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="5th Floor"
-                placeholderTextColor="#9CA3AF"
-                value={props.floor}
-                onChangeText={props.setFloor}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Unit No. *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Unit 501"
-                placeholderTextColor="#9CA3AF"
-                value={props.unitNo}
-                onChangeText={props.setUnitNo}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Block/Lot</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Block 1, Lot 2"
-                placeholderTextColor="#9CA3AF"
-                value={props.blockLot}
-                onChangeText={props.setBlockLot}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Phase</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Phase 1"
-                placeholderTextColor="#9CA3AF"
-                value={props.phase}
-                onChangeText={props.setPhase}
-              />
-            </View>
-          </View>
-          <View className="mb-4">
-            <Text className="text-xs text-gray-500 mb-1 ml-1">Street *</Text>
-            <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-              <TextInput
-                className="py-4 text-base"
-                placeholder="Main Street"
-                placeholderTextColor="#9CA3AF"
-                value={props.street}
-                onChangeText={props.setStreet}
-              />
-            </View>
-          </View>
+          <TextInput
+            label="Building Name"
+            required
+            placeholder="Corporate Tower"
+            value={props.buildingName}
+            onChangeText={props.setBuildingName}
+          />
+          <TextInput
+            label="Floor"
+            required
+            placeholder="5th Floor"
+            value={props.floor}
+            onChangeText={props.setFloor}
+          />
+          <TextInput
+            label="Unit No."
+            required
+            placeholder="Unit 501"
+            value={props.unitNo}
+            onChangeText={props.setUnitNo}
+          />
+          <TextInput
+            label="Block/Lot"
+            placeholder="Block 1, Lot 2"
+            value={props.blockLot}
+            onChangeText={props.setBlockLot}
+          />
+          <TextInput
+            label="Phase"
+            placeholder="Phase 1"
+            value={props.phase}
+            onChangeText={props.setPhase}
+          />
+          <TextInput
+            label="Street"
+            required
+            placeholder="Main Street"
+            value={props.street}
+            onChangeText={props.setStreet}
+          />
         </>
       )}
     </View>

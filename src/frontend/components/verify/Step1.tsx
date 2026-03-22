@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Platform, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import TextInput from '../ui/TextInput';
 
 interface Step1Props {
   firstName: string;
@@ -75,61 +76,39 @@ export default function Step1({
       <Text className="text-xl font-bold text-gray-800 mb-2">Personal Information</Text>
       <Text className="text-gray-600 mb-6">Enter your details as they appear on your ID</Text>
       
-      <View className="mb-4">
-        <Text className="text-xs text-gray-500 mb-1 ml-1">First Name *</Text>
-        <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-          <TextInput
-            className="py-4 text-base"
-            placeholder="Juan"
-            placeholderTextColor="#9CA3AF"
-            value={firstName}
-            onChangeText={setFirstName}
-            autoCapitalize="words"
-          />
-        </View>
-      </View>
+      <TextInput
+        label="First Name"
+        required
+        placeholder="Juan"
+        value={firstName}
+        onChangeText={setFirstName}
+        autoCapitalize="words"
+      />
 
-      <View className="mb-4">
-        <Text className="text-xs text-gray-500 mb-1 ml-1">Middle Name</Text>
-        <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-          <TextInput
-            className="py-4 text-base"
-            placeholder="Santos"
-            placeholderTextColor="#9CA3AF"
-            value={middleName}
-            onChangeText={setMiddleName}
-            autoCapitalize="words"
-          />
-        </View>
-      </View>
+      <TextInput
+        label="Middle Name"
+        placeholder="Santos"
+        value={middleName}
+        onChangeText={setMiddleName}
+        autoCapitalize="words"
+      />
 
-      <View className="mb-4">
-        <Text className="text-xs text-gray-500 mb-1 ml-1">Last Name *</Text>
-        <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-          <TextInput
-            className="py-4 text-base"
-            placeholder="Dela Cruz"
-            placeholderTextColor="#9CA3AF"
-            value={lastName}
-            onChangeText={setLastName}
-            autoCapitalize="words"
-          />
-        </View>
-      </View>
+      <TextInput
+        label="Last Name"
+        required
+        placeholder="Dela Cruz"
+        value={lastName}
+        onChangeText={setLastName}
+        autoCapitalize="words"
+      />
 
-      <View className="mb-4">
-        <Text className="text-xs text-gray-500 mb-1 ml-1">Suffix</Text>
-        <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4">
-          <TextInput
-            className="py-4 text-base"
-            placeholder="Jr., Sr., III (optional)"
-            placeholderTextColor="#9CA3AF"
-            value={suffix}
-            onChangeText={setSuffix}
-            autoCapitalize="characters"
-          />
-        </View>
-      </View>
+      <TextInput
+        label="Suffix"
+        placeholder="Jr., Sr., III (optional)"
+        value={suffix}
+        onChangeText={setSuffix}
+        autoCapitalize="characters"
+      />
 
       <View className="mb-4">
         <Text className="text-xs text-gray-500 mb-1 ml-1">Gender *</Text>
