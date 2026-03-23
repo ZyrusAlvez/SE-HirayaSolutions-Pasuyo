@@ -62,8 +62,8 @@ export default function HomeScreen() {
       <div id="map"></div>
       <script>
         const map = L.map('map').setView([${location.coords.latitude}, ${location.coords.longitude}], 15);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap'
+        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+          attribution: '© CartoDB'
         }).addTo(map);
         L.marker([${location.coords.latitude}, ${location.coords.longitude}])
           .addTo(map)

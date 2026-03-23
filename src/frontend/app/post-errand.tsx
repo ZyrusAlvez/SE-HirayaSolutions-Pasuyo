@@ -40,7 +40,7 @@ function buildMapHtml(lat: number, lng: number, isNative: boolean) {
 <div id="map"></div>
 <script>
   const map = L.map('map').setView([${lat}, ${lng}], 15);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+  L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',{attribution:'© CartoDB'}).addTo(map);
   let marker = L.marker([${lat}, ${lng}], {draggable:true}).addTo(map);
 
   function sendLocation(lat, lng) {
