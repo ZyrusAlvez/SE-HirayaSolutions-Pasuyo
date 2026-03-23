@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TextInput, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface DatePickerProps {
@@ -52,6 +52,8 @@ function TimeInput({ value, min, max, onChange }: { value: string; min: number; 
 
 export default function DatePicker({ label, value, onChange, minimumDate, placeholder = 'Select date & time' }: DatePickerProps) {
   const today = new Date();
+  const { width } = useWindowDimensions();
+  const cardWidth = Math.min(width - 48, 400);
   const [show, setShow] = useState(false);
   const [step, setStep] = useState<'date' | 'time'>('date');
   const [viewYear, setViewYear] = useState((value ?? today).getFullYear());
@@ -169,7 +171,7 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
           activeOpacity={1}
           onPress={() => setShow(false)}
         >
-          <TouchableOpacity activeOpacity={1} style={{ width: 320, backgroundColor: '#fff', borderRadius: 20, padding: 20 }}>
+          <TouchableOpacity activeOpacity={1} style={{ width: cardWidth, backgroundColor: '#fff', borderRadius: 20, padding: 20 }}>
 
             {step === 'date' ? (
               <>

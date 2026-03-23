@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
   Platform, Image, Alert, ActivityIndicator, Modal, KeyboardAvoidingView,
+  useWindowDimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
@@ -109,6 +110,8 @@ function WebErrandMap({ initialLat, initialLng, onPin }: {
 
 export default function PostErrandScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isLarge = width >= 768;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -225,14 +228,15 @@ export default function PostErrandScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View className="bg-white px-6 pt-12 pb-4 flex-row items-center border-b border-gray-100">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+      <View className={`bg-white px-6 pb-4 flex-row items-center border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-4'}`}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/')} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-gray-900">Post an Errand</Text>
       </View>
 
-      <ScrollView className="flex-1 px-6 py-4" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View style={{ alignSelf: 'center', width: '100%', maxWidth: isLarge ? 640 : undefined, paddingHorizontal: 24, paddingTop: 16 }}>
         <TextInput
           label="Title"
           required
@@ -344,6 +348,7 @@ export default function PostErrandScreen() {
             <Text className="text-white font-bold text-base">Post Errand</Text>
           )}
         </TouchableOpacity>
+        </View>
       </ScrollView>
 
       <Modal visible={showMapModal} animationType="slide" onRequestClose={() => setShowMapModal(false)}>

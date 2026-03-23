@@ -77,7 +77,7 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="bg-white px-6 pt-12 pb-4 flex-row items-center justify-between border-b border-gray-100">
+      <View className={`bg-white px-6 pb-4 flex-row items-center justify-between border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-4'}`}>
         <TouchableOpacity className="p-2" activeOpacity={0.7}>
           <Ionicons name="menu" size={28} color="#000" />
         </TouchableOpacity>
