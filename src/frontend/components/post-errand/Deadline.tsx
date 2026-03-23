@@ -2,12 +2,9 @@ import { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TextInput, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-interface DatePickerProps {
-  label?: string;
+interface Props {
   value: Date | null;
   onChange: (date: Date | null) => void;
-  minimumDate?: Date;
-  placeholder?: string;
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -32,10 +29,7 @@ function TimeInput({ value, min, max, onChange }: { value: string; min: number; 
       defaultValue={value}
       keyboardType="number-pad"
       maxLength={2}
-      onFocus={() => {
-        setFocused(true);
-        ref.current?.clear();
-      }}
+      onFocus={() => { setFocused(true); ref.current?.clear(); }}
       onBlur={() => setFocused(false)}
       onChangeText={(v) => {
         const n = parseInt(v.replace(/[^0-9]/g, ''));
@@ -44,16 +38,18 @@ function TimeInput({ value, min, max, onChange }: { value: string; min: number; 
       }}
       onEndEditing={(e) => {
         const n = parseInt(e.nativeEvent.text);
-        if (isNaN(n) || n < min || n > max) onChange(value); // revert if invalid
+        if (isNaN(n) || n < min || n > max) onChange(value);
       }}
     />
   );
 }
 
-export default function DatePicker({ label, value, onChange, minimumDate, placeholder = 'Select date & time' }: DatePickerProps) {
+export default function Deadline({ value, onChange }: Props) {
   const today = new Date();
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(width - 48, 400);
+  const minDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
   const [show, setShow] = useState(false);
   const [step, setStep] = useState<'date' | 'time'>('date');
   const [viewYear, setViewYear] = useState((value ?? today).getFullYear());
@@ -64,12 +60,7 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
   const [hour, setHour] = useState(value ? String(value.getHours() % 12 || 12).padStart(2, '0') : '12');
   const [minute, setMinute] = useState(value ? String(value.getMinutes()).padStart(2, '0') : '00');
   const [ampm, setAmpm] = useState<'AM' | 'PM'>(value ? (value.getHours() >= 12 ? 'PM' : 'AM') : 'AM');
-
   const [noDeadline, setNoDeadline] = useState(false);
-
-  const minDate = minimumDate
-    ? new Date(minimumDate.getFullYear(), minimumDate.getMonth(), minimumDate.getDate())
-    : new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -78,31 +69,22 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
     else setViewMonth(m => m - 1);
   };
-
   const nextMonth = () => {
     if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
     else setViewMonth(m => m + 1);
   };
 
   const isDisabled = (day: number) => new Date(viewYear, viewMonth, day) < minDate;
+  const isSelected = (day: number) => selectedDay?.y === viewYear && selectedDay?.m === viewMonth && selectedDay?.d === day;
+  const isToday = (day: number) => today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
 
-  const isSelected = (day: number) =>
-    selectedDay?.y === viewYear && selectedDay?.m === viewMonth && selectedDay?.d === day;
-
-  const isToday = (day: number) =>
-    today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
-
-  const handleDayPress = (day: number) => {
-    setSelectedDay({ y: viewYear, m: viewMonth, d: day });
-    setStep('time');
-  };
+  const handleDayPress = (day: number) => { setSelectedDay({ y: viewYear, m: viewMonth, d: day }); setStep('time'); };
 
   const handleConfirmTime = () => {
     if (!selectedDay) return;
-    const h = parseInt(hour);
-    const m = parseInt(minute);
+    const h = parseInt(hour), m = parseInt(minute);
     if (isNaN(h) || isNaN(m)) return;
-    let hours24 = ampm === 'PM' ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+    const hours24 = ampm === 'PM' ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
     onChange(new Date(selectedDay.y, selectedDay.m, selectedDay.d, hours24, m));
     setShow(false);
     setStep('date');
@@ -115,25 +97,17 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
     setShow(true);
   };
 
-  const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) =>
-    i < firstDay ? null : i - firstDay + 1
-  );
+  const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) => i < firstDay ? null : i - firstDay + 1);
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const displayValue = value
-    ? value.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })
-    : null;
+  const displayValue = value ? value.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }) : null;
 
   return (
     <View className="mb-4">
       <View className="flex-row items-center justify-between mb-1">
-        {label && <Text className="text-xs text-gray-500 ml-1">{label}</Text>}
+        <Text className="text-xs text-gray-500 ml-1">Deadline</Text>
         <TouchableOpacity
-          onPress={() => {
-            const next = !noDeadline;
-            setNoDeadline(next);
-            if (next) onChange(null);
-          }}
+          onPress={() => { const next = !noDeadline; setNoDeadline(next); if (next) onChange(null); }}
           className="flex-row items-center"
           hitSlop={8}
         >
@@ -156,7 +130,7 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
       >
         <Ionicons name="calendar-outline" size={18} color={ACCENT} />
         <Text className={`ml-2 text-base flex-1 ${value ? 'text-gray-900' : 'text-gray-400'}`}>
-          {displayValue ?? placeholder}
+          {displayValue ?? 'Select deadline'}
         </Text>
         {value && (
           <TouchableOpacity onPress={() => onChange(null)} hitSlop={8}>
@@ -172,32 +146,24 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
           onPress={() => setShow(false)}
         >
           <TouchableOpacity activeOpacity={1} style={{ width: cardWidth, backgroundColor: '#fff', borderRadius: 20, padding: 20 }}>
-
             {step === 'date' ? (
               <>
-                {/* Month/Year nav */}
                 <View className="flex-row items-center justify-between mb-4">
                   <TouchableOpacity onPress={prevMonth} className="p-1">
                     <Ionicons name="chevron-back" size={20} color="#374151" />
                   </TouchableOpacity>
-                  <Text className="font-bold text-base text-gray-900">
-                    {MONTHS[viewMonth]} {viewYear}
-                  </Text>
+                  <Text className="font-bold text-base text-gray-900">{MONTHS[viewMonth]} {viewYear}</Text>
                   <TouchableOpacity onPress={nextMonth} className="p-1">
                     <Ionicons name="chevron-forward" size={20} color="#374151" />
                   </TouchableOpacity>
                 </View>
 
-                {/* Day headers */}
                 <View className="flex-row mb-2">
                   {DAYS.map(d => (
-                    <Text key={d} style={{ flex: 1, textAlign: 'center', fontSize: 11, color: '#9CA3AF', fontWeight: '600' }}>
-                      {d}
-                    </Text>
+                    <Text key={d} style={{ flex: 1, textAlign: 'center', fontSize: 11, color: '#9CA3AF', fontWeight: '600' }}>{d}</Text>
                   ))}
                 </View>
 
-                {/* Calendar grid */}
                 {Array.from({ length: cells.length / 7 }, (_, row) => (
                   <View key={row} className="flex-row mb-1">
                     {cells.slice(row * 7, row * 7 + 7).map((day, col) => {
@@ -209,16 +175,9 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
                         <TouchableOpacity
                           key={col}
                           onPress={() => !disabled && handleDayPress(day)}
-                          style={{
-                            flex: 1, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100,
-                            backgroundColor: selected ? ACCENT : 'transparent',
-                          }}
+                          style={{ flex: 1, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100, backgroundColor: selected ? ACCENT : 'transparent' }}
                         >
-                          <Text style={{
-                            fontSize: 14,
-                            fontWeight: todayCell ? '700' : '400',
-                            color: selected ? '#fff' : disabled ? '#D1D5DB' : todayCell ? ACCENT : '#111827',
-                          }}>
+                          <Text style={{ fontSize: 14, fontWeight: todayCell ? '700' : '400', color: selected ? '#fff' : disabled ? '#D1D5DB' : todayCell ? ACCENT : '#111827' }}>
                             {day}
                           </Text>
                         </TouchableOpacity>
@@ -229,7 +188,6 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
               </>
             ) : (
               <>
-                {/* Time picker */}
                 <TouchableOpacity onPress={() => setStep('date')} className="flex-row items-center mb-4">
                   <Ionicons name="chevron-back" size={18} color="#374151" />
                   <Text className="text-sm text-gray-500 ml-1">
@@ -240,11 +198,9 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
                 <Text className="font-bold text-base text-gray-900 mb-6 text-center">Set Time</Text>
 
                 <View className="flex-row items-center justify-center mb-6" style={{ gap: 8 }}>
-                  {/* Hour */}
                   <TimeInput value={hour} min={1} max={12} onChange={setHour} />
                   <Text style={{ fontSize: 28, fontWeight: '700', color: '#9CA3AF', marginBottom: 2 }}>:</Text>
                   <TimeInput value={minute} min={0} max={59} onChange={setMinute} />
-                  {/* AM/PM */}
                   <View style={{ borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, overflow: 'hidden', marginLeft: 4 }}>
                     {(['AM', 'PM'] as const).map((p) => (
                       <TouchableOpacity
@@ -258,11 +214,7 @@ export default function DatePicker({ label, value, onChange, minimumDate, placeh
                   </View>
                 </View>
 
-                <TouchableOpacity
-                  onPress={handleConfirmTime}
-                  className="rounded-2xl py-3 items-center"
-                  style={{ backgroundColor: ACCENT }}
-                >
+                <TouchableOpacity onPress={handleConfirmTime} className="rounded-2xl py-3 items-center" style={{ backgroundColor: ACCENT }}>
                   <Text className="text-white font-bold text-base">Confirm</Text>
                 </TouchableOpacity>
               </>
