@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { toast } from '../lib/toast';
@@ -164,7 +164,7 @@ export default function VerifyScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <View style={{ backgroundColor: '#FEA405', paddingTop: 48, paddingBottom: 24, paddingHorizontal: 24 }}>
+      <View style={{ backgroundColor: '#FEA405', paddingTop: Platform.OS === 'web' ? 24 : 48, paddingBottom: 24, paddingHorizontal: 24 }}>
         <View style={{ width: contentWidth, alignSelf: isLarge ? 'center' : undefined }}>
           <View className="flex-row items-center mb-4">
             <TouchableOpacity onPress={handleBack} className="mr-3" disabled={submitting}>
