@@ -353,7 +353,7 @@ export default function PostErrandScreen() {
 
       <Modal visible={showMapModal} animationType="slide" onRequestClose={() => setShowMapModal(false)}>
         <View className="flex-1 bg-white">
-          <View className="px-4 pt-12 pb-3 flex-row items-center border-b border-gray-100">
+          <View style={{ alignSelf: 'center', width: '100%', maxWidth: isLarge ? 960 : undefined }} className="px-4 pt-4 pb-3 flex-row items-center border-b border-gray-100">
             <TouchableOpacity onPress={() => setShowMapModal(false)} className="mr-3">
               <Ionicons name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>
@@ -367,7 +367,7 @@ export default function PostErrandScreen() {
             </TouchableOpacity>
           </View>
 
-          <View className="flex-1">
+          <View style={{ flex: 1, alignSelf: 'center', width: '100%', maxWidth: isLarge ? 960 : undefined }}>
             {mapInitRef.current && (
               Platform.OS === 'web' ? (
                 <WebErrandMap
@@ -388,7 +388,7 @@ export default function PostErrandScreen() {
           </View>
 
           {pinnedLocation && (
-            <View className="px-4 py-3 border-t border-gray-100">
+            <View style={{ alignSelf: 'center', width: '100%', maxWidth: isLarge ? 960 : undefined }} className="px-4 py-3 border-t border-gray-100">
               <Text className="text-xs text-gray-500" numberOfLines={2}>{pinnedLocation.name}</Text>
             </View>
           )}
