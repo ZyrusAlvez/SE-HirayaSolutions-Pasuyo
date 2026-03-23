@@ -132,7 +132,7 @@ export default function HomeScreen() {
           <Ionicons name="chatbubble-outline" size={24} color="#FEA405" />
           <Text className="text-xs mt-1 text-gray-700">Chat</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="items-center" activeOpacity={0.7}>
+        <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => router.push('/post-errand')}>
           <Ionicons name="add-circle" size={32} color="#FEA405" />
           <Text className="text-xs mt-1 text-gray-700">Post Hustle</Text>
         </TouchableOpacity>
