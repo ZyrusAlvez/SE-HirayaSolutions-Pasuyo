@@ -71,22 +71,27 @@ export default function ProfileScreen() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { toast({ title: 'Permission required', preset: 'error' }); return; }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
+    let result;
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+    } catch {
+      toast({ title: 'Only JPG, PNG, or WEBP images are allowed', preset: 'error' }); return;
+    }
 
     if (!result.canceled) {
       const asset = result.assets[0];
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      const maxSize = 2 * 1024 * 1024;
+      const maxSize = 10 * 1024 * 1024;
       if (asset.mimeType && !allowedTypes.includes(asset.mimeType)) {
         toast({ title: 'Only JPG, PNG, or WEBP images are allowed', preset: 'error' }); return;
       }
       if (asset.fileSize && asset.fileSize > maxSize) {
-        toast({ title: 'Image must be under 2MB', preset: 'error' }); return;
+        toast({ title: 'Image must be under 10MB', preset: 'error' }); return;
       }
       setPendingImageUri(asset.uri);
       setAvatarUrl({ uri: asset.uri });
@@ -114,13 +119,14 @@ export default function ProfileScreen() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user');
-      let finalAvatarUrl = avatarUrl?.uri || 'default';
+      const updates: Record<string, string> = { name: displayName };
       if (pendingImageUri) {
-        finalAvatarUrl = await uploadAvatar(pendingImageUri, displayName, user.email || '');
+        const finalAvatarUrl = await uploadAvatar(pendingImageUri, displayName, user.email || '');
         setPendingImageUri(null);
         setAvatarUrl({ uri: finalAvatarUrl });
+        updates.custom_avatar_url = finalAvatarUrl;
       }
-      const { error } = await supabase.auth.updateUser({ data: { name: displayName, avatar_url: finalAvatarUrl, custom_avatar_url: finalAvatarUrl } });
+      const { error } = await supabase.auth.updateUser({ data: updates });
       if (error) throw error;
       toast({ title: 'Profile updated', preset: 'done' });
       setOriginalName(displayName);
