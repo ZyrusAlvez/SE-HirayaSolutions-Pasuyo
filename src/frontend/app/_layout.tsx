@@ -53,7 +53,7 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}/>
-      {Platform.OS === 'web' && Toaster && <Toaster position="top-right" />}
+      {Platform.OS === 'web' && Toaster && <Toaster position="top-center" />}
     </>
   );
 }

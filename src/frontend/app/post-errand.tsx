@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { toast } from 'burnt';
 import { supabase } from '../lib/supabase';
 import TextInput from '../components/ui/TextInput';
 import DatePicker from '../components/ui/DatePicker';
@@ -159,6 +160,7 @@ export default function PostErrandScreen() {
       else validUris.push(asset.uri);
     }
     setImageErrors(errors);
+    errors.forEach((err) => toast({ title: err, preset: 'error' }));
     if (validUris.length > 0) setImages((prev) => [...prev, ...validUris]);
   };
 
@@ -212,9 +214,10 @@ export default function PostErrandScreen() {
         await supabase.from('errands').update({ images: imageUrls }).eq('id', inserted.id);
       }
 
-      Alert.alert('Success', 'Errand posted!', [{ text: 'OK', onPress: () => router.back() }]);
+      toast({ title: 'Errand posted!', preset: 'done' });
+      router.back();
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      toast({ title: e.message ?? 'Something went wrong', preset: 'error' });
     } finally {
       setSubmitting(false);
     }
