@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, ScrollView, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
@@ -156,7 +156,7 @@ export default function ProfileScreen() {
     <View className="flex-1 bg-gray-50">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120, alignItems: isLarge ? 'center' : undefined }}>
       {/* Orange header */}
-      <View style={{ width: isLarge ? '100%' : undefined }} className="bg-[#FEA405] pt-12 pb-20 px-6 flex-row items-center">
+      <View style={{ width: isLarge ? '100%' : undefined }} className={`bg-[#FEA405] ${Platform.OS === 'web' ? 'pt-6' : 'pt-12'} pb-20 px-6 flex-row items-center`}>
         <View style={{ width: contentWidth, flexDirection: 'row', alignItems: 'center', alignSelf: isLarge ? 'center' : undefined }}>
           <TouchableOpacity onPress={() => router.replace('/')} className="mr-3">
             <Ionicons name="arrow-back" size={24} color="white" />
