@@ -7,7 +7,7 @@ import {
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { toast } from 'burnt';
+import { toast } from '../lib/toast';
 import { supabase } from '../lib/supabase';
 import TextInput from '../components/ui/TextInput';
 import TaskType from '../components/post-errand/TaskType';

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import * as ImagePicker from 'expo-image-picker';
-import { toast } from 'burnt';
+import { toast } from '../lib/toast';
 
 const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
 

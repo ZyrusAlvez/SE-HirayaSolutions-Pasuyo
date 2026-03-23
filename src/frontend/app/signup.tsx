@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle } from '../lib/authService';
 import { useRouter } from 'expo-router';
-import { toast } from 'burnt';
+import { toast } from '../lib/toast';
 
 export default function SignupScreen() {
   const [name, setName] = useState('');

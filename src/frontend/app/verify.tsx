@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { toast } from 'burnt';
+import { toast } from '../lib/toast';
 import Step1 from '../components/verify/Step1';
 import Step2 from '../components/verify/Step2';
 import Step3 from '../components/verify/Step3';
