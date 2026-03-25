@@ -12,7 +12,11 @@ interface Props {
 }
 
 export default function ImageUploader({ images, errors, onChange, onErrors }: Props) {
+  const MAX_IMAGES = 5;
+  const remaining = MAX_IMAGES - images.length;
+
   const pickImages = async () => {
+    if (remaining <= 0) return;
     let result;
     try {
       result = await ImagePicker.launchImageLibraryAsync({
@@ -30,13 +34,18 @@ export default function ImageUploader({ images, errors, onChange, onErrors }: Pr
 
     const errs: string[] = [];
     const validUris: string[] = [];
-    for (const asset of result.assets) {
+    for (const asset of result.assets.slice(0, remaining)) {
       const validation = await validateImageAsset(asset);
       if (!validation.ok) errs.push(validation.error);
       else validUris.push(asset.uri);
     }
+    if (result.assets.length > remaining) {
+      const msg = `Only ${remaining} more image${remaining === 1 ? '' : 's'} allowed. Extra selections were ignored.`;
+      errs.push(msg);
+      toast({ title: msg, preset: 'error' });
+    }
     onErrors(errs);
-    errs.forEach((err) => toast({ title: err, preset: 'error' }));
+    errs.filter(e => !e.includes('allowed')).forEach((err) => toast({ title: err, preset: 'error' }));
     if (validUris.length > 0) onChange([...images, ...validUris]);
   };
 
@@ -44,7 +53,7 @@ export default function ImageUploader({ images, errors, onChange, onErrors }: Pr
     <>
       <Text className="text-xs text-gray-500 mb-1 ml-1">Images</Text>
       <Text className="text-xs text-gray-400 mb-2 ml-1">
-        {ACCEPTED_EXTENSIONS.join(', ')} · Max {MAX_FILE_SIZE_MB}MB per file
+        {ACCEPTED_EXTENSIONS.join(', ')} · Max {MAX_FILE_SIZE_MB}MB per file · Up to {MAX_IMAGES} images
       </Text>
       <View className="flex-row flex-wrap gap-2 mb-2">
         {images.map((uri, i) => (
@@ -58,12 +67,15 @@ export default function ImageUploader({ images, errors, onChange, onErrors }: Pr
             </TouchableOpacity>
           </View>
         ))}
-        <TouchableOpacity
-          onPress={pickImages}
-          className="w-20 h-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl items-center justify-center"
-        >
-          <Ionicons name="add" size={28} color="#9CA3AF" />
-        </TouchableOpacity>
+        {remaining > 0 && (
+          <TouchableOpacity
+            onPress={pickImages}
+            className="w-20 h-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl items-center justify-center"
+          >
+            <Ionicons name="add" size={28} color="#9CA3AF" />
+            <Text className="text-xs text-gray-400">{remaining} left</Text>
+          </TouchableOpacity>
+        )}
       </View>
       {errors.map((err, i) => (
         <View key={i} className="flex-row items-center mb-1">
