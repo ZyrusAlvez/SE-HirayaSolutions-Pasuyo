@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
@@ -11,6 +11,7 @@ interface Errand {
   deadline?: string;
   poster_name?: string;
   poster_avatar?: string;
+  poster_is_verified?: boolean;
 }
 
 interface Props {
@@ -43,9 +44,14 @@ export default function RemoteErrandList({ errands }: Props) {
                 style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
               />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827' }} numberOfLines={1}>
-                  {e.title}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flexShrink: 1 }} numberOfLines={1}>
+                    {e.title}
+                  </Text>
+                  {e.poster_is_verified && (
+                    <MaterialIcons name="verified" size={14} color="#1D9BF0" />
+                  )}
+                </View>
               </View>
             </View>
             {e.budget != null && (

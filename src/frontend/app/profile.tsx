@@ -142,6 +142,7 @@ export default function ProfileScreen() {
         setPendingImageUri(null);
         setAvatarUrl({ uri: finalAvatarUrl });
         updates.custom_avatar_url = finalAvatarUrl;
+        await supabase.from('profiles').update({ avatar_url: finalAvatarUrl }).eq('id', user.id);
       }
       const { error } = await supabase.auth.updateUser({ data: updates });
       if (error) throw error;

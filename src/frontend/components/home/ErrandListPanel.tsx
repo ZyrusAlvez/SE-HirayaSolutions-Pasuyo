@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, ScrollView, Image, Animated, Platform, UIManager } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useState, useRef, useEffect } from 'react';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
@@ -18,6 +18,7 @@ interface Errand {
   images?: string[];
   poster_name?: string;
   poster_avatar?: string;
+  poster_is_verified?: boolean;
 }
 
 interface Props {
@@ -54,14 +55,21 @@ function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggl
         activeOpacity={0.7}
         style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <Image
             source={e.poster_avatar && e.poster_avatar !== 'default' ? { uri: e.poster_avatar } : DEFAULT_AVATAR}
             style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
           />
-          <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flex: 1 }} numberOfLines={1}>
-            {e.title}
-          </Text>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flexShrink: 1 }} numberOfLines={1}>
+                {e.title}
+              </Text>
+              {e.poster_is_verified && (
+                <MaterialIcons name="verified" size={14} color="#1D9BF0" />
+              )}
+            </View>
+          </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {e.budget != null && (
