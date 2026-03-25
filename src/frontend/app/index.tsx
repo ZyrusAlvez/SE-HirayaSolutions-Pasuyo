@@ -62,8 +62,8 @@ export default function HomeScreen() {
       <div id="map"></div>
       <script>
         const map = L.map('map').setView([${location.coords.latitude}, ${location.coords.longitude}], 15);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap'
+        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+          attribution: '© CartoDB'
         }).addTo(map);
         L.marker([${location.coords.latitude}, ${location.coords.longitude}])
           .addTo(map)
@@ -77,7 +77,7 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="bg-white px-6 pt-12 pb-4 flex-row items-center justify-between border-b border-gray-100">
+      <View className={`bg-white px-6 pb-4 flex-row items-center justify-between border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-4'}`}>
         <TouchableOpacity className="p-2" activeOpacity={0.7}>
           <Ionicons name="menu" size={28} color="#000" />
         </TouchableOpacity>
@@ -132,7 +132,7 @@ export default function HomeScreen() {
           <Ionicons name="chatbubble-outline" size={24} color="#FEA405" />
           <Text className="text-xs mt-1 text-gray-700">Chat</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="items-center" activeOpacity={0.7}>
+        <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => router.push('/post-errand')}>
           <Ionicons name="add-circle" size={32} color="#FEA405" />
           <Text className="text-xs mt-1 text-gray-700">Post Hustle</Text>
         </TouchableOpacity>

@@ -9,7 +9,7 @@ import "../global.css";
 
 let Toaster: any = null;
 if (Platform.OS === 'web') {
-  Toaster = require('burnt/web').Toaster;
+  Toaster = require('sonner').Toaster;
 }
 
 SplashScreen.preventAutoHideAsync();
@@ -53,7 +53,7 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}/>
-      {Platform.OS === 'web' && Toaster && <Toaster position="top-right" />}
+      {Platform.OS === 'web' && Toaster && <Toaster position="top-center" richColors />}
     </>
   );
 }

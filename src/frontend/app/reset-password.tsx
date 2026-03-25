@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDi
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { toast } from 'burnt';
+import { toast } from '../lib/toast';
 
 type Step = 'email' | 'code' | 'password';
 

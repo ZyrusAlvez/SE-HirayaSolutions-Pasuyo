@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { toast } from 'burnt';
+import { toast } from '../lib/toast';
 import Step1 from '../components/verify/Step1';
 import Step2 from '../components/verify/Step2';
 import Step3 from '../components/verify/Step3';
@@ -164,7 +164,7 @@ export default function VerifyScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <View style={{ backgroundColor: '#FEA405', paddingTop: 48, paddingBottom: 24, paddingHorizontal: 24 }}>
+      <View style={{ backgroundColor: '#FEA405', paddingTop: Platform.OS === 'web' ? 24 : 48, paddingBottom: 24, paddingHorizontal: 24 }}>
         <View style={{ width: contentWidth, alignSelf: isLarge ? 'center' : undefined }}>
           <View className="flex-row items-center mb-4">
             <TouchableOpacity onPress={handleBack} className="mr-3" disabled={submitting}>
@@ -224,7 +224,7 @@ export default function VerifyScreen() {
         </View>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: 24, paddingBottom: 32, paddingTop: 16, alignItems: isLarge ? 'center' : undefined }}>
+      <View style={{ paddingHorizontal: 24, paddingBottom: Platform.OS === 'web' ? 16 : 32, paddingTop: 16, alignItems: isLarge ? 'center' : undefined }}>
         <View style={{ width: contentWidth ?? '100%' }}>
           <TouchableOpacity
             className={`py-4 rounded-2xl items-center ${submitting ? 'bg-[#FEA405]/60' : 'bg-[#FEA405]'}`}
