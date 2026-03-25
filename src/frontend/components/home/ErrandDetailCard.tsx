@@ -1,6 +1,8 @@
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
+
 interface Errand {
   id: string;
   title: string;
@@ -9,6 +11,8 @@ interface Errand {
   budget?: number;
   deadline?: string;
   images?: string[];
+  poster_name?: string;
+  poster_avatar?: string;
 }
 
 interface Props {
@@ -24,15 +28,24 @@ function Content({ errand, onClose }: { errand: Errand; onClose: () => void }) {
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
       <View className="px-5 pt-2">
 
-        {/* Title + close */}
-        <View className="flex-row items-start justify-between mb-1">
-          <Text className="text-xl font-bold text-gray-900 flex-1 pr-3" numberOfLines={2}>
-            {errand.title}
+        {/* Poster info */}
+        <View className="flex-row items-center mb-3">
+          <Image
+            source={errand.poster_avatar ? { uri: errand.poster_avatar } : DEFAULT_AVATAR}
+            style={{ width: 36, height: 36, borderRadius: 18 }}
+          />
+          <Text className="text-sm font-semibold text-gray-700 ml-2 flex-1" numberOfLines={1}>
+            {errand.poster_name ?? 'Unknown'}
           </Text>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="close-circle" size={22} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
+
+        {/* Title */}
+        <Text className="text-xl font-bold text-gray-900 mb-1" numberOfLines={2}>
+          {errand.title}
+        </Text>
 
         {/* Meta pills */}
         <View className="flex-row flex-wrap gap-2 mt-2">

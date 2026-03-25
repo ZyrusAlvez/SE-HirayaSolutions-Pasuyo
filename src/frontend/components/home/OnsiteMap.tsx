@@ -19,6 +19,8 @@ interface Errand {
   budget?: number;
   deadline?: string;
   images?: string[];
+  poster_name?: string;
+  poster_avatar?: string;
 }
 
 interface Props {

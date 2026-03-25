@@ -2,6 +2,8 @@ import { View, Text, TouchableOpacity, ScrollView, Image, Modal, Animated, Platf
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useRef, useEffect } from 'react';
 
+const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
+
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -16,6 +18,8 @@ interface Errand {
   budget?: number;
   deadline?: string;
   images?: string[];
+  poster_name?: string;
+  poster_avatar?: string;
 }
 
 interface Props {
@@ -64,9 +68,15 @@ function ErrandRow({ e, isLast, onSelect, onClose, onPreview, autoExpand }: {
         activeOpacity={0.7}
         style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
       >
-        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flex: 1, marginRight: 8 }} numberOfLines={1}>
-          {e.title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <Image
+            source={e.poster_avatar ? { uri: e.poster_avatar } : DEFAULT_AVATAR}
+            style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
+          />
+          <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flex: 1 }} numberOfLines={1}>
+            {e.title}
+          </Text>
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {e.budget != null && (
             <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
@@ -167,6 +177,9 @@ function ExpandedContent({ e, onSelect, onClose, onPreview }: {
 }) {
   return (
     <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
+      {e.poster_name && (
+        <Text style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 6 }}>Posted by {e.poster_name}</Text>
+      )}
       <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 18, marginBottom: 10 }}>
         {e.description}
       </Text>

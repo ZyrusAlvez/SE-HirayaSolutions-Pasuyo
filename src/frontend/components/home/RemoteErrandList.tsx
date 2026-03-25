@@ -1,5 +1,7 @@
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
 interface Errand {
   id: string;
@@ -7,6 +9,8 @@ interface Errand {
   description: string;
   budget?: number;
   deadline?: string;
+  poster_name?: string;
+  poster_avatar?: string;
 }
 
 interface Props {
@@ -27,6 +31,13 @@ export default function RemoteErrandList({ errands }: Props) {
     <ScrollView showsVerticalScrollIndicator={false}>
       {errands.map(e => (
         <View key={e.id} className="bg-white border border-gray-100 rounded-2xl p-4 mb-3 shadow-sm">
+          <View className="flex-row items-center mb-2">
+            <Image
+              source={e.poster_avatar ? { uri: e.poster_avatar } : DEFAULT_AVATAR}
+              style={{ width: 28, height: 28, borderRadius: 14 }}
+            />
+            <Text className="text-xs text-gray-500 ml-2 flex-1" numberOfLines={1}>{e.poster_name ?? 'Unknown'}</Text>
+          </View>
           <Text className="text-base font-semibold text-gray-900">{e.title}</Text>
           <Text className="text-sm text-gray-500 mt-1" numberOfLines={2}>{e.description}</Text>
           <View className="flex-row mt-3 gap-3">
