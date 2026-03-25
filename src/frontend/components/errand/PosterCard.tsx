@@ -12,17 +12,6 @@ interface Props {
   postedOn: string;
 }
 
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <View style={{ flexDirection: 'row', gap: 2, alignItems: 'center' }}>
-      {[1, 2, 3, 4, 5].map(i => (
-        <FontAwesome key={i} name={i <= Math.round(rating) ? 'star' : 'star-o'} size={12} color={ACCENT} />
-      ))}
-      <Text style={{ fontSize: 11, color: '#6B7280', marginLeft: 4 }}>{rating.toFixed(1)}</Text>
-    </View>
-  );
-}
-
 export default function ErrandPosterCard({ name, avatar, rating, isVerified, postedOn }: Props) {
   return (
     <View style={{
@@ -42,9 +31,14 @@ export default function ErrandPosterCard({ name, avatar, rating, isVerified, pos
           </Text>
           {isVerified && <MaterialIcons name="verified" size={14} color="#1D9BF0" />}
         </View>
-        {rating != null && rating > 0 && <StarRating rating={rating} />}
         <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>Posted {postedOn}</Text>
       </View>
+      {rating != null && rating > 0 && (
+        <View style={{ alignItems: 'center', backgroundColor: '#FFFBEB', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 }}>
+          <FontAwesome name="star" size={14} color={ACCENT} />
+          <Text style={{ fontSize: 13, fontWeight: '700', color: '#D97706', marginTop: 2 }}>{rating.toFixed(1)}</Text>
+        </View>
+      )}
     </View>
   );
 }
