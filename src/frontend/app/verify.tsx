@@ -224,7 +224,7 @@ export default function VerifyScreen() {
         </View>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: 24, paddingBottom: 32, paddingTop: 16, alignItems: isLarge ? 'center' : undefined }}>
+      <View style={{ paddingHorizontal: 24, paddingBottom: Platform.OS === 'web' ? 16 : 32, paddingTop: 16, alignItems: isLarge ? 'center' : undefined }}>
         <View style={{ width: contentWidth ?? '100%' }}>
           <TouchableOpacity
             className={`py-4 rounded-2xl items-center ${submitting ? 'bg-[#FEA405]/60' : 'bg-[#FEA405]'}`}
