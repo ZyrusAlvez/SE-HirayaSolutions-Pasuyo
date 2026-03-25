@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { View, Text, Platform } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import ErrandListPanel from './ErrandListPanel';
 
 let WebView: any;
 if (Platform.OS !== 'web') {
@@ -16,6 +17,8 @@ interface Errand {
   location_lng: number;
   location_name?: string;
   budget?: number;
+  deadline?: string;
+  images?: string[];
 }
 
 interface Props {
@@ -51,24 +54,58 @@ function buildMapHtml(lat: number, lng: number, errands: Errand[]) {
       html: '<div style="position:relative;width:24px;height:24px"><div class="user-dot-ring"></div><div class="user-dot-core"></div></div>',
       iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -14]
     });
-    L.marker([${lat}, ${lng}], { icon: userIcon }).addTo(map).bindPopup('You are here').openPopup();
+    L.marker([${lat}, ${lng}], { icon: userIcon }).addTo(map).bindPopup('You are here');
     const errandIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
       shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
     });
+    const markers = {};
     ${JSON.stringify(errands)}.forEach(e => {
-      L.marker([e.location_lat, e.location_lng], { icon: errandIcon })
-        .addTo(map)
-        .bindPopup('<strong>' + e.title + '</strong><br>' + e.description + (e.location_name ? '<br>' + e.location_name : '') + (e.budget != null ? '<br>Budget: ₱' + e.budget : ''));
+      const m = L.marker([e.location_lat, e.location_lng], { icon: errandIcon }).addTo(map);
+      m.bindPopup('<strong>' + e.title + '</strong>' + (e.location_name ? '<br><small>' + e.location_name + '</small>' : ''));
+      markers[e.id] = m;
+    });
+    // Listen for flyTo commands from React Native
+    document.addEventListener('message', function(event) {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'flyTo' && markers[data.id]) {
+          map.flyTo([data.lat, data.lng], 17, { animate: true, duration: 0.8 });
+          markers[data.id].openPopup();
+        }
+      } catch(e) {}
+    });
+    window.addEventListener('message', function(event) {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'flyTo' && markers[data.id]) {
+          map.flyTo([data.lat, data.lng], 17, { animate: true, duration: 0.8 });
+          markers[data.id].openPopup();
+        }
+      } catch(e) {}
     });
   </script>
 </body>
 </html>`;
 }
 
+// Web-only: component that controls the react-leaflet map instance
+function WebMapController({ target }: { target: Errand | null }) {
+  const { useMap } = require('react-leaflet');
+  const map = useMap();
+  useEffect(() => {
+    if (!target) return;
+    map.flyTo([target.location_lat, target.location_lng], 17, { animate: true, duration: 0.8 });
+  }, [target?.id]);
+  return null;
+}
+
 export default function OnsiteMap({ errands, location }: Props) {
   const [WebMap, setWebMap] = useState<any>(null);
+  const [listOpen, setListOpen] = useState(false);
+  const [flyTarget, setFlyTarget] = useState<Errand | null>(null);
+  const webViewRef = useRef<any>(null);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -76,7 +113,22 @@ export default function OnsiteMap({ errands, location }: Props) {
     }
   }, []);
 
+  function onSelect(errand: Errand) {
+    setListOpen(false);
+    if (Platform.OS !== 'web') {
+      // Send flyTo message into the WebView
+      webViewRef.current?.injectJavaScript(`
+        map.flyTo([${errand.location_lat}, ${errand.location_lng}], 17, { animate: true, duration: 0.8 });
+        if (markers['${errand.id}']) markers['${errand.id}'].openPopup();
+        true;
+      `);
+    } else {
+      setFlyTarget(errand);
+    }
+  }
+
   const { latitude, longitude } = location.coords;
+
   const loading = (
     <View className="flex-1 items-center justify-center">
       <Ionicons name="map-outline" size={48} color="#9CA3AF" />
@@ -85,15 +137,42 @@ export default function OnsiteMap({ errands, location }: Props) {
   );
 
   return (
-    <View className="flex-1 rounded-2xl overflow-hidden shadow-md bg-gray-100">
-      {Platform.OS === 'web'
-        ? WebMap
-          ? <WebMap latitude={latitude} longitude={longitude} errands={errands} />
-          : loading
-        : WebView
-          ? <WebView source={{ html: buildMapHtml(latitude, longitude, errands) }} style={{ flex: 1 }} />
-          : loading
-      }
+    <View className="flex-1" style={{ position: 'relative' } as any}>
+      {/* Map */}
+      <View className="flex-1 rounded-2xl overflow-hidden shadow-md bg-gray-100">
+        {Platform.OS === 'web'
+          ? WebMap
+            ? <WebMap latitude={latitude} longitude={longitude} errands={errands}>
+                <WebMapController target={flyTarget} />
+              </WebMap>
+            : loading
+          : WebView
+            ? <WebView
+                ref={webViewRef}
+                source={{ html: buildMapHtml(latitude, longitude, errands) }}
+                style={{ flex: 1 }}
+              />
+            : loading
+        }
+      </View>
+
+      {/* List toggle button */}
+      <View style={{ position: 'absolute', top: 12, right: 12, zIndex: 800 }}>
+        <TouchableOpacity
+          onPress={() => setListOpen(v => !v)}
+          style={{ backgroundColor: 'white', borderRadius: 12, padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 }}
+          activeOpacity={0.8}
+        >
+          <Ionicons name={listOpen ? 'close' : 'list'} size={20} color="#111827" />
+        </TouchableOpacity>
+      </View>
+
+      <ErrandListPanel
+        errands={errands}
+        visible={listOpen}
+        onClose={() => setListOpen(false)}
+        onSelect={onSelect}
+      />
     </View>
   );
 }

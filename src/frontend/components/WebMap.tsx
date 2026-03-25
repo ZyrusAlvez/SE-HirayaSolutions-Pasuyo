@@ -1,3 +1,4 @@
+import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -45,12 +46,26 @@ interface Errand {
   location_lng: number;
   location_name?: string;
   budget?: number;
+  deadline?: string;
+  images?: string[];
 }
 
 interface WebMapProps {
   latitude: number;
   longitude: number;
   errands?: Errand[];
+  onMarkerClick?: (errand: Errand) => void;
+  children?: React.ReactNode;
+}
+
+function ClickableMarker({ errand, icon, onClick }: { errand: Errand; icon: L.Icon; onClick: (e: Errand) => void }) {
+  return (
+    <Marker
+      position={[errand.location_lat, errand.location_lng]}
+      icon={icon}
+      eventHandlers={{ click: () => onClick(errand) }}
+    />
+  );
 }
 
 const errandIcon = new L.Icon({
@@ -61,7 +76,7 @@ const errandIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-export default function WebMap({ latitude, longitude, errands = [] }: WebMapProps) {
+export default function WebMap({ latitude, longitude, errands = [], onMarkerClick, children }: WebMapProps) {
   return (
     <MapContainer
       center={[latitude, longitude]}
@@ -75,16 +90,16 @@ export default function WebMap({ latitude, longitude, errands = [] }: WebMapProp
       <Marker position={[latitude, longitude]} icon={userLocationIcon}>
         <Popup>You are here</Popup>
       </Marker>
-      {errands.map((errand) => (
-        <Marker key={errand.id} position={[errand.location_lat, errand.location_lng]} icon={errandIcon}>
-          <Popup>
-            <strong>{errand.title}</strong><br />
-            {errand.description}<br />
-            {errand.location_name && <>{errand.location_name}<br /></>}
-            {errand.budget != null && <>Budget: ₱{errand.budget}</>}
-          </Popup>
-        </Marker>
-      ))}
+      {errands.map((errand) =>
+        onMarkerClick
+          ? <ClickableMarker key={errand.id} errand={errand} icon={errandIcon} onClick={onMarkerClick} />
+          : (
+            <Marker key={errand.id} position={[errand.location_lat, errand.location_lng]} icon={errandIcon}>
+              <Popup><strong>{errand.title}</strong></Popup>
+            </Marker>
+          )
+      )}
+      {children}
     </MapContainer>
   );
 }

@@ -20,6 +20,7 @@ interface Errand {
   location_name?: string;
   budget?: number;
   deadline?: string;
+  images?: string[];
 }
 
 export default function HomeScreen() {
@@ -40,7 +41,7 @@ export default function HomeScreen() {
   useEffect(() => {
     supabase
       .from('errands')
-      .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline')
+      .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images')
       .eq('status', 'open')
       .then(({ data }) => { if (data) setErrands(data); });
   }, []);
