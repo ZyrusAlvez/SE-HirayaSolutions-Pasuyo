@@ -10,12 +10,15 @@ import ErrandDetailCard from '../../components/errand/DetailCard';
 import ErrandPosterCard from '../../components/errand/PosterCard';
 import ErrandImageLightbox from '../../components/errand/ImageLightbox';
 import SkeletonLoading from '../../components/errand/SkeletonLoading';
+import OwnerActions from '../../components/errand/OwnerActions';
+import EditErrandSheet from '../../components/errand/EditErrandSheet';
 
 const ACCENT = '#FEA405';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
 interface Errand {
   id: string;
+  user_id: string;
   title: string;
   description: string;
   is_remote: boolean;
@@ -43,10 +46,13 @@ export default function ErrandDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
+        setCurrentUserId(user.id);
         const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
         if (url && url !== 'default') setAvatarUrl({ uri: url });
       }
@@ -90,6 +96,8 @@ export default function ErrandDetailScreen() {
     );
   }
 
+  const isOwner = currentUserId === errand.user_id;
+
   const deadline = errand.deadline
     ? new Date(errand.deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
@@ -109,17 +117,36 @@ export default function ErrandDetailScreen() {
 
           <ErrandDetailHeader isRemote={errand.is_remote} />
 
-          <ErrandDetailCard
-            title={errand.title}
-            description={errand.description}
-            isOpen={errand.is_open}
-            budget={errand.budget}
-            deadline={deadline}
-            locationName={errand.location_name}
-            addressDetails={errand.address_details}
-            images={images}
-            onImagePress={setPreviewIndex}
-          />
+          {isOwner && (
+            <OwnerActions
+              errandId={errand.id}
+              isEditing={isEditing}
+              onEditToggle={() => setIsEditing(e => !e)}
+            />
+          )}
+
+          {isEditing ? (
+            <EditErrandSheet
+              errand={errand}
+              onSaved={(updated) => {
+                setErrand(prev => prev ? { ...prev, ...updated } : prev);
+                setIsEditing(false);
+              }}
+              onCancel={() => setIsEditing(false)}
+            />
+          ) : (
+            <ErrandDetailCard
+              title={errand.title}
+              description={errand.description}
+              isOpen={errand.is_open}
+              budget={errand.budget}
+              deadline={deadline}
+              locationName={errand.location_name}
+              addressDetails={errand.address_details}
+              images={images}
+              onImagePress={setPreviewIndex}
+            />
+          )}
 
           <ErrandPosterCard
             name={errand.poster_name}
@@ -129,12 +156,12 @@ export default function ErrandDetailScreen() {
             postedOn={postedOn}
           />
 
-          {errand.is_open && (
+          {errand.is_open && !isOwner && (
             <TouchableOpacity
               activeOpacity={0.85}
               style={{ backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 4 }}
             >
-              <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Accept Errand</Text>
+              <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Apply for this Errand</Text>
             </TouchableOpacity>
           )}
 
