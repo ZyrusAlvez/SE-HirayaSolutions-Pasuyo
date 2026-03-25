@@ -33,7 +33,7 @@ export default function RemoteErrandList({ errands }: Props) {
         <View key={e.id} className="bg-white border border-gray-100 rounded-2xl p-4 mb-3 shadow-sm">
           <View className="flex-row items-center mb-2">
             <Image
-              source={e.poster_avatar ? { uri: e.poster_avatar } : DEFAULT_AVATAR}
+              source={e.poster_avatar && e.poster_avatar !== 'default' ? { uri: e.poster_avatar } : DEFAULT_AVATAR}
               style={{ width: 28, height: 28, borderRadius: 14 }}
             />
             <Text className="text-xs text-gray-500 ml-2 flex-1" numberOfLines={1}>{e.poster_name ?? 'Unknown'}</Text>

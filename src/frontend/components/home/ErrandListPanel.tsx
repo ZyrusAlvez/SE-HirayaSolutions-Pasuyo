@@ -70,7 +70,7 @@ function ErrandRow({ e, isLast, onSelect, onClose, onPreview, autoExpand }: {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
           <Image
-            source={e.poster_avatar ? { uri: e.poster_avatar } : DEFAULT_AVATAR}
+            source={e.poster_avatar && e.poster_avatar !== 'default' ? { uri: e.poster_avatar } : DEFAULT_AVATAR}
             style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
           />
           <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flex: 1 }} numberOfLines={1}>

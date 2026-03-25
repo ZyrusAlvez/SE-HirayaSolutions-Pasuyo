@@ -31,7 +31,7 @@ function Content({ errand, onClose }: { errand: Errand; onClose: () => void }) {
         {/* Poster info */}
         <View className="flex-row items-center mb-3">
           <Image
-            source={errand.poster_avatar ? { uri: errand.poster_avatar } : DEFAULT_AVATAR}
+            source={errand.poster_avatar && errand.poster_avatar !== 'default' ? { uri: errand.poster_avatar } : DEFAULT_AVATAR}
             style={{ width: 36, height: 36, borderRadius: 18 }}
           />
           <Text className="text-sm font-semibold text-gray-700 ml-2 flex-1" numberOfLines={1}>
