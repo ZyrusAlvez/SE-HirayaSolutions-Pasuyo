@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, ScrollView, Image, Modal, Animated, Platform, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
 
@@ -22,34 +22,33 @@ interface Props {
   slideAnim: Animated.Value;
   onClose: () => void;
   onSelect: (errand: Errand) => void;
+  expandedId?: string | null;
 }
 
-function ErrandRow({ e, isLast, onSelect, onClose, onPreview }: {
+function ErrandRow({ e, isLast, onSelect, onClose, onPreview, autoExpand }: {
   e: Errand; isLast: boolean;
   onSelect: (e: Errand) => void;
   onClose: () => void;
   onPreview: (uri: string) => void;
+  autoExpand?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const animValue = useRef(new Animated.Value(0)).current;
   const chevronAnim = useRef(new Animated.Value(0)).current;
 
-  const toggle = () => {
-    const toExpand = !expanded;
+  const animate = (toExpand: boolean) => {
     setExpanded(toExpand);
     Animated.parallel([
-      Animated.timing(animValue, {
-        toValue: toExpand ? 1 : 0,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-      Animated.timing(chevronAnim, {
-        toValue: toExpand ? 1 : 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
+      Animated.timing(animValue, { toValue: toExpand ? 1 : 0, duration: 300, useNativeDriver: false }),
+      Animated.timing(chevronAnim, { toValue: toExpand ? 1 : 0, duration: 300, useNativeDriver: true }),
     ]).start();
   };
+
+  useEffect(() => {
+    if (autoExpand) animate(true);
+  }, [autoExpand]);
+
+  const toggle = () => animate(!expanded);
 
   const chevronRotate = chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
   const maxHeight = animValue.interpolate({ inputRange: [0, 1], outputRange: [0, 600] });
@@ -132,7 +131,7 @@ function ExpandedContent({ e, onSelect, onClose, onPreview }: {
   );
 }
 
-export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect }: Props) {
+export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId }: Props) {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   if (!visible) return null;
 
@@ -185,6 +184,7 @@ export default function ErrandListPanel({ errands, visible, slideAnim, onClose, 
                 onSelect={onSelect}
                 onClose={onClose}
                 onPreview={setPreviewUri}
+                autoExpand={e.id === expandedId}
               />
             ))}
           </ScrollView>

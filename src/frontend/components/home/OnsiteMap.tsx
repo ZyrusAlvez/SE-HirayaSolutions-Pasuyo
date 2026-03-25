@@ -65,6 +65,11 @@ function buildMapHtml(lat: number, lng: number, errands: Errand[]) {
       const m = L.marker([e.location_lat, e.location_lng], { icon: errandIcon }).addTo(map);
       m.bindPopup('<strong>' + e.title + '</strong>' + (e.location_name ? '<br><small>' + e.location_name + '</small>' : ''));
       markers[e.id] = m;
+      m.on('click', function() {
+        const msg = JSON.stringify({ type: 'markerClick', id: e.id });
+        if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(msg);
+        else window.parent.postMessage(msg, '*');
+      });
     });
     // Listen for flyTo commands from React Native
     document.addEventListener('message', function(event) {
@@ -105,16 +110,21 @@ export default function OnsiteMap({ errands, location }: Props) {
   const [WebMap, setWebMap] = useState<any>(null);
   const [listOpen, setListOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<Errand | null>(null);
+  const [clickedErrandId, setClickedErrandId] = useState<string | null>(null);
   const webViewRef = useRef<any>(null);
   const slideAnim = useRef(new Animated.Value(400)).current;
 
-  const openPanel = () => {
+  const openPanel = (errandId?: string) => {
+    setClickedErrandId(errandId ?? null);
     setListOpen(true);
     Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 14 }).start();
   };
 
   const closePanel = () => {
-    Animated.spring(slideAnim, { toValue: 400, useNativeDriver: true, bounciness: 0, speed: 14 }).start(() => setListOpen(false));
+    Animated.spring(slideAnim, { toValue: 400, useNativeDriver: true, bounciness: 0, speed: 14 }).start(() => {
+      setListOpen(false);
+      setClickedErrandId(null);
+    });
   };
 
   useEffect(() => {
@@ -152,7 +162,7 @@ export default function OnsiteMap({ errands, location }: Props) {
       <View className="flex-1 rounded-2xl overflow-hidden shadow-md bg-gray-100">
         {Platform.OS === 'web'
           ? WebMap
-            ? <WebMap latitude={latitude} longitude={longitude} errands={errands}>
+            ? <WebMap latitude={latitude} longitude={longitude} errands={errands} onMarkerClick={(e) => openPanel(e.id)}>
                 <WebMapController target={flyTarget} />
               </WebMap>
             : loading
@@ -161,6 +171,12 @@ export default function OnsiteMap({ errands, location }: Props) {
                 ref={webViewRef}
                 source={{ html: buildMapHtml(latitude, longitude, errands) }}
                 style={{ flex: 1 }}
+                onMessage={(e) => {
+                  try {
+                    const data = JSON.parse(e.nativeEvent.data);
+                    if (data.type === 'markerClick') openPanel(data.id);
+                  } catch {}
+                }}
               />
             : loading
         }
@@ -183,6 +199,7 @@ export default function OnsiteMap({ errands, location }: Props) {
         slideAnim={slideAnim}
         onClose={closePanel}
         onSelect={onSelect}
+        expandedId={clickedErrandId}
       />
     </View>
   );
