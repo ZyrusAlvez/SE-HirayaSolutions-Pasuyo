@@ -16,6 +16,7 @@ import Budget from '../components/post-errand/Budget';
 import Deadline from '../components/post-errand/Deadline';
 import ImageUploader from '../components/post-errand/ImageUploader';
 import LocationMap from '../components/post-errand/LocationMap';
+import AddressDetails from '../components/post-errand/AddressDetails';
 
 const ACCENT = '#FEA405';
 
@@ -35,6 +36,7 @@ export default function PostErrandScreen() {
 
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [pinnedLocation, setPinnedLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  const [addressDetails, setAddressDetails] = useState('');
   const [showMapModal, setShowMapModal] = useState(false);
   const mapInitRef = useRef<{ lat: number; lng: number } | null>(null);
 
@@ -94,6 +96,7 @@ export default function PostErrandScreen() {
         location_lat: pinnedLocation?.lat ?? null,
         location_lng: pinnedLocation?.lng ?? null,
         location_name: pinnedLocation?.name ?? null,
+        address_details: addressDetails.trim() || null,
         budget: budget ? parseFloat(budget) : null,
         deadline: deadline ? deadline.toISOString() : null,
         images: [],
@@ -149,7 +152,10 @@ export default function PostErrandScreen() {
           <TaskType isRemote={isRemote} onChange={setIsRemote} />
 
           {!isRemote && (
-            <LocationPicker pinnedLocation={pinnedLocation} onPress={handleOpenMap} />
+            <>
+              <LocationPicker pinnedLocation={pinnedLocation} onPress={handleOpenMap} />
+              <AddressDetails value={addressDetails} onChange={setAddressDetails} />
+            </>
           )}
 
           <Budget value={budget} onChange={setBudget} />
