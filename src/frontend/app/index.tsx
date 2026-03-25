@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Alert } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
 import Header from '../components/layout/Header';
@@ -40,13 +42,13 @@ export default function HomeScreen() {
     });
   }, []);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     supabase
       .from('errands_with_poster')
       .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images, poster_name, poster_avatar, poster_is_verified')
       .eq('status', 'open')
       .then(({ data }) => { if (data) setErrands(data); });
-  }, []);
+  }, []));
 
   useEffect(() => {
     (async () => {
