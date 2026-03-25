@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, ScrollView, Image, Modal, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Modal, Animated, Platform, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
 
@@ -19,19 +19,122 @@ interface Errand {
 interface Props {
   errands: Errand[];
   visible: boolean;
+  slideAnim: Animated.Value;
   onClose: () => void;
   onSelect: (errand: Errand) => void;
 }
 
-export default function ErrandListPanel({ errands, visible, onClose, onSelect }: Props) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+function ErrandRow({ e, isLast, onSelect, onClose, onPreview }: {
+  e: Errand; isLast: boolean;
+  onSelect: (e: Errand) => void;
+  onClose: () => void;
+  onPreview: (uri: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const animValue = useRef(new Animated.Value(0)).current;
+  const chevronAnim = useRef(new Animated.Value(0)).current;
+
+  const toggle = () => {
+    const toExpand = !expanded;
+    setExpanded(toExpand);
+    Animated.parallel([
+      Animated.timing(animValue, {
+        toValue: toExpand ? 1 : 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(chevronAnim, {
+        toValue: toExpand ? 1 : 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const chevronRotate = chevronAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+  const maxHeight = animValue.interpolate({ inputRange: [0, 1], outputRange: [0, 600] });
+  const opacity = animValue.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
+
+  return (
+    <View style={{ borderBottomWidth: isLast ? 0 : 1, borderBottomColor: '#F3F4F6' }}>
+      <TouchableOpacity
+        onPress={toggle}
+        activeOpacity={0.7}
+        style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+      >
+        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flex: 1, marginRight: 8 }} numberOfLines={1}>
+          {e.title}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {e.budget != null && (
+            <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#D97706' }}>₱{e.budget}</Text>
+            </View>
+          )}
+          <Animated.View style={{ transform: [{ rotate: chevronRotate }] }}>
+            <Ionicons name="chevron-down" size={14} color="#9CA3AF" />
+          </Animated.View>
+        </View>
+      </TouchableOpacity>
+
+      <Animated.View style={{ maxHeight, overflow: 'hidden', opacity }}>
+        <ExpandedContent e={e} onSelect={onSelect} onClose={onClose} onPreview={onPreview} />
+      </Animated.View>
+    </View>
+  );
+}
+
+function ExpandedContent({ e, onSelect, onClose, onPreview }: {
+  e: Errand;
+  onSelect: (e: Errand) => void;
+  onClose: () => void;
+  onPreview: (uri: string) => void;
+}) {
+  return (
+    <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
+      <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 18, marginBottom: 10 }}>
+        {e.description}
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+        {e.deadline && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+            <Ionicons name="time-outline" size={11} color="#9CA3AF" />
+            <Text style={{ fontSize: 11, color: '#6B7280', marginLeft: 3 }}>
+              {new Date(e.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              {' '}{new Date(e.deadline).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+        )}
+        {e.location_name && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, maxWidth: '100%' }}>
+            <Ionicons name="location-outline" size={11} color="#9CA3AF" />
+            <Text style={{ fontSize: 11, color: '#6B7280', marginLeft: 3, flexShrink: 1 }} numberOfLines={1}>{e.location_name}</Text>
+          </View>
+        )}
+      </View>
+      {(e.images?.filter(Boolean).length ?? 0) > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+          {e.images!.filter(Boolean).map((uri, idx) => (
+            <TouchableOpacity key={idx} onPress={() => onPreview(uri)} activeOpacity={0.8}>
+              <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 10, marginRight: 6 }} resizeMode="cover" />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+      <TouchableOpacity
+        onPress={() => { onSelect(e); onClose(); }}
+        activeOpacity={0.8}
+        style={{ backgroundColor: '#FEA405', borderRadius: 10, paddingVertical: 8, alignItems: 'center' }}
+      >
+        <Text style={{ fontSize: 12, fontWeight: '700', color: 'white' }}>View on Map</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect }: Props) {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   if (!visible) return null;
-
-  const toggle = (id: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedId(prev => (prev === id ? null : id));
-  };
 
   return (
     <>
@@ -43,9 +146,9 @@ export default function ErrandListPanel({ errands, visible, onClose, onSelect }:
       />
 
       {/* Panel */}
-      <View style={{
+      <Animated.View style={{
         position: 'absolute', top: 0, right: 0, bottom: 0,
-        width: 300,
+        width: '75%',
         backgroundColor: 'white',
         zIndex: 901,
         borderTopLeftRadius: 20,
@@ -55,6 +158,7 @@ export default function ErrandListPanel({ errands, visible, onClose, onSelect }:
         shadowOpacity: 0.08,
         shadowRadius: 20,
         elevation: 12,
+        transform: [{ translateX: slideAnim }],
       }}>
 
         {/* Header */}
@@ -73,76 +177,20 @@ export default function ErrandListPanel({ errands, visible, onClose, onSelect }:
           </View>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false}>
-            {errands.map((e, i) => {
-              const expanded = expandedId === e.id;
-              return (
-                <View key={e.id} style={{ borderBottomWidth: i < errands.length - 1 ? 1 : 0, borderBottomColor: '#F3F4F6' }}>
-                  {/* Collapsed row */}
-                  <TouchableOpacity
-                    onPress={() => toggle(e.id)}
-                    activeOpacity={0.7}
-                    style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-                  >
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', flex: 1, marginRight: 8 }} numberOfLines={1}>
-                      {e.title}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      {e.budget != null && (
-                        <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-                          <Text style={{ fontSize: 11, fontWeight: '700', color: '#D97706' }}>₱{e.budget}</Text>
-                        </View>
-                      )}
-                      <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color="#9CA3AF" />
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* Expanded details */}
-                  {expanded && (
-                    <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
-                      <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 18, marginBottom: 10 }}>
-                        {e.description}
-                      </Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                        {e.deadline && (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-                            <Ionicons name="time-outline" size={11} color="#9CA3AF" />
-                            <Text style={{ fontSize: 11, color: '#6B7280', marginLeft: 3 }}>
-                              {new Date(e.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                              {' '}{new Date(e.deadline).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                            </Text>
-                          </View>
-                        )}
-                        {e.location_name && (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, maxWidth: '100%' }}>
-                            <Ionicons name="location-outline" size={11} color="#9CA3AF" />
-                            <Text style={{ fontSize: 11, color: '#6B7280', marginLeft: 3, flexShrink: 1 }} numberOfLines={1}>{e.location_name}</Text>
-                          </View>
-                        )}
-                      </View>
-                      {(e.images?.filter(Boolean).length ?? 0) > 0 && (
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-                          {e.images!.filter(Boolean).map((uri, idx) => (
-                            <TouchableOpacity key={idx} onPress={() => setPreviewUri(uri)} activeOpacity={0.8}>
-                              <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 10, marginRight: 6 }} resizeMode="cover" />
-                            </TouchableOpacity>
-                          ))}
-                        </ScrollView>
-                      )}
-                      <TouchableOpacity
-                        onPress={() => { onSelect(e); onClose(); }}
-                        activeOpacity={0.8}
-                        style={{ backgroundColor: '#FEA405', borderRadius: 10, paddingVertical: 8, alignItems: 'center' }}
-                      >
-                        <Text style={{ fontSize: 12, fontWeight: '700', color: 'white' }}>View on Map</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
+            {errands.map((e, i) => (
+              <ErrandRow
+                key={e.id}
+                e={e}
+                isLast={i === errands.length - 1}
+                onSelect={onSelect}
+                onClose={onClose}
+                onPreview={setPreviewUri}
+              />
+            ))}
           </ScrollView>
         )}
-      </View>
+      </Animated.View>
+
       {/* Image preview modal */}
       <Modal visible={!!previewUri} transparent animationType="fade" onRequestClose={() => setPreviewUri(null)}>
         <TouchableOpacity

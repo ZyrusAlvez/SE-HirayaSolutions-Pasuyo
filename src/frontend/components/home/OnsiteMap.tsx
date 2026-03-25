@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import ErrandListPanel from './ErrandListPanel';
@@ -106,6 +106,16 @@ export default function OnsiteMap({ errands, location }: Props) {
   const [listOpen, setListOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<Errand | null>(null);
   const webViewRef = useRef<any>(null);
+  const slideAnim = useRef(new Animated.Value(400)).current;
+
+  const openPanel = () => {
+    setListOpen(true);
+    Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 14 }).start();
+  };
+
+  const closePanel = () => {
+    Animated.spring(slideAnim, { toValue: 400, useNativeDriver: true, bounciness: 0, speed: 14 }).start(() => setListOpen(false));
+  };
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -114,7 +124,7 @@ export default function OnsiteMap({ errands, location }: Props) {
   }, []);
 
   function onSelect(errand: Errand) {
-    setListOpen(false);
+    closePanel();
     if (Platform.OS !== 'web') {
       // Send flyTo message into the WebView
       webViewRef.current?.injectJavaScript(`
@@ -137,7 +147,7 @@ export default function OnsiteMap({ errands, location }: Props) {
   );
 
   return (
-    <View className="flex-1" style={{ position: 'relative' } as any}>
+    <View className="flex-1" style={{ position: 'relative', overflow: 'hidden' } as any}>
       {/* Map */}
       <View className="flex-1 rounded-2xl overflow-hidden shadow-md bg-gray-100">
         {Platform.OS === 'web'
@@ -159,7 +169,7 @@ export default function OnsiteMap({ errands, location }: Props) {
       {/* List toggle button */}
       <View style={{ position: 'absolute', top: 12, right: 12, zIndex: 800 }}>
         <TouchableOpacity
-          onPress={() => setListOpen(v => !v)}
+          onPress={() => listOpen ? closePanel() : openPanel()}
           style={{ backgroundColor: 'white', borderRadius: 12, padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 }}
           activeOpacity={0.8}
         >
@@ -170,7 +180,8 @@ export default function OnsiteMap({ errands, location }: Props) {
       <ErrandListPanel
         errands={errands}
         visible={listOpen}
-        onClose={() => setListOpen(false)}
+        slideAnim={slideAnim}
+        onClose={closePanel}
         onSelect={onSelect}
       />
     </View>
