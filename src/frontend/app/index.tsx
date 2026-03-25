@@ -12,11 +12,22 @@ if (Platform.OS !== 'web') {
   WebView = require('react-native-webview').WebView;
 }
 
+interface Errand {
+  id: string;
+  title: string;
+  description: string;
+  location_lat: number;
+  location_lng: number;
+  location_name?: string;
+  budget?: number;
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [WebMap, setWebMap] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
+  const [errands, setErrands] = useState<Errand[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -31,6 +42,16 @@ export default function HomeScreen() {
     if (Platform.OS === 'web') {
       import('../components/WebMap').then((mod) => setWebMap(() => mod.default));
     }
+  }, []);
+
+  useEffect(() => {
+    supabase
+      .from('errands')
+      .select('id, title, description, location_lat, location_lng, location_name, budget')
+      .eq('status', 'open')
+      .not('location_lat', 'is', null)
+      .not('location_lng', 'is', null)
+      .then(({ data }) => { if (data) setErrands(data); });
   }, []);
 
   useEffect(() => {
@@ -56,6 +77,21 @@ export default function HomeScreen() {
       <style>
         body { margin: 0; padding: 0; }
         #map { height: 100vh; width: 100vw; }
+        @keyframes pulse {
+          0%{transform:scale(1);opacity:0.8}
+          100%{transform:scale(2.5);opacity:0}
+        }
+        .user-dot-ring {
+          position:absolute;inset:0;border-radius:50%;
+          background:rgba(254,164,5,0.3);
+          animation:pulse 1.8s ease-out infinite;
+        }
+        .user-dot-core {
+          position:absolute;inset:4px;border-radius:50%;
+          background:#FEA405;
+          border:2px solid #fff;
+          box-shadow:0 0 4px rgba(0,0,0,0.3);
+        }
       </style>
     </head>
     <body>
@@ -65,10 +101,27 @@ export default function HomeScreen() {
         L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
           attribution: '© CartoDB'
         }).addTo(map);
-        L.marker([${location.coords.latitude}, ${location.coords.longitude}])
+        const userIcon = L.divIcon({
+          className: '',
+          html: '<div style="position:relative;width:24px;height:24px"><div class="user-dot-ring"></div><div class="user-dot-core"></div></div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+          popupAnchor: [0, -14]
+        });
+        L.marker([${location.coords.latitude}, ${location.coords.longitude}], { icon: userIcon })
           .addTo(map)
           .bindPopup('You are here')
           .openPopup();
+        const errandIcon = L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
+        });
+        ${JSON.stringify(errands)}.forEach(e => {
+          L.marker([e.location_lat, e.location_lng], { icon: errandIcon })
+            .addTo(map)
+            .bindPopup('<strong>' + e.title + '</strong><br>' + e.description + (e.location_name ? '<br>' + e.location_name : '') + (e.budget != null ? '<br>Budget: ₱' + e.budget : ''));
+        });
       </script>
     </body>
     </html>
@@ -103,7 +156,7 @@ export default function HomeScreen() {
         <View className="flex-1 rounded-2xl overflow-hidden shadow-md bg-gray-100">
           {Platform.OS === 'web' ? (
             location && WebMap ? (
-              <WebMap latitude={location.coords.latitude} longitude={location.coords.longitude} />
+              <WebMap latitude={location.coords.latitude} longitude={location.coords.longitude} errands={errands} />
             ) : (
               <View className="flex-1 items-center justify-center">
                 <Ionicons name="map-outline" size={48} color="#9CA3AF" />
