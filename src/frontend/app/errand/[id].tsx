@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
@@ -9,6 +9,7 @@ import ErrandDetailHeader from '../../components/errand/DetailHeader';
 import ErrandDetailCard from '../../components/errand/DetailCard';
 import ErrandPosterCard from '../../components/errand/PosterCard';
 import ErrandImageLightbox from '../../components/errand/ImageLightbox';
+import SkeletonLoading from '../../components/errand/SkeletonLoading';
 
 const ACCENT = '#FEA405';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
@@ -66,11 +67,11 @@ export default function ErrandDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: 'white' }}>
+      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
         <Header avatarUrl={avatarUrl} />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={ACCENT} />
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+          <SkeletonLoading />
+        </ScrollView>
         <NavBar />
       </View>
     );
@@ -133,7 +134,7 @@ export default function ErrandDetailScreen() {
               activeOpacity={0.85}
               style={{ backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 4 }}
             >
-              <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Apply for this Errand</Text>
+              <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Accept Errand</Text>
             </TouchableOpacity>
           )}
 
