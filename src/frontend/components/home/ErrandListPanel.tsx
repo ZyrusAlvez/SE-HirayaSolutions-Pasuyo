@@ -25,6 +25,7 @@ interface Props {
   onClose: () => void;
   onSelect: (errand: Errand) => void;
   expandedId?: string | null;
+  static?: boolean;
 }
 
 function ErrandRow({ e, isLast, onSelect, onClose, onPreview, autoExpand }: {
@@ -206,8 +207,63 @@ function ExpandedContent({ e, onSelect, onClose, onPreview }: {
   );
 }
 
-export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId }: Props) {
+function ErrandListContent({ errands, onSelect, onClose, expandedId, setPreview }: {
+  errands: Errand[];
+  onSelect: (e: Errand) => void;
+  onClose: () => void;
+  expandedId?: string | null;
+  setPreview: (p: { images: string[]; index: number }) => void;
+}) {
+  return errands.length === 0 ? (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Ionicons name="location-outline" size={36} color="#E5E7EB" />
+      <Text style={{ color: '#9CA3AF', marginTop: 8, fontSize: 12 }}>No errands nearby</Text>
+    </View>
+  ) : (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      {errands.map((e, i) => (
+        <ErrandRow
+          key={e.id}
+          e={e}
+          isLast={i === errands.length - 1}
+          onSelect={onSelect}
+          onClose={onClose}
+          onPreview={(images, index) => setPreview({ images, index })}
+          autoExpand={e.id === expandedId}
+        />
+      ))}
+    </ScrollView>
+  );
+}
+
+export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId, static: isStatic }: Props) {
   const [preview, setPreview] = useState<{ images: string[]; index: number } | null>(null);
+
+  const modal = (
+    <Modal visible={!!preview} transparent animationType="fade" onRequestClose={() => setPreview(null)}>
+      {preview && <ImageViewer images={preview.images} startIndex={preview.index} onClose={() => setPreview(null)} />}
+    </Modal>
+  );
+
+  if (isStatic) {
+    return (
+      <View style={{
+        width: 300,
+        backgroundColor: 'white',
+        borderRadius: 16,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 4,
+      }}>
+        <ErrandListContent errands={errands} onSelect={onSelect} onClose={onClose} expandedId={expandedId} setPreview={setPreview} />
+        {modal}
+      </View>
+    );
+  }
+
   if (!visible) return null;
 
   return (
@@ -234,42 +290,16 @@ export default function ErrandListPanel({ errands, visible, slideAnim, onClose, 
         elevation: 12,
         transform: [{ translateX: slideAnim }],
       }}>
-
-        {/* Header */}
         <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 14, alignItems: 'flex-end' }}>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="close" size={18} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
-
         <View style={{ height: 1, backgroundColor: '#F3F4F6' }} />
-
-        {errands.length === 0 ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="location-outline" size={36} color="#E5E7EB" />
-            <Text style={{ color: '#9CA3AF', marginTop: 8, fontSize: 12 }}>No errands nearby</Text>
-          </View>
-        ) : (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {errands.map((e, i) => (
-              <ErrandRow
-                key={e.id}
-                e={e}
-                isLast={i === errands.length - 1}
-                onSelect={onSelect}
-                onClose={onClose}
-                onPreview={(images, index) => setPreview({ images, index })}
-                autoExpand={e.id === expandedId}
-              />
-            ))}
-          </ScrollView>
-        )}
+        <ErrandListContent errands={errands} onSelect={onSelect} onClose={onClose} expandedId={expandedId} setPreview={setPreview} />
       </Animated.View>
 
-      {/* Image preview modal */}
-      <Modal visible={!!preview} transparent animationType="fade" onRequestClose={() => setPreview(null)}>
-        {preview && <ImageViewer images={preview.images} startIndex={preview.index} onClose={() => setPreview(null)} />}
-      </Modal>
+      {modal}
     </>
   );
 }

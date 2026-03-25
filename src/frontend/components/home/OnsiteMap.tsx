@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Platform, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import ErrandListPanel from './ErrandListPanel';
@@ -111,8 +111,16 @@ export default function OnsiteMap({ errands, location }: Props) {
   const [listOpen, setListOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<Errand | null>(null);
   const [clickedErrandId, setClickedErrandId] = useState<string | null>(null);
+  const [isTablet, setIsTablet] = useState(Dimensions.get('window').width >= 600);
   const webViewRef = useRef<any>(null);
   const slideAnim = useRef(new Animated.Value(400)).current;
+
+  useEffect(() => {
+    const sub = Dimensions.addEventListener('change', ({ window }) => {
+      setIsTablet(window.width >= 600);
+    });
+    return () => sub.remove();
+  }, []);
 
   const openPanel = (errandId?: string) => {
     setClickedErrandId(errandId ?? null);
@@ -157,12 +165,12 @@ export default function OnsiteMap({ errands, location }: Props) {
   );
 
   return (
-    <View className="flex-1" style={{ position: 'relative', overflow: 'hidden' } as any}>
+    <View style={{ flex: 1, flexDirection: isTablet ? 'row' : 'column', position: 'relative', overflow: 'hidden', gap: isTablet ? 12 : 0, padding: isTablet ? 12 : 0 } as any}>
       {/* Map */}
-      <View className="flex-1 rounded-2xl overflow-hidden shadow-md bg-gray-100">
+      <View style={{ flex: 1, borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 4 }} className="bg-gray-100">
         {Platform.OS === 'web'
           ? WebMap
-            ? <WebMap latitude={latitude} longitude={longitude} errands={errands} onMarkerClick={(e) => openPanel(e.id)}>
+            ? <WebMap latitude={latitude} longitude={longitude} errands={errands} onMarkerClick={(e: Errand) => openPanel(e.id)}>
                 <WebMapController target={flyTarget} />
               </WebMap>
             : loading
@@ -171,7 +179,7 @@ export default function OnsiteMap({ errands, location }: Props) {
                 ref={webViewRef}
                 source={{ html: buildMapHtml(latitude, longitude, errands) }}
                 style={{ flex: 1 }}
-                onMessage={(e) => {
+                onMessage={(e: { nativeEvent: { data: string } }) => {
                   try {
                     const data = JSON.parse(e.nativeEvent.data);
                     if (data.type === 'markerClick') openPanel(data.id);
@@ -182,25 +190,40 @@ export default function OnsiteMap({ errands, location }: Props) {
         }
       </View>
 
-      {/* List toggle button */}
-      <View style={{ position: 'absolute', top: 12, right: 12, zIndex: 800 }}>
-        <TouchableOpacity
-          onPress={() => listOpen ? closePanel() : openPanel()}
-          style={{ backgroundColor: 'white', borderRadius: 12, padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name={listOpen ? 'close' : 'list'} size={20} color="#111827" />
-        </TouchableOpacity>
-      </View>
+      {/* Burger button — mobile only */}
+      {!isTablet && (
+        <View style={{ position: 'absolute', top: 12, right: 12, zIndex: 800 }}>
+          <TouchableOpacity
+            onPress={() => listOpen ? closePanel() : openPanel()}
+            style={{ backgroundColor: 'white', borderRadius: 12, padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name={listOpen ? 'close' : 'list'} size={20} color="#111827" />
+          </TouchableOpacity>
+        </View>
+      )}
 
-      <ErrandListPanel
-        errands={errands}
-        visible={listOpen}
-        slideAnim={slideAnim}
-        onClose={closePanel}
-        onSelect={onSelect}
-        expandedId={clickedErrandId}
-      />
+      {/* Tablet: static sidebar / Mobile: slide panel */}
+      {isTablet ? (
+        <ErrandListPanel
+          static
+          errands={errands}
+          visible={false}
+          slideAnim={slideAnim}
+          onClose={() => {}}
+          onSelect={onSelect}
+          expandedId={clickedErrandId}
+        />
+      ) : (
+        <ErrandListPanel
+          errands={errands}
+          visible={listOpen}
+          slideAnim={slideAnim}
+          onClose={closePanel}
+          onSelect={onSelect}
+          expandedId={clickedErrandId}
+        />
+      )}
     </View>
   );
 }
