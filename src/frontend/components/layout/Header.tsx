@@ -5,10 +5,10 @@ import { useRouter } from 'expo-router';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
 interface Props {
-  avatarUrl: any;
+  avatarUrl?: any;
 }
 
-export default function HomeHeader({ avatarUrl }: Props) {
+export default function Header({ avatarUrl }: Props) {
   const router = useRouter();
   return (
     <View className={`bg-white px-6 pb-4 flex-row items-center justify-between border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-4'}`}>

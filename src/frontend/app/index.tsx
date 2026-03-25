@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { View, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
-import HomeHeader from '../components/home/HomeHeader';
+import Header from '../components/layout/Header';
+import NavBar from '../components/layout/NavBar';
 import ErrandTabToggle from '../components/home/ErrandTabToggle';
 import OnsiteMap from '../components/home/OnsiteMap';
 import RemoteErrandList from '../components/home/RemoteErrandList';
-import HomeNavBar from '../components/home/HomeNavBar';
 
-const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
 
 interface Errand {
   id: string;
@@ -28,7 +27,7 @@ interface Errand {
 
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState<any>(require('../assets/images/default_profile.jpg'));
   const [errands, setErrands] = useState<Errand[]>([]);
   const [tab, setTab] = useState<'onsite' | 'remote'>('onsite');
 
@@ -65,7 +64,7 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <HomeHeader avatarUrl={avatarUrl} />
+      <Header avatarUrl={avatarUrl} />
       <ErrandTabToggle tab={tab} onTabChange={setTab} />
       <View className="flex-1 px-6 pb-4">
         {tab === 'onsite'
@@ -73,7 +72,7 @@ export default function HomeScreen() {
           : <RemoteErrandList errands={remoteErrands} />
         }
       </View>
-      <HomeNavBar />
+      <NavBar />
     </View>
   );
 }

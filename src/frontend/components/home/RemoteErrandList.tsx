@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function RemoteErrandList({ errands }: Props) {
+  const router = useRouter();
   if (errands.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
@@ -36,6 +38,7 @@ export default function RemoteErrandList({ errands }: Props) {
           <TouchableOpacity
             key={e.id}
             activeOpacity={0.7}
+            onPress={() => router.push(`/errand/${e.id}`)}
             style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: i === errands.length - 1 ? 0 : 1, borderBottomColor: '#F3F4F6' }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>

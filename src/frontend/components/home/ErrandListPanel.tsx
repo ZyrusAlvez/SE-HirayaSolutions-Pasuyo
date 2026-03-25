@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, ScrollView, Image, Animated, Platform, UIManager } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
@@ -140,10 +141,8 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
 }
 
 export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId, static: isStatic }: Props) {
-  const onMoreInfo = (e: Errand) => {
-    // TODO: wire up to a detail modal/screen
-    console.log('More info:', e.id);
-  };
+  const router = useRouter();
+  const onMoreInfo = (e: Errand) => router.push(`/errand/${e.id}`);
 
   if (isStatic) {
     return (

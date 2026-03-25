@@ -2,7 +2,7 @@ import { View, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-export default function HomeNavBar() {
+export default function NavBar() {
   const router = useRouter();
   return (
     <View className="bg-white px-6 py-4 flex-row justify-around border-t border-gray-100">
