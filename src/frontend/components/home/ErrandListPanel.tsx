@@ -1,6 +1,8 @@
-import { View, Text, TouchableOpacity, ScrollView, Image, Modal, Animated, Platform, UIManager } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Modal, Animated, Platform, UIManager, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useRef, useEffect } from 'react';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
 
@@ -29,7 +31,7 @@ function ErrandRow({ e, isLast, onSelect, onClose, onPreview, autoExpand }: {
   e: Errand; isLast: boolean;
   onSelect: (e: Errand) => void;
   onClose: () => void;
-  onPreview: (uri: string) => void;
+  onPreview: (images: string[], index: number) => void;
   autoExpand?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -77,9 +79,82 @@ function ErrandRow({ e, isLast, onSelect, onClose, onPreview, autoExpand }: {
       </TouchableOpacity>
 
       <Animated.View style={{ maxHeight, overflow: 'hidden', opacity }}>
-        <ExpandedContent e={e} onSelect={onSelect} onClose={onClose} onPreview={onPreview} />
+        <ExpandedContent e={e} onSelect={onSelect} onClose={onClose} onPreview={(idx) => onPreview(e.images!.filter(Boolean), idx)} />
       </Animated.View>
     </View>
+  );
+}
+
+function ImageViewer({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) {
+  const [index, setIndex] = useState(startIndex);
+  const thumbScrollRef = useRef<ScrollView>(null);
+
+  const go = (next: number) => {
+    const clamped = Math.max(0, Math.min(images.length - 1, next));
+    setIndex(clamped);
+    thumbScrollRef.current?.scrollTo({ x: clamped * 62 - 62, animated: true });
+  };
+
+  return (
+    <TouchableOpacity
+      style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', alignItems: 'center', justifyContent: 'center' }}
+      activeOpacity={1}
+      onPress={onClose}
+    >
+      {/* Main image */}
+      <Image
+        source={{ uri: images[index] }}
+        style={{ width: SCREEN_WIDTH * 0.9, height: SCREEN_WIDTH * 0.9, borderRadius: 12 }}
+        resizeMode="contain"
+      />
+
+      {/* Counter */}
+      <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 10 }}>
+        {index + 1} / {images.length}
+      </Text>
+
+      {/* Left / Right arrows */}
+      {index > 0 && (
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation(); go(index - 1); }}
+          style={{ position: 'absolute', left: 16, padding: 10, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 999 }}
+        >
+          <Ionicons name="chevron-back" size={24} color="white" />
+        </TouchableOpacity>
+      )}
+      {index < images.length - 1 && (
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation(); go(index + 1); }}
+          style={{ position: 'absolute', right: 16, padding: 10, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 999 }}
+        >
+          <Ionicons name="chevron-forward" size={24} color="white" />
+        </TouchableOpacity>
+      )}
+
+      {/* Thumbnail strip */}
+      <ScrollView
+        ref={thumbScrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ position: 'absolute', bottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}
+      >
+        {images.map((uri, i) => (
+          <TouchableOpacity key={i} onPress={(e) => { e.stopPropagation(); go(i); }} activeOpacity={0.8}>
+            <Image
+              source={{ uri }}
+              style={{
+                width: 52, height: 52, borderRadius: 8,
+                borderWidth: i === index ? 2 : 0,
+                borderColor: '#FEA405',
+                opacity: i === index ? 1 : 0.5,
+              }}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </TouchableOpacity>
   );
 }
 
@@ -87,7 +162,7 @@ function ExpandedContent({ e, onSelect, onClose, onPreview }: {
   e: Errand;
   onSelect: (e: Errand) => void;
   onClose: () => void;
-  onPreview: (uri: string) => void;
+  onPreview: (index: number) => void;
 }) {
   return (
     <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
@@ -114,7 +189,7 @@ function ExpandedContent({ e, onSelect, onClose, onPreview }: {
       {(e.images?.filter(Boolean).length ?? 0) > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
           {e.images!.filter(Boolean).map((uri, idx) => (
-            <TouchableOpacity key={idx} onPress={() => onPreview(uri)} activeOpacity={0.8}>
+            <TouchableOpacity key={idx} onPress={() => onPreview(idx)} activeOpacity={0.8}>
               <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 10, marginRight: 6 }} resizeMode="cover" />
             </TouchableOpacity>
           ))}
@@ -132,7 +207,7 @@ function ExpandedContent({ e, onSelect, onClose, onPreview }: {
 }
 
 export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId }: Props) {
-  const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ images: string[]; index: number } | null>(null);
   if (!visible) return null;
 
   return (
@@ -183,7 +258,7 @@ export default function ErrandListPanel({ errands, visible, slideAnim, onClose, 
                 isLast={i === errands.length - 1}
                 onSelect={onSelect}
                 onClose={onClose}
-                onPreview={setPreviewUri}
+                onPreview={(images, index) => setPreview({ images, index })}
                 autoExpand={e.id === expandedId}
               />
             ))}
@@ -192,16 +267,8 @@ export default function ErrandListPanel({ errands, visible, slideAnim, onClose, 
       </Animated.View>
 
       {/* Image preview modal */}
-      <Modal visible={!!previewUri} transparent animationType="fade" onRequestClose={() => setPreviewUri(null)}>
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', alignItems: 'center', justifyContent: 'center' }}
-          activeOpacity={1}
-          onPress={() => setPreviewUri(null)}
-        >
-          {previewUri && (
-            <Image source={{ uri: previewUri }} style={{ width: '90%', height: '70%', borderRadius: 12 }} resizeMode="contain" />
-          )}
-        </TouchableOpacity>
+      <Modal visible={!!preview} transparent animationType="fade" onRequestClose={() => setPreview(null)}>
+        {preview && <ImageViewer images={preview.images} startIndex={preview.index} onClose={() => setPreview(null)} />}
       </Modal>
     </>
   );
