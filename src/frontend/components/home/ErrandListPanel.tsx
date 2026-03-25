@@ -115,6 +115,10 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
 }) {
   const [activeId, setActiveId] = useState<string | null>(initialExpandedId ?? null);
 
+  useEffect(() => {
+    if (initialExpandedId) setActiveId(initialExpandedId);
+  }, [initialExpandedId]);
+
   const toggle = (id: string) => setActiveId(prev => prev === id ? null : id);
 
   return errands.length === 0 ? (
@@ -142,7 +146,7 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
 
 export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId, static: isStatic }: Props) {
   const router = useRouter();
-  const onMoreInfo = (e: Errand) => router.push(`/errand/${e.id}`);
+  const onMoreInfo = (e: Errand) => router.push({ pathname: '/errand/[id]', params: { id: e.id } });
 
   if (isStatic) {
     return (

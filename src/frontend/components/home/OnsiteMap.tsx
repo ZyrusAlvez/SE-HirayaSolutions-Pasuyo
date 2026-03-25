@@ -26,6 +26,7 @@ interface Errand {
 interface Props {
   errands: Errand[];
   location: Location.LocationObject;
+  expandId?: string;
 }
 
 function buildMapHtml(lat: number, lng: number, errands: Errand[]) {
@@ -108,7 +109,7 @@ function WebMapController({ target }: { target: Errand | null }) {
   return null;
 }
 
-export default function OnsiteMap({ errands, location }: Props) {
+export default function OnsiteMap({ errands, location, expandId }: Props) {
   const [WebMap, setWebMap] = useState<any>(null);
   const [listOpen, setListOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<Errand | null>(null);
@@ -116,6 +117,15 @@ export default function OnsiteMap({ errands, location }: Props) {
   const [isTablet, setIsTablet] = useState(Dimensions.get('window').width >= 600);
   const webViewRef = useRef<any>(null);
   const slideAnim = useRef(new Animated.Value(400)).current;
+
+  const didAutoOpen = useRef(false);
+
+  useEffect(() => {
+    if (expandId && !didAutoOpen.current && errands.some(e => e.id === expandId)) {
+      didAutoOpen.current = true;
+      openPanel(expandId);
+    }
+  }, [expandId, errands]);
 
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', ({ window }) => {

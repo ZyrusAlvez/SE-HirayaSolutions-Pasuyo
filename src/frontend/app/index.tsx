@@ -1,15 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
+import { postErrandStore } from '../lib/postErrandStore';
 import Header from '../components/layout/Header';
 import NavBar from '../components/layout/NavBar';
 import ErrandTabToggle from '../components/home/ErrandTabToggle';
 import OnsiteMap from '../components/home/OnsiteMap';
 import RemoteErrandList from '../components/home/RemoteErrandList';
-
 
 interface Errand {
   id: string;
@@ -32,6 +31,7 @@ export default function HomeScreen() {
   const [avatarUrl, setAvatarUrl] = useState<any>(require('../assets/images/default_profile.jpg'));
   const [errands, setErrands] = useState<Errand[]>([]);
   const [tab, setTab] = useState<'onsite' | 'remote'>('onsite');
+  const [expandId, setExpandId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -43,6 +43,13 @@ export default function HomeScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => {
+    const result = postErrandStore.consume();
+    if (result) {
+      setTab(result.tab);
+      setExpandId(result.expandId);
+    } else {
+      setExpandId(undefined);
+    }
     supabase
       .from('errands_with_poster')
       .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images, poster_name, poster_avatar, poster_is_verified')
@@ -70,7 +77,7 @@ export default function HomeScreen() {
       <ErrandTabToggle tab={tab} onTabChange={setTab} />
       <View className="flex-1 px-6 pb-4">
         {tab === 'onsite'
-          ? location && <OnsiteMap errands={onsiteErrands} location={location} />
+          ? location && <OnsiteMap errands={onsiteErrands} location={location} expandId={expandId} />
           : <RemoteErrandList errands={remoteErrands} />
         }
       </View>
