@@ -137,7 +137,7 @@ export default function OnsiteMap({ errands, location }: Props) {
 
   useEffect(() => {
     if (Platform.OS === 'web') {
-      import('../WebMap').then((mod) => setWebMap(() => mod.default));
+      import('./WebMap').then((mod) => setWebMap(() => mod.default));
     }
   }, []);
 
