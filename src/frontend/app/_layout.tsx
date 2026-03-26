@@ -4,6 +4,7 @@ import { useColorScheme } from "nativewind";
 import * as SplashScreen from "expo-splash-screen";
 import { supabase } from "../lib/supabase";
 import { Session } from "@supabase/supabase-js";
+import { consumePendingRedirect } from "../lib/redirectStore";
 import { Platform } from "react-native";
 import "../global.css";
 
@@ -45,7 +46,8 @@ export default function RootLayout() {
     if (!session && !inAuthGroup && !isPublic) {
       router.replace('/login');
     } else if (session && inAuthGroup && !isResetPassword) {
-      router.replace('/');
+      const dest = consumePendingRedirect();
+      router.replace((dest as any) || '/');
     }
   }, [session, segments, loading]);
 

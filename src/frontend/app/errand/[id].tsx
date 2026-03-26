@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import Header from '../../components/layout/Header';
@@ -42,6 +42,7 @@ interface Errand {
 export default function ErrandDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { width } = useWindowDimensions();
+  const router = useRouter();
 
   const [errand, setErrand] = useState<Errand | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,9 +168,10 @@ export default function ErrandDetailScreen() {
           {errand.is_open && !isOwner && (
             <TouchableOpacity
               activeOpacity={0.85}
+              onPress={() => isGuest ? router.push(`/signup?redirect=/errand/${errand.id}`) : undefined}
               style={{ backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 4 }}
             >
-              <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Apply for this Errand</Text>
+              <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Accept Errand</Text>
             </TouchableOpacity>
           )}
 
