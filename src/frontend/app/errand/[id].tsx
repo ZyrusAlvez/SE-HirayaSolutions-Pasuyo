@@ -166,13 +166,24 @@ export default function ErrandDetailScreen() {
           />
 
           {errand.is_open && !isOwner && (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => isGuest ? router.push(`/signup?redirect=/errand/${errand.id}`) : undefined}
-              style={{ backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 4 }}
-            >
-              <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Accept Errand</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => { if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`); }}
+                style={{ flex: 1, borderRadius: 16, paddingVertical: 12, alignItems: 'center', borderWidth: 2, borderColor: ACCENT }}
+              >
+                <Text style={{ color: '#111827', fontWeight: '700', fontSize: 14 }}>
+                  Chat with {errand.poster_name ?? 'poster'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => { if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`); }}
+                style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
+              >
+                <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>Accept Errand</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
         </View>
