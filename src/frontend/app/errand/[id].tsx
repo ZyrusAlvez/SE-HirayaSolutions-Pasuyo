@@ -122,7 +122,7 @@ export default function ErrandDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         <View style={{ alignSelf: 'center', width: '100%', maxWidth: width >= 768 ? 680 : undefined, padding: 20, gap: 16 }}>
 
-          <DetailHeader isRemote={errand.is_remote} />
+          <DetailHeader isRemote={errand.is_remote} errandId={errand.id} />
 
           {isOwner && (
             <OwnerActions
