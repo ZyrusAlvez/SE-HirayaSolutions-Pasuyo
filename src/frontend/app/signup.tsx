@@ -3,8 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDi
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle } from '../lib/authService';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from '../lib/toast';
+import { setPendingRedirect } from '../lib/redirectStore';
 
 export default function SignupScreen() {
   const [name, setName] = useState('');
@@ -13,6 +14,7 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
@@ -27,6 +29,7 @@ export default function SignupScreen() {
     }
 
     setLoading(true);
+    if (redirect) setPendingRedirect(redirect);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -42,15 +45,15 @@ export default function SignupScreen() {
     if (error) {
       toast({ title: 'Invalid email or password', preset: 'error' });
     } else if (data.user) {
-      router.replace('/');
+      router.replace((redirect as string) || '/');
     }
   };
 
   const handleGoogleSignup = async () => {
     try {
       setLoading(true);
+      if (redirect) setPendingRedirect(redirect);
       await signInWithGoogle();
-      router.replace('/');
     } catch (error: any) {
       toast({ title: 'Google signup failed', preset: 'error' });
     } finally {
@@ -155,7 +158,7 @@ export default function SignupScreen() {
 
           <TouchableOpacity 
             className="mt-6"
-            onPress={() => router.push('/login')}
+            onPress={() => router.push(redirect ? `/login?redirect=${redirect}` : '/login')}
             activeOpacity={0.7}
           >
             <Text className="text-center text-sm text-gray-600">

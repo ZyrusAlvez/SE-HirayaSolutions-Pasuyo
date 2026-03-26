@@ -1,22 +1,37 @@
-import { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Alert, Platform, Image, Text } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Alert } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { postErrandStore } from '../lib/postErrandStore';
+import Header from '../components/layout/Header';
+import NavBar from '../components/layout/NavBar';
+import ErrandTabToggle from '../components/home/ErrandTabToggle';
+import OnsiteMap from '../components/home/OnsiteMap';
+import RemoteErrandList from '../components/home/RemoteErrandList';
 
-const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
-
-let WebView: any;
-if (Platform.OS !== 'web') {
-  WebView = require('react-native-webview').WebView;
+interface Errand {
+  id: string;
+  title: string;
+  description: string;
+  is_remote: boolean;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_name?: string;
+  budget?: number;
+  deadline?: string;
+  images?: string[];
+  poster_name?: string;
+  poster_avatar?: string;
+  poster_is_verified?: boolean;
 }
 
 export default function HomeScreen() {
-  const router = useRouter();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [WebMap, setWebMap] = useState<any>(null);
-  const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState<any>(require('../assets/images/default_profile.jpg'));
+  const [errands, setErrands] = useState<Errand[]>([]);
+  const [tab, setTab] = useState<'onsite' | 'remote'>('onsite');
+  const [expandId, setExpandId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -27,11 +42,20 @@ export default function HomeScreen() {
     });
   }, []);
 
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      import('../components/WebMap').then((mod) => setWebMap(() => mod.default));
+  useFocusEffect(useCallback(() => {
+    const result = postErrandStore.consume();
+    if (result) {
+      setTab(result.tab);
+      setExpandId(result.expandId);
+    } else {
+      setExpandId(undefined);
     }
-  }, []);
+    supabase
+      .from('errands_with_poster')
+      .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images, poster_name, poster_avatar, poster_is_verified')
+      .eq('status', 'open')
+      .then(({ data }) => { if (data) setErrands(data); });
+  }, []));
 
   useEffect(() => {
     (async () => {
@@ -40,107 +64,24 @@ export default function HomeScreen() {
         Alert.alert('Permission Denied', 'Location permission is required to use this app');
         return;
       }
-
-      const currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
+      setLocation(await Location.getCurrentPositionAsync({}));
     })();
   }, []);
 
-  const mapHtml = location ? `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-      <style>
-        body { margin: 0; padding: 0; }
-        #map { height: 100vh; width: 100vw; }
-      </style>
-    </head>
-    <body>
-      <div id="map"></div>
-      <script>
-        const map = L.map('map').setView([${location.coords.latitude}, ${location.coords.longitude}], 15);
-        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
-          attribution: '© CartoDB'
-        }).addTo(map);
-        L.marker([${location.coords.latitude}, ${location.coords.longitude}])
-          .addTo(map)
-          .bindPopup('You are here')
-          .openPopup();
-      </script>
-    </body>
-    </html>
-  ` : '';
+  const onsiteErrands = errands.filter(e => !e.is_remote && e.location_lat && e.location_lng) as any[];
+  const remoteErrands = errands.filter(e => e.is_remote);
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header */}
-      <View className={`bg-white px-6 pb-4 flex-row items-center justify-between border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-4'}`}>
-        <TouchableOpacity className="p-2" activeOpacity={0.7}>
-          <Ionicons name="menu" size={28} color="#000" />
-        </TouchableOpacity>
-        <Image 
-          source={require('../assets/logo/Pasuyo_full.png')}
-          style={{ width: 120, height: 40 }}
-          resizeMode="contain"
-        />
-        <TouchableOpacity 
-          onPress={() => router.push('/profile')}
-          activeOpacity={0.7}
-        >
-          <Image
-            source={avatarUrl}
-            style={{ width: 36, height: 36, borderRadius: 18 }}
-            resizeMode="cover"
-          />
-        </TouchableOpacity>
+      <Header avatarUrl={avatarUrl} />
+      <ErrandTabToggle tab={tab} onTabChange={setTab} />
+      <View className="flex-1 px-6 pb-4">
+        {tab === 'onsite'
+          ? location && <OnsiteMap errands={onsiteErrands} location={location} expandId={expandId} />
+          : <RemoteErrandList errands={remoteErrands} />
+        }
       </View>
-
-      {/* Map */}
-      <View className="flex-1 px-6 py-4">
-        <View className="flex-1 rounded-2xl overflow-hidden shadow-md bg-gray-100">
-          {Platform.OS === 'web' ? (
-            location && WebMap ? (
-              <WebMap latitude={location.coords.latitude} longitude={location.coords.longitude} />
-            ) : (
-              <View className="flex-1 items-center justify-center">
-                <Ionicons name="map-outline" size={48} color="#9CA3AF" />
-                <Text className="text-gray-500 mt-2">Loading map...</Text>
-              </View>
-            )
-          ) : (
-            location && WebView ? (
-              <WebView
-                source={{ html: mapHtml }}
-                style={{ flex: 1 }}
-              />
-            ) : (
-              <View className="flex-1 items-center justify-center">
-                <Ionicons name="map-outline" size={48} color="#9CA3AF" />
-                <Text className="text-gray-500 mt-2">Loading map...</Text>
-              </View>
-            )
-          )}
-        </View>
-      </View>
-
-      {/* Navigation Bar */}
-      <View className="bg-white px-6 py-4 flex-row justify-around border-t border-gray-100">
-        <TouchableOpacity className="items-center" activeOpacity={0.7}>
-          <Ionicons name="chatbubble-outline" size={24} color="#FEA405" />
-          <Text className="text-xs mt-1 text-gray-700">Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => router.push('/post-errand')}>
-          <Ionicons name="add-circle" size={32} color="#FEA405" />
-          <Text className="text-xs mt-1 text-gray-700">Post Hustle</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="items-center" activeOpacity={0.7}>
-          <Ionicons name="list-outline" size={24} color="#FEA405" />
-          <Text className="text-xs mt-1 text-gray-700">My Tasks</Text>
-        </TouchableOpacity>
-      </View>
+      <NavBar />
     </View>
   );
 }

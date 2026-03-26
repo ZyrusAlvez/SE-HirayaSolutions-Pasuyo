@@ -3,8 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDi
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle } from '../lib/authService';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from '../lib/toast';
+import { setPendingRedirect } from '../lib/redirectStore';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
@@ -22,6 +24,7 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
+    if (redirect) setPendingRedirect(redirect);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -31,15 +34,15 @@ export default function LoginScreen() {
     if (error) {
       toast({ title: 'Invalid email or password', preset: 'error' });
     } else if (data.user) {
-      router.replace('/');
+      router.replace((redirect as string) || '/');
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
+      if (redirect) setPendingRedirect(redirect);
       await signInWithGoogle();
-      router.replace('/');
     } catch (error: any) {
       toast({ title: 'Google login failed', preset: 'error' });
     } finally {
@@ -141,7 +144,7 @@ export default function LoginScreen() {
 
           <TouchableOpacity 
             className="mt-6"
-            onPress={() => router.push('/signup')}
+            onPress={() => router.push(redirect ? `/signup?redirect=${redirect}` : '/signup')}
             activeOpacity={0.7}
           >
             <Text className="text-center text-sm text-gray-600">

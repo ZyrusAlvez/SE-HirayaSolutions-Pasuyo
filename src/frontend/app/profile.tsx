@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
@@ -9,6 +9,7 @@ import ProfileHeader from '../components/profile/ProfileHeader';
 import AvatarPicker from '../components/profile/AvatarPicker';
 import VerificationBadge from '../components/profile/VerificationBadge';
 import ProfileInfoCard from '../components/profile/ProfileInfoCard';
+import SkeletonLoading from '../components/profile/SkeletonLoading';
 
 const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
 
@@ -142,6 +143,7 @@ export default function ProfileScreen() {
         setPendingImageUri(null);
         setAvatarUrl({ uri: finalAvatarUrl });
         updates.custom_avatar_url = finalAvatarUrl;
+        await supabase.from('profiles').update({ avatar_url: finalAvatarUrl }).eq('id', user.id);
       }
       const { error } = await supabase.auth.updateUser({ data: updates });
       if (error) throw error;
@@ -162,11 +164,7 @@ export default function ProfileScreen() {
   };
 
   if (loading) {
-    return (
-      <View className="flex-1 bg-white justify-center items-center">
-        <ActivityIndicator size="large" color="#FEA405" />
-      </View>
-    );
+    return <SkeletonLoading contentWidth={contentWidth} isLarge={isLarge} />;
   }
 
   return (
