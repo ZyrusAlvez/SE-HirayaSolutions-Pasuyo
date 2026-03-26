@@ -40,8 +40,9 @@ export default function RootLayout() {
 
     const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup' || segments[0] === 'reset-password';
     const isResetPassword = segments[0] === 'reset-password';
+    const isPublic = segments[0] === 'errand';
 
-    if (!session && !inAuthGroup) {
+    if (!session && !inAuthGroup && !isPublic) {
       router.replace('/login');
     } else if (session && inAuthGroup && !isResetPassword) {
       router.replace('/');

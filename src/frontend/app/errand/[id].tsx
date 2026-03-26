@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import Header from '../../components/layout/Header';
 import NavBar from '../../components/layout/NavBar';
+import GuestHeader from '../../components/layout/GuestHeader';
 import DetailHeader from '../../components/errand/DetailHeader';
 import DetailCard from '../../components/errand/DetailCard';
 import PosterCard from '../../components/errand/PosterCard';
@@ -48,6 +49,7 @@ export default function ErrandDetailScreen() {
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -55,6 +57,8 @@ export default function ErrandDetailScreen() {
         setCurrentUserId(user.id);
         const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
         if (url && url !== 'default') setAvatarUrl({ uri: url });
+      } else {
+        setIsGuest(true);
       }
     });
   }, []);
@@ -71,14 +75,16 @@ export default function ErrandDetailScreen() {
       });
   }, [id]);
 
+  const headerEl = isGuest ? <GuestHeader /> : <Header avatarUrl={avatarUrl} />;
+
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-        <Header avatarUrl={avatarUrl} />
+        {headerEl}
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <SkeletonLoading />
         </ScrollView>
-        <NavBar />
+        {!isGuest && <NavBar />}
       </View>
     );
   }
@@ -86,12 +92,12 @@ export default function ErrandDetailScreen() {
   if (!errand) {
     return (
       <View style={{ flex: 1, backgroundColor: 'white' }}>
-        <Header avatarUrl={avatarUrl} />
+        {headerEl}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Ionicons name="alert-circle-outline" size={48} color="#E5E7EB" />
           <Text style={{ color: '#9CA3AF', marginTop: 8 }}>Errand not found</Text>
         </View>
-        <NavBar />
+        {!isGuest && <NavBar />}
       </View>
     );
   }
@@ -110,7 +116,7 @@ export default function ErrandDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <Header avatarUrl={avatarUrl} />
+      {headerEl}
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         <View style={{ alignSelf: 'center', width: '100%', maxWidth: width >= 768 ? 680 : undefined, padding: 20, gap: 16 }}>
@@ -170,7 +176,7 @@ export default function ErrandDetailScreen() {
         </View>
       </ScrollView>
 
-      <NavBar />
+      {!isGuest && <NavBar />}
 
       <ImageLightbox
         images={images}
