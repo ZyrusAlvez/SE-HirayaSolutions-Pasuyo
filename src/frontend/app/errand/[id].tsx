@@ -5,10 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import Header from '../../components/layout/Header';
 import NavBar from '../../components/layout/NavBar';
-import ErrandDetailHeader from '../../components/errand/DetailHeader';
-import ErrandDetailCard from '../../components/errand/DetailCard';
-import ErrandPosterCard from '../../components/errand/PosterCard';
-import ErrandImageLightbox from '../../components/errand/ImageLightbox';
+import DetailHeader from '../../components/errand/DetailHeader';
+import DetailCard from '../../components/errand/DetailCard';
+import PosterCard from '../../components/errand/PosterCard';
+import ImageLightbox from '../../components/errand/ImageLightbox';
 import SkeletonLoading from '../../components/errand/SkeletonLoading';
 import OwnerActions from '../../components/errand/OwnerActions';
 import EditErrandSheet from '../../components/errand/EditErrandSheet';
@@ -115,7 +115,7 @@ export default function ErrandDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         <View style={{ alignSelf: 'center', width: '100%', maxWidth: width >= 768 ? 680 : undefined, padding: 20, gap: 16 }}>
 
-          <ErrandDetailHeader isRemote={errand.is_remote} />
+          <DetailHeader isRemote={errand.is_remote} />
 
           {isOwner && (
             <OwnerActions
@@ -135,7 +135,7 @@ export default function ErrandDetailScreen() {
               onCancel={() => setIsEditing(false)}
             />
           ) : (
-            <ErrandDetailCard
+            <DetailCard
               title={errand.title}
               description={errand.description}
               isOpen={errand.is_open}
@@ -143,12 +143,14 @@ export default function ErrandDetailScreen() {
               deadline={deadline}
               locationName={errand.location_name}
               addressDetails={errand.address_details}
+              locationLat={errand.location_lat}
+              locationLng={errand.location_lng}
               images={images}
               onImagePress={setPreviewIndex}
             />
           )}
 
-          <ErrandPosterCard
+          <PosterCard
             name={errand.poster_name}
             avatar={errand.poster_avatar}
             rating={errand.poster_rating}
@@ -170,7 +172,7 @@ export default function ErrandDetailScreen() {
 
       <NavBar />
 
-      <ErrandImageLightbox
+      <ImageLightbox
         images={images}
         activeIndex={previewIndex}
         onClose={() => setPreviewIndex(null)}

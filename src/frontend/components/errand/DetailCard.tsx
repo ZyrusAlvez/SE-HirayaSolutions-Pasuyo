@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import ErrandMinimap from './ErrandMinimap';
 
 const ACCENT = '#FEA405';
 
@@ -11,6 +12,8 @@ interface Props {
   deadline?: string | null;
   locationName?: string;
   addressDetails?: string;
+  locationLat?: number | null;
+  locationLng?: number | null;
   images?: string[];
   onImagePress: (index: number) => void;
 }
@@ -29,7 +32,7 @@ function SectionLabel({ text }: { text: string }) {
 
 export default function ErrandDetailCard({
   title, description, isOpen, budget, deadline,
-  locationName, addressDetails, images = [], onImagePress,
+  locationName, addressDetails, locationLat, locationLng, images = [], onImagePress,
 }: Props) {
   const statusColor = isOpen ? '#10B981' : '#6B7280';
   const statusLabel = isOpen ? 'Open' : 'Closed';
@@ -94,6 +97,11 @@ export default function ErrandDetailCard({
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 6 }}>
               <Ionicons name="map-outline" size={15} color="#9CA3AF" style={{ marginTop: 1 }} />
               <Text style={{ fontSize: 13, color: '#6B7280', flex: 1, lineHeight: 19 }}>{addressDetails}</Text>
+            </View>
+          )}
+          {locationLat != null && locationLng != null && (
+            <View style={{ marginTop: 12 }}>
+              <ErrandMinimap lat={locationLat} lng={locationLng} />
             </View>
           )}
         </>
