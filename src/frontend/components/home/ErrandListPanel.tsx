@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, ScrollView, Image, Animated, Platform, UI
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import SortBar, { SortState } from './SortBar';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
@@ -30,6 +31,8 @@ interface Props {
   onSelect: (errand: Errand) => void;
   expandedId?: string | null;
   static?: boolean;
+  userLat?: number;
+  userLng?: number;
 }
 
 function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggle }: {
@@ -106,14 +109,25 @@ function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggl
   );
 }
 
-function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpandedId, onMoreInfo }: {
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpandedId, onMoreInfo, userLat, userLng }: {
   errands: Errand[];
   onSelect: (e: Errand) => void;
   onClose: () => void;
   expandedId?: string | null;
   onMoreInfo: (e: Errand) => void;
+  userLat?: number;
+  userLng?: number;
 }) {
   const [activeId, setActiveId] = useState<string | null>(initialExpandedId ?? null);
+  const [sort, setSort] = useState<SortState>({ key: null, dir: 'asc' });
 
   useEffect(() => {
     if (initialExpandedId) setActiveId(initialExpandedId);
@@ -121,30 +135,54 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
 
   const toggle = (id: string) => setActiveId(prev => prev === id ? null : id);
 
+  const sortKeys = userLat != null && userLng != null
+    ? (['deadline', 'budget', 'distance'] as const)
+    : (['deadline', 'budget'] as const);
+
+  const sorted = [...errands].sort((a, b) => {
+    if (!sort.key) return 0;
+    let diff = 0;
+    if (sort.key === 'deadline') {
+      const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+      const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      diff = da - db;
+    } else if (sort.key === 'budget') {
+      diff = (a.budget ?? 0) - (b.budget ?? 0);
+    } else if (sort.key === 'distance' && userLat != null && userLng != null) {
+      diff = haversineKm(userLat, userLng, a.location_lat, a.location_lng)
+           - haversineKm(userLat, userLng, b.location_lat, b.location_lng);
+    }
+    return sort.dir === 'asc' ? diff : -diff;
+  });
+
   return errands.length === 0 ? (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Ionicons name="location-outline" size={36} color="#E5E7EB" />
       <Text style={{ color: '#9CA3AF', marginTop: 8, fontSize: 12 }}>No errands nearby</Text>
     </View>
   ) : (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      {errands.map((e, i) => (
-        <ErrandRow
-          key={e.id}
-          e={e}
-          isLast={i === errands.length - 1}
-          onSelect={onSelect}
-          onClose={onClose}
-          onMoreInfo={onMoreInfo}
-          expanded={activeId === e.id}
-          onToggle={() => toggle(e.id)}
-        />
-      ))}
-    </ScrollView>
+    <>
+      <SortBar sort={sort} onSort={setSort} keys={sortKeys as any} />
+      <View style={{ height: 1, backgroundColor: '#F3F4F6' }} />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {sorted.map((e, i) => (
+          <ErrandRow
+            key={e.id}
+            e={e}
+            isLast={i === sorted.length - 1}
+            onSelect={onSelect}
+            onClose={onClose}
+            onMoreInfo={onMoreInfo}
+            expanded={activeId === e.id}
+            onToggle={() => toggle(e.id)}
+          />
+        ))}
+      </ScrollView>
+    </>
   );
 }
 
-export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId, static: isStatic }: Props) {
+export default function ErrandListPanel({ errands, visible, slideAnim, onClose, onSelect, expandedId, static: isStatic, userLat, userLng }: Props) {
   const router = useRouter();
   const onMoreInfo = (e: Errand) => router.push({ pathname: '/errand/[id]', params: { id: e.id } });
 
@@ -161,7 +199,7 @@ export default function ErrandListPanel({ errands, visible, slideAnim, onClose, 
         shadowRadius: 12,
         elevation: 4,
       }}>
-        <ErrandListContent errands={errands} onSelect={onSelect} onClose={onClose} expandedId={expandedId} onMoreInfo={onMoreInfo} />
+        <ErrandListContent errands={errands} onSelect={onSelect} onClose={onClose} expandedId={expandedId} onMoreInfo={onMoreInfo} userLat={userLat} userLng={userLng} />
       </View>
     );
   }
@@ -195,7 +233,7 @@ export default function ErrandListPanel({ errands, visible, slideAnim, onClose, 
           </TouchableOpacity>
         </View>
         <View style={{ height: 1, backgroundColor: '#F3F4F6' }} />
-        <ErrandListContent errands={errands} onSelect={onSelect} onClose={onClose} expandedId={expandedId} onMoreInfo={onMoreInfo} />
+        <ErrandListContent errands={errands} onSelect={onSelect} onClose={onClose} expandedId={expandedId} onMoreInfo={onMoreInfo} userLat={userLat} userLng={userLng} />
       </Animated.View>
     </>
   );
