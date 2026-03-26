@@ -7,7 +7,7 @@ const ACCENT = '#FEA405';
 interface Props {
   title: string;
   description: string;
-  isOpen: boolean;
+  status: 'Pending' | 'Accepted' | 'In Progress' | 'Completed';
   budget?: number;
   deadline?: string | null;
   locationName?: string;
@@ -31,11 +31,16 @@ function SectionLabel({ text }: { text: string }) {
 }
 
 export default function ErrandDetailCard({
-  title, description, isOpen, budget, deadline,
+  title, description, status, budget, deadline,
   locationName, addressDetails, locationLat, locationLng, images = [], onImagePress,
 }: Props) {
-  const statusColor = isOpen ? '#10B981' : '#6B7280';
-  const statusLabel = isOpen ? 'Open' : 'Closed';
+  const statusBadgeColor: Record<string, string> = {
+    Pending: '#F59E0B',
+    Accepted: '#3B82F6',
+    'In Progress': '#8B5CF6',
+    Completed: '#10B981',
+  };
+  const badgeColor = statusBadgeColor[status] ?? '#6B7280';
 
   return (
     <View style={{
@@ -46,8 +51,8 @@ export default function ErrandDetailCard({
       {/* Title + status */}
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <Text style={{ fontSize: 20, fontWeight: '800', color: '#111827', flex: 1 }}>{title}</Text>
-        <View style={{ backgroundColor: statusColor + '1A', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginTop: 2 }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: statusColor }}>{statusLabel}</Text>
+        <View style={{ backgroundColor: badgeColor + '1A', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginTop: 2 }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: badgeColor }}>{status}</Text>
         </View>
       </View>
 

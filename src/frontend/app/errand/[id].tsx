@@ -23,7 +23,7 @@ interface Errand {
   title: string;
   description: string;
   is_remote: boolean;
-  is_open: boolean;
+  status: 'Pending' | 'Accepted' | 'In Progress' | 'Completed';
   location_lat: number | null;
   location_lng: number | null;
   location_name?: string;
@@ -31,7 +31,6 @@ interface Errand {
   budget?: number;
   deadline?: string;
   images?: string[];
-  status: string;
   created_at: string;
   poster_name?: string;
   poster_avatar?: string;
@@ -66,11 +65,12 @@ export default function ErrandDetailScreen() {
 
   useEffect(() => {
     supabase
-      .from('errands_with_poster')
+      .from('errands_with_profiles')
       .select('*')
       .eq('id', id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        console.log('errand fetch:', data, error);
         setErrand(data);
         setLoading(false);
       });
@@ -145,7 +145,7 @@ export default function ErrandDetailScreen() {
             <DetailCard
               title={errand.title}
               description={errand.description}
-              isOpen={errand.is_open}
+              status={errand.status}
               budget={errand.budget}
               deadline={deadline}
               locationName={errand.location_name}
@@ -165,7 +165,7 @@ export default function ErrandDetailScreen() {
             postedOn={postedOn}
           />
 
-          {errand.is_open && !isOwner && (
+          {errand.status !== 'Completed' && !isOwner && (
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
               <TouchableOpacity
                 activeOpacity={0.85}
