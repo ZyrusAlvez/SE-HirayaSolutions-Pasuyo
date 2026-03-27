@@ -30,6 +30,7 @@ interface Errand {
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<any>(require('../assets/images/default_profile.jpg'));
+  const [isVerified, setIsVerified] = useState(false);
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loadingErrands, setLoadingErrands] = useState(true);
   const hasLoaded = useRef(false);
@@ -41,6 +42,8 @@ export default function HomeScreen() {
       if (user) {
         const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
         if (url && url !== 'default') setAvatarUrl({ uri: url });
+        supabase.from('profiles').select('verified').eq('id', user.id).single()
+          .then(({ data }) => { if (data?.verified) setIsVerified(true); });
       }
     });
   }, []);
@@ -81,7 +84,7 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <Header avatarUrl={avatarUrl} />
+      <Header avatarUrl={avatarUrl} isVerified={isVerified} />
       <View style={[{ flex: 1 }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
         <ErrandTabToggle tab={tab} onTabChange={setTab} />
         <View className="flex-1 px-6 pb-4">

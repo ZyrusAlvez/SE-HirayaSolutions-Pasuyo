@@ -80,7 +80,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
 
       const imageUrls = await uploadNewImages(user.id);
 
-      const updates = {
+      const dbUpdates = {
         title: title.trim(),
         description: description.trim(),
         is_remote: isRemote,
@@ -93,11 +93,22 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
         images: imageUrls,
       };
 
-      const { error } = await supabase.from('errands').update(updates).eq('id', errand.id);
+      const { error } = await supabase.from('errands').update(dbUpdates).eq('id', errand.id);
       if (error) throw error;
 
       toast({ title: 'Errand updated!', preset: 'done' });
-      onSaved(updates);
+      onSaved({
+        title: dbUpdates.title,
+        description: dbUpdates.description,
+        is_remote: dbUpdates.is_remote,
+        budget: dbUpdates.budget ?? undefined,
+        deadline: dbUpdates.deadline ?? undefined,
+        location_lat: dbUpdates.location_lat,
+        location_lng: dbUpdates.location_lng,
+        location_name: dbUpdates.location_name ?? undefined,
+        address_details: dbUpdates.address_details ?? undefined,
+        images: dbUpdates.images,
+      });
     } catch (e: any) {
       toast({ title: e.message ?? 'Something went wrong', preset: 'error' });
     } finally {
@@ -145,7 +156,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
       <LocationMap
         visible={showMap}
         onClose={() => setShowMap(false)}
-        initialCoords={pinnedLocation ?? undefined}
+        initialCoords={pinnedLocation}
         pinnedLocation={pinnedLocation}
         onPin={(lat, lng, name) => setPinnedLocation({ lat, lng, name })}
       />
