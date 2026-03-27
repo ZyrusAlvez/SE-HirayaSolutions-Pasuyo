@@ -23,10 +23,9 @@ interface Props {
 
 export default function RemoteErrandList({ errands }: Props) {
   const router = useRouter();
-  const [sort, setSort] = useState<SortState>({ key: null, dir: 'asc' });
+  const [sort, setSort] = useState<SortState>({ key: 'budget', dir: 'asc' });
 
   const sorted = [...errands].sort((a, b) => {
-    if (!sort.key) return 0;
     let diff = 0;
     if (sort.key === 'deadline') {
       const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
@@ -48,7 +47,7 @@ export default function RemoteErrandList({ errands }: Props) {
   }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScrollView showsVerticalScrollIndicator={false} style={{ overflow: 'visible' }}>
       <SortBar sort={sort} onSort={setSort} keys={['deadline', 'budget']} />
       <Text style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 8, marginLeft: 4 }}>Tap a row to see more info</Text>
       <View style={{ backgroundColor: 'white', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#F3F4F6' }}>
