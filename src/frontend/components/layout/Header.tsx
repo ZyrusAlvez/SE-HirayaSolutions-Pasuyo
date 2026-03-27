@@ -1,14 +1,16 @@
 import { View, TouchableOpacity, Image, Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
 interface Props {
   avatarUrl?: any;
+  isVerified?: boolean;
 }
 
-export default function Header({ avatarUrl }: Props) {
+export default function Header({ avatarUrl, isVerified }: Props) {
   const router = useRouter();
   const isWeb = Platform.OS === 'web';
   return (
@@ -23,11 +25,18 @@ export default function Header({ avatarUrl }: Props) {
           resizeMode="contain"
         />
         <TouchableOpacity onPress={() => router.push('/profile')} activeOpacity={0.7}>
-          <Image
-            source={avatarUrl ?? DEFAULT_AVATAR}
-            style={{ width: 36, height: 36, borderRadius: 18 }}
-            resizeMode="cover"
-          />
+          <View style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#FACC15', alignItems: 'center', justifyContent: 'center' }}>
+            <Image
+              source={avatarUrl ?? DEFAULT_AVATAR}
+              style={{ width: 34, height: 34, borderRadius: 17 }}
+              resizeMode="cover"
+            />
+            {isVerified && (
+              <View style={{ position: 'absolute', bottom: -2, right: -2, backgroundColor: '#fff', borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
+                <MaterialIcons name="verified" size={14} color="#1D9BF0" />
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
     </View>

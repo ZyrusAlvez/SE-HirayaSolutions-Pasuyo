@@ -127,7 +127,7 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
   userLng?: number;
 }) {
   const [activeId, setActiveId] = useState<string | null>(initialExpandedId ?? null);
-  const [sort, setSort] = useState<SortState>({ key: null, dir: 'asc' });
+  const [sort, setSort] = useState<SortState>({ key: userLat != null && userLng != null ? 'distance' : 'deadline', dir: 'asc' });
 
   useEffect(() => {
     if (initialExpandedId) setActiveId(initialExpandedId);
@@ -140,7 +140,6 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
     : (['deadline', 'budget'] as const);
 
   const sorted = [...errands].sort((a, b) => {
-    if (!sort.key) return 0;
     let diff = 0;
     if (sort.key === 'deadline') {
       const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
