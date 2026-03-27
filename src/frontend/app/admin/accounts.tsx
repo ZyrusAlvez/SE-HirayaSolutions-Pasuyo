@@ -64,12 +64,14 @@ export default function AdminAccountsScreen() {
   useEffect(() => {
     fetchUsers();
 
-    const channel = supabaseAdmin
-      .channel('admin-profiles')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchUsers())
-      .subscribe();
+    // Poll every 5 seconds for updates
+    const interval = setInterval(() => {
+      fetchUsers();
+    }, 5000);
 
-    return () => { supabaseAdmin.removeChannel(channel); };
+    return () => { 
+      clearInterval(interval);
+    };
   }, []);
 
   const filtered = useMemo(() => {
