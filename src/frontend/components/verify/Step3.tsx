@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { toast } from 'burnt';
+import { toast } from '../../lib/toast';
 import { validateImageAsset } from '../../lib/imageValidation';
 
 type UtilityBillType = 'Water' | 'Electricity' | 'Internet';
@@ -21,24 +21,20 @@ export default function Step3({
   utilityBillBackUri, setUtilityBillBackUri,
 }: Step3Props) {
   const pickImage = async (side: 'front' | 'back') => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') { toast({ title: 'Permission required to access photos', preset: 'error' }); return; }
+    let result;
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.7,
-      });
-      if (!result.canceled) {
-        const asset = result.assets[0];
-        const validation = await validateImageAsset(asset);
-        if (!validation.ok) {
-          toast({ title: validation.error, preset: 'error' });
-          return;
-        }
-        if (side === 'front') setUtilityBillFrontUri(asset.uri);
-        else setUtilityBillBackUri(asset.uri);
-      }
+      result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
     } catch {
-      toast({ title: 'Failed to pick image. Please try again.', preset: 'error' });
+      toast({ title: 'Only JPG, PNG, or WebP images are allowed', preset: 'error' }); return;
     }
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    const validation = await validateImageAsset(asset);
+    if (!validation.ok) { toast({ title: validation.error, preset: 'error' }); return; }
+    if (side === 'front') setUtilityBillFrontUri(asset.uri);
+    else setUtilityBillBackUri(asset.uri);
   };
 
   const UploadSlot = ({
