@@ -7,7 +7,7 @@ const ACCENT = '#FEA405';
 interface Props {
   title: string;
   description: string;
-  status: 'Pending' | 'Accepted' | 'In Progress' | 'Completed';
+  status: 'Available' | 'Expired' | 'In Progress' | 'Completed';
   budget?: number;
   deadline?: string | null;
   locationName?: string;
@@ -35,10 +35,10 @@ export default function ErrandDetailCard({
   locationName, addressDetails, locationLat, locationLng, images = [], onImagePress,
 }: Props) {
   const statusBadgeColor: Record<string, string> = {
-    Pending: '#F59E0B',
-    Accepted: '#3B82F6',
+    Available: '#10B981',
+    Expired: '#EF4444',
     'In Progress': '#8B5CF6',
-    Completed: '#10B981',
+    Completed: '#3B82F6',
   };
   const badgeColor = statusBadgeColor[status] ?? '#6B7280';
 

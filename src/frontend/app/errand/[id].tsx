@@ -23,7 +23,7 @@ interface Errand {
   title: string;
   description: string;
   is_remote: boolean;
-  status: 'Pending' | 'Accepted' | 'In Progress' | 'Completed';
+  status: 'Available' | 'Expired' | 'In Progress' | 'Completed';
   location_lat: number | null;
   location_lng: number | null;
   location_name?: string;
@@ -71,6 +71,9 @@ export default function ErrandDetailScreen() {
       .single()
       .then(({ data, error }) => {
         console.log('errand fetch:', data, error);
+        if (data && data.status === 'Available' && data.deadline && new Date(data.deadline) < new Date()) {
+          data.status = 'Expired';
+        }
         setErrand(data);
         setLoading(false);
       });
@@ -165,7 +168,7 @@ export default function ErrandDetailScreen() {
             postedOn={postedOn}
           />
 
-          {errand.status !== 'Completed' && !isOwner && (
+          {errand.status === 'Available' && !isOwner && (
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
               <TouchableOpacity
                 activeOpacity={0.85}
