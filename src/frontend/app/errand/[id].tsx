@@ -50,6 +50,7 @@ export default function ErrandDetailScreen() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -57,6 +58,8 @@ export default function ErrandDetailScreen() {
         setCurrentUserId(user.id);
         const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
         if (url && url !== 'default') setAvatarUrl({ uri: url });
+        supabase.from('profiles').select('verified').eq('id', user.id).single()
+          .then(({ data }) => { if (data?.verified) setIsVerified(true); });
       } else {
         setIsGuest(true);
       }
@@ -79,7 +82,7 @@ export default function ErrandDetailScreen() {
       });
   }, [id]);
 
-  const headerEl = isGuest ? <GuestHeader /> : <Header avatarUrl={avatarUrl} />;
+  const headerEl = isGuest ? <GuestHeader /> : <Header avatarUrl={avatarUrl} isVerified={isVerified} />;
 
   if (loading) {
     return (
