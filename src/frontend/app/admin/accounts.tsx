@@ -1,36 +1,44 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../lib/supabase';
 import AdminNavBar from '../../components/admin/AdminNavBar';
 import UserCard, { UserProfile } from '../../components/admin/UserCard';
+import VerificationCard, { PendingUser } from '../../components/admin/VerificationCard';
 
 const ACCENT = '#FEA405';
 
-type SortKey = 'newest' | 'oldest' | 'verified' | 'unverified';
+type SortKey = 'newest' | 'oldest' | 'verified' | 'unverified' | 'pending';
 
 const SORT_OPTIONS: { label: string; value: SortKey }[] = [
   { label: 'Newest', value: 'newest' },
   { label: 'Oldest', value: 'oldest' },
   { label: 'Verified', value: 'verified' },
   { label: 'Unverified', value: 'unverified' },
+  { label: 'Pending', value: 'pending' },
 ];
 
+interface FullUserProfile extends UserProfile {
+  pending_verification: boolean;
+  avatar_url: string | null;
+  verification_submitted_at: string | null;
+  id_type: string | null;
+}
+
 export default function AdminAccountsScreen() {
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [users, setUsers] = useState<FullUserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('newest');
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchUsers = async () => {
-    const { data } = await supabase
+    const { data } = await supabaseAdmin
       .from('admin_user_profiles')
-      .select('id, display_name, email, verified, role, created_at, rating');
-    if (data) setUsers(data as UserProfile[]);
+      .select('id, display_name, email, verified, role, created_at, rating, pending_verification, avatar_url, verification_submitted_at, id_type');
+    if (data) setUsers(data as FullUserProfile[]);
     setLoading(false);
   };
-
-  const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -41,15 +49,12 @@ export default function AdminAccountsScreen() {
   useEffect(() => {
     fetchUsers();
 
-    const channel = supabase
+    const channel = supabaseAdmin
       .channel('admin-profiles')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
-        console.log('realtime event:', payload);
-        fetchUsers();
-      })
-      .subscribe((status) => console.log('realtime status:', status));
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchUsers())
+      .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { supabaseAdmin.removeChannel(channel); };
   }, []);
 
   const filtered = useMemo(() => {
@@ -63,6 +68,8 @@ export default function AdminAccountsScreen() {
       );
     }
 
+    if (sort === 'pending') return list.filter(u => u.pending_verification === true);
+
     switch (sort) {
       case 'newest': list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); break;
       case 'oldest': list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); break;
@@ -75,14 +82,17 @@ export default function AdminAccountsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      {/* Header */}
-      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6`}>
-        <Text className="text-xl font-bold text-gray-900">User Accounts</Text>
-        <Text className="text-xs text-gray-400 mt-0.5">{users.length} total users</Text>
+      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6 flex-row items-center justify-between`}>
+        <View>
+          <Text className="text-xl font-bold text-gray-900">User Accounts</Text>
+          <Text className="text-xs text-gray-400 mt-0.5">{users.length} total users</Text>
+        </View>
+        <TouchableOpacity onPress={() => supabase.auth.signOut()} activeOpacity={0.7} style={{ padding: 8 }}>
+          <Ionicons name="log-out-outline" size={24} color="#9CA3AF" />
+        </TouchableOpacity>
       </View>
 
       <View style={{ flex: 1, padding: 16, gap: 12 }}>
-        {/* Search */}
         <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-3 gap-2">
           <Ionicons name="search-outline" size={18} color="#9CA3AF" />
           <TextInput
@@ -99,8 +109,7 @@ export default function AdminAccountsScreen() {
           )}
         </View>
 
-        {/* Sort */}
-        <View className="flex-row gap-2">
+        <View className="flex-row gap-2 flex-wrap">
           {SORT_OPTIONS.map(opt => (
             <TouchableOpacity
               key={opt.value}
@@ -114,7 +123,6 @@ export default function AdminAccountsScreen() {
           ))}
         </View>
 
-        {/* List */}
         {loading ? (
           <View className="flex-1 items-center justify-center">
             <Text className="text-gray-400 text-sm">Loading users...</Text>
@@ -123,10 +131,13 @@ export default function AdminAccountsScreen() {
           <FlatList
             data={filtered}
             keyExtractor={item => item.id}
-            renderItem={({ item }) => <UserCard user={item} />}
+            renderItem={({ item }) => sort === 'pending'
+              ? <VerificationCard user={item as unknown as PendingUser} />
+              : <UserCard user={item} />
+            }
             contentContainerStyle={{ gap: 8, paddingBottom: 16 }}
             showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#FEA405']} tintColor="#FEA405" />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
             ListEmptyComponent={
               <View className="items-center justify-center mt-16">
                 <Ionicons name="people-outline" size={40} color="#E5E7EB" />

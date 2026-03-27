@@ -42,12 +42,17 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup' || segments[0] === 'reset-password';
     const isResetPassword = segments[0] === 'reset-password';
     const isPublic = segments[0] === 'errand';
+    const inAdminGroup = segments[0] === 'admin';
 
     if (!session && !inAuthGroup && !isPublic) {
       router.replace('/login');
     } else if (session && inAuthGroup && !isResetPassword) {
       const dest = consumePendingRedirect();
       router.replace((dest as any) || '/');
+    } else if (session && !inAuthGroup && !inAdminGroup && !isPublic) {
+      supabase.from('profiles').select('role').eq('id', session.user.id).single().then(({ data }) => {
+        if (data?.role === 'admin') router.replace('/admin');
+      });
     }
   }, [session, segments, loading]);
 

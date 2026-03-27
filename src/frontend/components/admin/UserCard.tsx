@@ -11,6 +11,7 @@ export interface UserProfile {
   role: string | null;
   created_at: string;
   rating: number | null;
+  avatar_url?: string | null;
 }
 
 interface Props {
@@ -26,7 +27,7 @@ export default function UserCard({ user }: Props) {
   return (
     <View className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-3 border border-gray-100">
       <Image
-        source={DEFAULT_AVATAR}
+        source={user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
         style={{ width: 44, height: 44, borderRadius: 22 }}
         resizeMode="cover"
       />
