@@ -34,7 +34,17 @@ export default function LoginScreen() {
     if (error) {
       toast({ title: 'Invalid email or password', preset: 'error' });
     } else if (data.user) {
-      router.replace((redirect as string) || '/');
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace((redirect as string) || '/');
+      }
     }
   };
 

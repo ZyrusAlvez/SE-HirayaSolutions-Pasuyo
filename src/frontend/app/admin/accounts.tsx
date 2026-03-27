@@ -1,0 +1,143 @@
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../../lib/supabase';
+import AdminNavBar from '../../components/admin/AdminNavBar';
+import UserCard, { UserProfile } from '../../components/admin/UserCard';
+
+const ACCENT = '#FEA405';
+
+type SortKey = 'newest' | 'oldest' | 'verified' | 'unverified';
+
+const SORT_OPTIONS: { label: string; value: SortKey }[] = [
+  { label: 'Newest', value: 'newest' },
+  { label: 'Oldest', value: 'oldest' },
+  { label: 'Verified', value: 'verified' },
+  { label: 'Unverified', value: 'unverified' },
+];
+
+export default function AdminAccountsScreen() {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortKey>('newest');
+
+  const fetchUsers = async () => {
+    const { data } = await supabase
+      .from('admin_user_profiles')
+      .select('id, display_name, email, verified, role, created_at, rating');
+    if (data) setUsers(data as UserProfile[]);
+    setLoading(false);
+  };
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchUsers();
+    setRefreshing(false);
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+
+    const channel = supabase
+      .channel('admin-profiles')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        console.log('realtime event:', payload);
+        fetchUsers();
+      })
+      .subscribe((status) => console.log('realtime status:', status));
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const filtered = useMemo(() => {
+    let list = [...users];
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(u =>
+        (u.display_name ?? '').toLowerCase().includes(q) ||
+        (u.email ?? '').toLowerCase().includes(q)
+      );
+    }
+
+    switch (sort) {
+      case 'newest': list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); break;
+      case 'oldest': list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); break;
+      case 'verified': list.sort((a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0)); break;
+      case 'unverified': list.sort((a, b) => (a.verified ? 1 : 0) - (b.verified ? 1 : 0)); break;
+    }
+
+    return list;
+  }, [users, search, sort]);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      {/* Header */}
+      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6`}>
+        <Text className="text-xl font-bold text-gray-900">User Accounts</Text>
+        <Text className="text-xs text-gray-400 mt-0.5">{users.length} total users</Text>
+      </View>
+
+      <View style={{ flex: 1, padding: 16, gap: 12 }}>
+        {/* Search */}
+        <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-3 gap-2">
+          <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+          <TextInput
+            placeholder="Search by name or email..."
+            placeholderTextColor="#9CA3AF"
+            value={search}
+            onChangeText={setSearch}
+            className="flex-1 py-2.5 text-sm text-gray-800"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Sort */}
+        <View className="flex-row gap-2">
+          {SORT_OPTIONS.map(opt => (
+            <TouchableOpacity
+              key={opt.value}
+              onPress={() => setSort(opt.value)}
+              className={`px-3 py-1.5 rounded-full border ${sort === opt.value ? 'bg-[#FEA405] border-[#FEA405]' : 'bg-white border-gray-200'}`}
+            >
+              <Text className={`text-xs font-medium ${sort === opt.value ? 'text-white' : 'text-gray-600'}`}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* List */}
+        {loading ? (
+          <View className="flex-1 items-center justify-center">
+            <Text className="text-gray-400 text-sm">Loading users...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filtered}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => <UserCard user={item} />}
+            contentContainerStyle={{ gap: 8, paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#FEA405']} tintColor="#FEA405" />}
+            ListEmptyComponent={
+              <View className="items-center justify-center mt-16">
+                <Ionicons name="people-outline" size={40} color="#E5E7EB" />
+                <Text className="text-gray-400 text-sm mt-2">No users found</Text>
+              </View>
+            }
+          />
+        )}
+      </View>
+
+      <AdminNavBar />
+    </View>
+  );
+}
