@@ -1,11 +1,11 @@
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function NavBar() {
   const router = useRouter();
   return (
-    <View className="bg-white px-6 py-4 flex-row justify-around border-t border-gray-100">
+    <View className={`bg-white px-6 flex-row justify-around border-t border-gray-100 ${Platform.OS === 'web' ? 'py-2' : 'py-4'}`}>
       <TouchableOpacity className="items-center" activeOpacity={0.7}>
         <Ionicons name="chatbubble-outline" size={24} color="#FEA405" />
         <Text className="text-xs mt-1 text-gray-700">Chat</Text>

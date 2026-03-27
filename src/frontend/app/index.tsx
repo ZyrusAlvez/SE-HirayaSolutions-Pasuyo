@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Alert } from 'react-native';
+import { View, Alert, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
@@ -74,12 +74,14 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-white">
       <Header avatarUrl={avatarUrl} />
-      <ErrandTabToggle tab={tab} onTabChange={setTab} />
-      <View className="flex-1 px-6 pb-4">
-        {tab === 'onsite'
-          ? location && <OnsiteMap errands={onsiteErrands} location={location} expandId={expandId} />
-          : <RemoteErrandList errands={remoteErrands} />
-        }
+      <View style={[{ flex: 1 }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
+        <ErrandTabToggle tab={tab} onTabChange={setTab} />
+        <View className="flex-1 px-6 pb-4">
+          {tab === 'onsite'
+            ? location && <OnsiteMap errands={onsiteErrands} location={location} expandId={expandId} />
+            : <RemoteErrandList errands={remoteErrands} />
+          }
+        </View>
       </View>
       <NavBar />
     </View>
