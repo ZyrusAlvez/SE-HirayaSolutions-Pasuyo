@@ -3,8 +3,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useSegments } from 'expo-router';
 
 const TABS = [
-  { label: 'Accounts', icon: 'people-outline', route: '/admin/accounts' },
-  { label: 'Errands', icon: 'list-outline', route: '/admin/errands' },
+  { label: 'Accounts',  icon: 'people-outline',       route: '/admin/accounts'  },
+  { label: 'Errands',   icon: 'list-outline',          route: '/admin/errands'   },
+  { label: 'Analytics', icon: 'bar-chart-outline',     route: '/admin/analytics' },
+  { label: 'Logs',      icon: 'document-text-outline', route: '/admin/logs'      },
 ] as const;
 
 const ACCENT = '#FEA405';
@@ -15,18 +17,18 @@ export default function AdminNavBar() {
   const currentRoute = '/' + segments.join('/');
 
   return (
-    <View className={`bg-white px-6 flex-row justify-around border-t border-gray-100 ${Platform.OS === 'web' ? 'py-2' : 'py-4'}`}>
+    <View style={{ backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#F3F4F6', flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 8, paddingVertical: Platform.OS === 'web' ? 8 : 16 }}>
       {TABS.map(tab => {
         const active = currentRoute === tab.route;
         return (
           <TouchableOpacity
             key={tab.route}
-            className="items-center"
+            style={{ alignItems: 'center', flex: 1 }}
             activeOpacity={0.7}
             onPress={() => router.push(tab.route)}
           >
-            <Ionicons name={tab.icon as any} size={24} color={active ? ACCENT : '#9CA3AF'} />
-            <Text className={`text-xs mt-1 ${active ? 'text-[#FEA405] font-semibold' : 'text-gray-400'}`}>
+            <Ionicons name={tab.icon as any} size={22} color={active ? ACCENT : '#9CA3AF'} />
+            <Text style={{ fontSize: 10, marginTop: 3, color: active ? ACCENT : '#9CA3AF', fontWeight: active ? '600' : '400' }}>
               {tab.label}
             </Text>
           </TouchableOpacity>

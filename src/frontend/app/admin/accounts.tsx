@@ -8,7 +8,7 @@ import VerificationCard, { PendingUser } from '../../components/admin/Verificati
 
 const ACCENT = '#FEA405';
 
-type SortKey = 'newest' | 'oldest' | 'verified' | 'unverified' | 'pending';
+type SortKey = 'newest' | 'oldest' | 'verified' | 'unverified' | 'pending' | 'suspended';
 
 const SORT_OPTIONS: { label: string; value: SortKey }[] = [
   { label: 'Newest', value: 'newest' },
@@ -16,6 +16,7 @@ const SORT_OPTIONS: { label: string; value: SortKey }[] = [
   { label: 'Verified', value: 'verified' },
   { label: 'Unverified', value: 'unverified' },
   { label: 'Pending', value: 'pending' },
+  { label: 'Suspended', value: 'suspended' },
 ];
 
 interface FullUserProfile extends UserProfile {
@@ -23,6 +24,7 @@ interface FullUserProfile extends UserProfile {
   avatar_url: string | null;
   verification_submitted_at: string | null;
   id_type: string | null;
+  is_active: boolean;
 }
 
 export default function AdminAccountsScreen() {
@@ -36,7 +38,20 @@ export default function AdminAccountsScreen() {
     const { data } = await supabaseAdmin
       .from('admin_user_profiles')
       .select('id, display_name, email, verified, role, created_at, rating, pending_verification, avatar_url, verification_submitted_at, id_type');
-    if (data) setUsers(data as FullUserProfile[]);
+    
+    if (data) {
+      const usersWithStatus = await Promise.all(
+        data.map(async (user) => {
+          const { data: profileData } = await supabaseAdmin
+            .from('profiles')
+            .select('is_active')
+            .eq('id', user.id)
+            .maybeSingle();
+          return { ...user, is_active: profileData?.is_active ?? true };
+        })
+      );
+      setUsers(usersWithStatus as FullUserProfile[]);
+    }
     setLoading(false);
   };
 
@@ -69,12 +84,13 @@ export default function AdminAccountsScreen() {
     }
 
     if (sort === 'pending') return list.filter(u => u.pending_verification === true);
+    if (sort === 'suspended') return list.filter(u => u.is_active === false);
+    if (sort === 'verified') return list.filter(u => u.verified === true);
+    if (sort === 'unverified') return list.filter(u => u.verified === false);
 
     switch (sort) {
       case 'newest': list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); break;
       case 'oldest': list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); break;
-      case 'verified': list.sort((a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0)); break;
-      case 'unverified': list.sort((a, b) => (a.verified ? 1 : 0) - (b.verified ? 1 : 0)); break;
     }
 
     return list;
