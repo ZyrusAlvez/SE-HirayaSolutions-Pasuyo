@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Alert } from 'react-native';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Alert, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
@@ -9,6 +9,7 @@ import NavBar from '../components/layout/NavBar';
 import ErrandTabToggle from '../components/home/ErrandTabToggle';
 import OnsiteMap from '../components/home/OnsiteMap';
 import RemoteErrandList from '../components/home/RemoteErrandList';
+import SkeletonLoading from '../components/home/SkeletonLoading';
 
 interface Errand {
   id: string;
@@ -30,6 +31,8 @@ export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<any>(require('../assets/images/default_profile.jpg'));
   const [errands, setErrands] = useState<Errand[]>([]);
+  const [loadingErrands, setLoadingErrands] = useState(true);
+  const hasLoaded = useRef(false);
   const [tab, setTab] = useState<'onsite' | 'remote'>('onsite');
   const [expandId, setExpandId] = useState<string | undefined>(undefined);
 
@@ -50,11 +53,16 @@ export default function HomeScreen() {
     } else {
       setExpandId(undefined);
     }
+    if (!hasLoaded.current) setLoadingErrands(true);
     supabase
-      .from('errands_with_poster')
+      .from('errands_with_profiles')
       .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images, poster_name, poster_avatar, poster_is_verified')
-      .eq('status', 'open')
-      .then(({ data }) => { if (data) setErrands(data); });
+      .eq('status', 'Available')
+      .then(({ data }) => {
+        if (data) setErrands(data);
+        setLoadingErrands(false);
+        hasLoaded.current = true;
+      });
   }, []));
 
   useEffect(() => {
@@ -74,12 +82,16 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-white">
       <Header avatarUrl={avatarUrl} />
-      <ErrandTabToggle tab={tab} onTabChange={setTab} />
-      <View className="flex-1 px-6 pb-4">
-        {tab === 'onsite'
-          ? location && <OnsiteMap errands={onsiteErrands} location={location} expandId={expandId} />
-          : <RemoteErrandList errands={remoteErrands} />
-        }
+      <View style={[{ flex: 1 }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
+        <ErrandTabToggle tab={tab} onTabChange={setTab} />
+        <View className="flex-1 px-6 pb-4">
+          {tab === 'onsite'
+            ? (loadingErrands || !location)
+              ? <SkeletonLoading />
+              : <OnsiteMap errands={onsiteErrands} location={location} expandId={expandId} />
+            : <RemoteErrandList errands={remoteErrands} />
+          }
+        </View>
       </View>
       <NavBar />
     </View>

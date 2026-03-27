@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from '../lib/toast';
+import { validateImageAsset } from '../lib/imageValidation';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import AvatarPicker from '../components/profile/AvatarPicker';
 import VerificationBadge from '../components/profile/VerificationBadge';
@@ -103,14 +104,8 @@ export default function ProfileScreen() {
 
     if (!result.canceled) {
       const asset = result.assets[0];
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      const maxSize = 10 * 1024 * 1024;
-      if (asset.mimeType && !allowedTypes.includes(asset.mimeType)) {
-        toast({ title: 'Only JPG, PNG, or WEBP images are allowed', preset: 'error' }); return;
-      }
-      if (asset.fileSize && asset.fileSize > maxSize) {
-        toast({ title: 'Image must be under 10MB', preset: 'error' }); return;
-      }
+      const validation = await validateImageAsset(asset);
+      if (!validation.ok) { toast({ title: validation.error, preset: 'error' }); return; }
       setPendingImageUri(asset.uri);
       setAvatarUrl({ uri: asset.uri });
     }

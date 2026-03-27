@@ -60,7 +60,7 @@ export default function Deadline({ value, onChange }: Props) {
   const [hour, setHour] = useState(value ? String(value.getHours() % 12 || 12).padStart(2, '0') : '12');
   const [minute, setMinute] = useState(value ? String(value.getMinutes()).padStart(2, '0') : '00');
   const [ampm, setAmpm] = useState<'AM' | 'PM'>(value ? (value.getHours() >= 12 ? 'PM' : 'AM') : 'AM');
-  const [noDeadline, setNoDeadline] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -105,28 +105,23 @@ export default function Deadline({ value, onChange }: Props) {
   return (
     <View className="mb-4">
       <View className="flex-row items-center justify-between mb-1">
-        <Text className="text-xs text-gray-500 ml-1">Deadline</Text>
-        <TouchableOpacity
-          onPress={() => { const next = !noDeadline; setNoDeadline(next); if (next) onChange(null); }}
-          className="flex-row items-center"
-          hitSlop={8}
-        >
-          <View style={{
-            width: 16, height: 16, borderRadius: 4, borderWidth: 1.5,
-            borderColor: noDeadline ? ACCENT : '#D1D5DB',
-            backgroundColor: noDeadline ? ACCENT : 'transparent',
-            alignItems: 'center', justifyContent: 'center', marginRight: 4,
-          }}>
-            {noDeadline && <Ionicons name="checkmark" size={10} color="#fff" />}
-          </View>
-          <Text className="text-xs text-gray-500">No deadline</Text>
+        <View className="flex-row items-center gap-1">
+          <Text className="text-xs text-gray-500 ml-1">Deadline</Text>
+        </View>
+        <TouchableOpacity onPress={() => setInfoVisible(v => !v)} hitSlop={8}>
+          <Ionicons name="information-circle-outline" size={18} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
 
+      {infoVisible && (
+        <View className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-2">
+          <Text className="text-xs text-amber-700">Tasks past their deadline will no longer appear as available.</Text>
+        </View>
+      )}
+
       <TouchableOpacity
-        onPress={() => !noDeadline && handleOpen()}
+        onPress={handleOpen}
         className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 flex-row items-center"
-        style={{ opacity: noDeadline ? 0.4 : 1 }}
       >
         <Ionicons name="calendar-outline" size={18} color={ACCENT} />
         <Text className={`ml-2 text-base flex-1 ${value ? 'text-gray-900' : 'text-gray-400'}`}>

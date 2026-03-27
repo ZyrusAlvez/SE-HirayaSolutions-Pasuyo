@@ -225,6 +225,8 @@ export default function OnsiteMap({ errands, location, expandId }: Props) {
           onClose={() => {}}
           onSelect={onSelect}
           expandedId={clickedErrandId}
+          userLat={latitude}
+          userLng={longitude}
         />
       ) : (
         <ErrandListPanel
@@ -234,6 +236,8 @@ export default function OnsiteMap({ errands, location, expandId }: Props) {
           onClose={closePanel}
           onSelect={onSelect}
           expandedId={clickedErrandId}
+          userLat={latitude}
+          userLng={longitude}
         />
       )}
     </View>

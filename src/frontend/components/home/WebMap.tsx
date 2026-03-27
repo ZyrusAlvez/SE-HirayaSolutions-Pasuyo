@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -77,6 +76,15 @@ const errandIcon = new L.Icon({
 });
 
 export default function WebMap({ latitude, longitude, errands = [], onMarkerClick, children }: WebMapProps) {
+  useEffect(() => {
+    if (typeof document !== 'undefined' && !document.querySelector('link[href*="leaflet.css"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+  }, []);
+
   return (
     <MapContainer
       center={[latitude, longitude]}

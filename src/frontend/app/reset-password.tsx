@@ -52,8 +52,12 @@ export default function ResetPasswordScreen() {
     await sendCode(email);
   };
 
-  const handleVerifyCode = () => {
+  const handleVerifyCode = async () => {
     if (!token) { toast({ title: 'Please enter the code', preset: 'error' }); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
+    setLoading(false);
+    if (error) { toast({ title: 'Invalid OTP', preset: 'error' }); return; }
     setStep('password');
   };
 
@@ -62,13 +66,6 @@ export default function ResetPasswordScreen() {
     if (password !== confirmPassword) { toast({ title: 'Passwords do not match', preset: 'error' }); return; }
     if (password.length < 6) { toast({ title: 'Password must be at least 6 characters', preset: 'error' }); return; }
     setLoading(true);
-    const { error: verifyError } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
-    if (verifyError) {
-      setLoading(false);
-      toast({ title: 'Invalid or expired code', preset: 'error' });
-      setStep('code');
-      return;
-    }
     const { error: updateError } = await supabase.auth.updateUser({ password });
     if (updateError) {
       await supabase.auth.signOut();
