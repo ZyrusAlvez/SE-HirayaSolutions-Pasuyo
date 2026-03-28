@@ -37,14 +37,22 @@ export default function NavBar() {
 
   const isActive = (path: string) => pathname === path;
 
+  const handleNavigation = (path: string) => {
+    if (isActive(path)) {
+      router.push('/');
+    } else {
+      router.push(path);
+    }
+  };
+
   return (
     <View className={`bg-white px-6 flex-row justify-around border-t border-gray-100 ${Platform.OS === 'web' ? 'py-2' : 'py-4'}`}>
-      <TouchableOpacity className="items-center" activeOpacity={0.7}>
+      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/chat')}>
         <Ionicons name="chatbubble-outline" size={24} color={isActive('/chat') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/chat') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Chat</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => router.push('/notifications')}>
+      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/notifications')}>
         <View>
           <Ionicons name="notifications-outline" size={24} color={isActive('/notifications') ? '#FEA405' : '#9CA3AF'} />
           {unreadCount > 0 && (
@@ -61,7 +69,7 @@ export default function NavBar() {
         <Text className="text-xs mt-1 text-gray-700">Post Hustle</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity className="items-center" activeOpacity={0.7}>
+      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/tasks')}>
         <Ionicons name="list-outline" size={24} color={isActive('/tasks') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/tasks') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>My Tasks</Text>
       </TouchableOpacity>
