@@ -17,81 +17,118 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 
 ---
 
-## Project Roadmap (Pasuyo System)
-
-**Phase 1: Planning and Design**
-- Define system features (backlog)
-- Create wireframes (UI design)
-- Design database structure
-- Decide technology stack
-  
-**Phase 2: Core Development (MVP)**
-- User authentication (register, login, roles)
-- Profile system
-- Errand posting system
-- Errand acceptance (runner side)
-- Task status tracking
-  
-**Phase 3: System Integration**
-- Connect client and runner workflow
-- Implement basic chat system
-- Add notification system
-  
-**Phase 4: Feature Expansion**
-- File upload (documents/images)
-- ID verification system
-- Admin approval/rejection
-- Ratings and feedback system
-  
-**Phase 5: Testing and Debugging**
-- Perform system testing
-- Fix bugs and errors
-- Validate user flows
-- Improve performance
-  
-**Phase 6: Finalization and Deployment**
+## Project Roadmap (Pasuyo System – Sprint-Based)
+**Phase 1: Authentication and Access Control (Sprint 1)**
+- User registration
+- Login and logout functionality
+- Session management
+- Protected routing for authenticated users
+**Phase 2: User Profile and Verification (Sprint 2)**
+- Profile creation and editing
+- Upload profile picture
+- Upload valid ID for verification
+- Submit ID for admin review
+- Display verification status (Pending, Approved, Rejected)
+- Forgot password via email
+**Phase 3: Administrative Management (Sprint 3)**
+- View all registered users
+- Approve or reject user verification requests
+- View all errands in the system
+- Basic admin controls and monitoring
+**Phase 4: Core Errand System and Task Flow (Sprint 4)**
+- Create errand posts (title, description, locations, deadline, budget)
+- View list of posted errands (client side)
+- View available errands (runner side)
+- View detailed errand information
+- Accept errand (with single-runner restriction)
+- Implement task status flow (Pending, Accepted, In Progress, Completed)
+**Phase 5: Communication and Notification System (Sprint 5)**
+- Chat system between client and runner
+- Send and receive text messages
+- Message notifications
+- Notifications for new errands
+- Notifications for errand acceptance
+- Notifications for task completion
+**Phase 6: Payment, Ratings, and History (Sprint 6)**
+- Display payment details
+- Mark errands as paid
+- Payment confirmation system
+- Rating system after task completion
+- User comments and feedback
+- View ratings on user profiles
+- View past errands (client side)
+- View completed tasks (runner side)
+- Store transaction history
+**Phase 7: Finalization, Security, and Deployment (Sprint 7)**
 - UI/UX improvements
-- Final system testing
-- Prepare demo and presentation
-- Deploy system
+- Mobile responsiveness
+- Data validation
+- Prevent fake accounts
+- Report user feature
+- Bug fixing and full system testing
+- Final system preparation and deployment
 
 ## Realistic Timeline to Final Release
 
 **Project Start Date: February 1**
+
 **Planning and Design**
+
 - Feb 1 – Feb 10
 
 **Core Development (MVP)**
-**Authentication & Profiles**
-- Feb 11 – Feb 24
-**Errand System**
-- Feb 25 – Mar 12
 
-**Workflow & Communication**
-- Mar 13 – Mar 26
+**Authentication & Access Control (Sprint 1)**
+
+- Feb 11 – Feb 18
+
+**User Profiles & Verification (Sprint 2)**
+
+- Feb 19 – Feb 26
+
+**Admin Dashboard (Sprint 3)**
+
+- Feb 27 – Mar 5
+
+**Errand System & Task Flow (Sprint 4)**
+
+- Mar 6 – Mar 15
 
 **MVP Release (Version 1.0)**
-- March 26
+
+- March 15
 
 **Feature Expansion**
-**Verification & Uploads**
-- Mar 27 – Apr 9
 
-**Enhancements & UI Improvements**
-- Apr 10 – Apr 20
+**Communication & Notifications (Sprint 5)**
+
+- Mar 16 – Mar 30
+
+**Payment, Ratings & History (Sprint 6)**
+
+- Mar 31 – Apr 15
 
 **Version 1.5 Release**
-- April 20
+
+- April 15
+
+**Final Phase**
+
+**Finalization, Security & UI Improvements (Sprint 7)**
+
+- Apr 16 – Apr 30
 
 **Testing and Debugging Phase**
+
 - Apr 21 – Apr 30
 
 **Finalization and Preparation**
+
 - May 1 – May 5
 
 **Final Release (Version 2.0)**
-- May 5
 
+- May 5
 ---
 
 ## Architectural Style
