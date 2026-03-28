@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from '../lib/toast';
 import { setPendingRedirect } from '../lib/redirectStore';
 
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,6 +48,8 @@ export default function LoginScreen() {
       }
     }
   };
+
+
 
   const handleGoogleLogin = async () => {
     try {
