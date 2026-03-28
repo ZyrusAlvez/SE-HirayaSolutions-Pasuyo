@@ -18,11 +18,13 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 ---
 
 ## Project Roadmap (Pasuyo System – Sprint-Based)
+
 **Phase 1: Authentication and Access Control (Sprint 1)**
 - User registration
 - Login and logout functionality
 - Session management
 - Protected routing for authenticated users
+
 **Phase 2: User Profile and Verification (Sprint 2)**
 - Profile creation and editing
 - Upload profile picture
@@ -30,11 +32,13 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - Submit ID for admin review
 - Display verification status (Pending, Approved, Rejected)
 - Forgot password via email
+
 **Phase 3: Administrative Management (Sprint 3)**
 - View all registered users
 - Approve or reject user verification requests
 - View all errands in the system
 - Basic admin controls and monitoring
+
 **Phase 4: Core Errand System and Task Flow (Sprint 4)**
 - Create errand posts (title, description, locations, deadline, budget)
 - View list of posted errands (client side)
@@ -42,6 +46,7 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - View detailed errand information
 - Accept errand (with single-runner restriction)
 - Implement task status flow (Pending, Accepted, In Progress, Completed)
+
 **Phase 5: Communication and Notification System (Sprint 5)**
 - Chat system between client and runner
 - Send and receive text messages
@@ -49,6 +54,7 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - Notifications for new errands
 - Notifications for errand acceptance
 - Notifications for task completion
+
 **Phase 6: Payment, Ratings, and History (Sprint 6)**
 - Display payment details
 - Mark errands as paid
@@ -59,6 +65,7 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 - View past errands (client side)
 - View completed tasks (runner side)
 - Store transaction history
+
 **Phase 7: Finalization, Security, and Deployment (Sprint 7)**
 - UI/UX improvements
 - Mobile responsiveness
@@ -76,27 +83,33 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 
 - Feb 1 – Feb 10
 
+
 **Core Development (MVP)**
 
 **Authentication & Access Control (Sprint 1)**
 
 - Feb 11 – Feb 18
 
+
 **User Profiles & Verification (Sprint 2)**
 
 - Feb 19 – Feb 26
+
 
 **Admin Dashboard (Sprint 3)**
 
 - Feb 27 – Mar 5
 
+
 **Errand System & Task Flow (Sprint 4)**
 
 - Mar 6 – Mar 15
 
+
 **MVP Release (Version 1.0)**
 
 - March 15
+
 
 **Feature Expansion**
 
@@ -104,13 +117,16 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 
 - Mar 16 – Mar 30
 
+
 **Payment, Ratings & History (Sprint 6)**
 
 - Mar 31 – Apr 15
 
+
 **Version 1.5 Release**
 
 - April 15
+
 
 **Final Phase**
 
@@ -118,17 +134,21 @@ The platform focuses on convenience, flexibility, and empowering local communiti
 
 - Apr 16 – Apr 30
 
+
 **Testing and Debugging Phase**
 
 - Apr 21 – Apr 30
+
 
 **Finalization and Preparation**
 
 - May 1 – May 5
 
+
 **Final Release (Version 2.0)**
 
 - May 5
+
 ---
 
 ## Architectural Style
