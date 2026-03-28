@@ -66,6 +66,16 @@ export default function UserDetailScreen() {
     });
   };
 
+  const notify = async (suspended: boolean) => {
+    await supabaseAdmin.from('notifications').insert({
+      user_id: id,
+      title: suspended ? 'Account Suspended' : 'Account Restored',
+      message: suspended
+        ? 'Your account has been suspended. Please contact support for more information.'
+        : 'Your account has been restored. You can now access Pasuyo again.',
+    });
+  };
+
   const handleConfirm = async () => {
     const suspending = modal.type === 'suspend';
     setModal({ visible: false, type: null });
@@ -79,6 +89,7 @@ export default function UserDetailScreen() {
       await supabaseAdmin.auth.admin.updateUserById(id, { ban_duration: 'none' });
     }
 
+    await notify(suspending);
     await logAction(suspending ? 'SUSPENDED_USER' : 'RESTORED_USER');
     setUser(prev => prev ? { ...prev, is_active: !suspending } : prev);
     setActing(false);
