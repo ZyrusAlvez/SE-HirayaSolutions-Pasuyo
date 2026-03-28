@@ -83,12 +83,6 @@ export default function UserDetailScreen() {
 
     await supabaseAdmin.from('profiles').update({ is_active: !suspending }).eq('id', id);
 
-    if (suspending) {
-      await supabaseAdmin.auth.admin.updateUserById(id, { ban_duration: '876600h' });
-    } else {
-      await supabaseAdmin.auth.admin.updateUserById(id, { ban_duration: 'none' });
-    }
-
     await notify(suspending);
     await logAction(suspending ? 'SUSPENDED_USER' : 'RESTORED_USER');
     setUser(prev => prev ? { ...prev, is_active: !suspending } : prev);

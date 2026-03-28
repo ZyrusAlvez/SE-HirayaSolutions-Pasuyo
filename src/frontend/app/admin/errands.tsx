@@ -35,12 +35,14 @@ export default function AdminErrandsScreen() {
   useEffect(() => {
     fetchErrands();
 
-    const channel = supabase
-      .channel('admin-errands')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'errands' }, () => fetchErrands())
-      .subscribe();
+    // Poll every 5 seconds for updates
+    const interval = setInterval(() => {
+      fetchErrands();
+    }, 5000);
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      clearInterval(interval);
+    };
   }, []);
 
   const filtered = useMemo(() => {

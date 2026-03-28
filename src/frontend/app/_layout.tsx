@@ -23,7 +23,12 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.log('Session error:', error);
+        // Clear any bad session
+        supabase.auth.signOut();
+      }
       setSession(session);
       setLoading(false);
       SplashScreen.hideAsync();
@@ -43,15 +48,27 @@ export default function RootLayout() {
     const isResetPassword = segments[0] === 'reset-password';
     const isPublic = segments[0] === 'errand';
     const inAdminGroup = segments[0] === 'admin';
+    const isSuspended = segments[0] === 'suspended';
 
-    if (!session && !inAuthGroup && !isPublic) {
+    if (!session && !inAuthGroup && !isPublic && !isSuspended) {
       router.replace('/login');
     } else if (session && inAuthGroup && !isResetPassword) {
-      const dest = consumePendingRedirect();
-      router.replace((dest as any) || '/');
-    } else if (session && !inAuthGroup && !inAdminGroup && !isPublic) {
-      supabase.from('profiles').select('role').eq('id', session.user.id).single().then(({ data }) => {
-        if (data?.role === 'admin') router.replace('/admin');
+      // Check suspension before redirecting
+      supabase.from('profiles').select('is_active').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+        if (data?.is_active === false) {
+          router.replace('/suspended');
+        } else {
+          const dest = consumePendingRedirect();
+          router.replace((dest as any) || '/');
+        }
+      });
+    } else if (session && !inAuthGroup && !inAdminGroup && !isPublic && !isSuspended) {
+      supabase.from('profiles').select('role, is_active').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+        if (data?.is_active === false) {
+          router.replace('/suspended');
+        } else if (data?.role === 'admin') {
+          router.replace('/admin');
+        }
       });
     }
   }, [session, segments, loading]);
