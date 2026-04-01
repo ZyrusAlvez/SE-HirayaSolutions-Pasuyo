@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { fetchProvinces, fetchCities, fetchBarangays, Province, City, Barangay } from '../../lib/psgc';
+import { fetchProvinces, fetchCities, fetchBarangays, Province, City, Barangay } from '../../utils/psgc';
 import AddressDropdown from './AddressDropdown';
 import { toast } from 'burnt';
 import TextInput from '../ui/TextInput';

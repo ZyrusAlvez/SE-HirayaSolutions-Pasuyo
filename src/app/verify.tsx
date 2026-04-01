@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { toast } from '../lib/toast';
+import { toast } from '../utils/toast';
 import Step1 from '../components/verify/Step1';
 import Step2 from '../components/verify/Step2';
 import Step3 from '../components/verify/Step3';
 import Step4 from '../components/verify/Step4';
 import SuccessScreen from '../components/verify/SuccessScreen';
-import { supabase } from '../lib/supabase';
-import { archiveCurrentFiles, uploadFile } from '../lib/verificationService';
+import { supabase } from '../utils/supabase';
+import { archiveCurrentFiles, uploadFile } from '../utils/verificationService';
 
 export default function VerifyScreen() {
   const router = useRouter();

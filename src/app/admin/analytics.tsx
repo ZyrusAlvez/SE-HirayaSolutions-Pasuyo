@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { LineChart, PieChart } from 'react-native-chart-kit';
-import { supabaseAdmin } from '../../lib/supabase';
+import { supabaseAdmin } from '../../utils/supabase';
 import AdminNavBar from '../../components/admin/AdminNavBar';
 
 const ACCENT = '#FEA405';

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../utils/supabase';
 import AdminNavBar from '../../components/admin/AdminNavBar';
 import UserCard, { UserProfile } from '../../components/admin/UserCard';
 import VerificationCard, { PendingUser } from '../../components/admin/VerificationCard';

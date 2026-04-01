@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../utils/supabase';
 import Header from '../../components/layout/Header';
 import NavBar from '../../components/layout/NavBar';
 import GuestHeader from '../../components/layout/GuestHeader';

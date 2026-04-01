@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../utils/supabase';
 import AdminNavBar from '../../components/admin/AdminNavBar';
 
 const ACCENT = '#FEA405';

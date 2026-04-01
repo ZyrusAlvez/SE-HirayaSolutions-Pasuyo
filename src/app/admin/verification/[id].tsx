@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../../lib/supabase';
+import { supabase, supabaseAdmin } from '../../../utils/supabase';
 
 const ACCENT = '#FEA405';
 

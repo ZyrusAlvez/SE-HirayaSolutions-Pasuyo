@@ -2,8 +2,8 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Modal, Pressable } fro
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { toast } from '../../lib/toast';
+import { supabase } from '../../utils/supabase';
+import { toast } from '../../utils/toast';
 
 const ACCENT = '#FEA405';
 

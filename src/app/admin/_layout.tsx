@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../utils/supabase';
 
 export default function AdminLayout() {
   const router = useRouter();

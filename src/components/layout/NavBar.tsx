@@ -2,7 +2,7 @@ import { View, TouchableOpacity, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../utils/supabase';
 
 export default function NavBar() {
   const router = useRouter();

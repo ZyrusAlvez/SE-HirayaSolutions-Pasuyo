@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../utils/supabase';
 import { useRouter } from 'expo-router';
 
 export default function SuspendedScreen() {

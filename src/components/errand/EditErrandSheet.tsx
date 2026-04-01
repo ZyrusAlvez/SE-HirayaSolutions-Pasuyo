@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../lib/supabase';
-import { toast } from '../../lib/toast';
+import { supabase } from '../../utils/supabase';
+import { toast } from '../../utils/toast';
 import TextInput from '../ui/TextInput';
 import Budget from '../post-errand/Budget';
 import Deadline from '../post-errand/Deadline';

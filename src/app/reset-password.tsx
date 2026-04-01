@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../utils/supabase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { toast } from '../lib/toast';
+import { toast } from '../utils/toast';
 
 type Step = 'email' | 'code' | 'password';
 

@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { toast } from '../../lib/toast';
-import { validateImageAsset } from '../../lib/imageValidation';
+import { toast } from '../../utils/toast';
+import { validateImageAsset } from '../../utils/imageValidation';
 
 type UtilityBillType = 'Water' | 'Electricity' | 'Internet';
 

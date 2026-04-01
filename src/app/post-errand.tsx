@@ -7,9 +7,9 @@ import {
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { toast } from '../lib/toast';
-import { postErrandStore } from '../lib/postErrandStore';
-import { supabase } from '../lib/supabase';
+import { toast } from '../utils/toast';
+import { postErrandStore } from '../utils/postErrandStore';
+import { supabase } from '../utils/supabase';
 import TextInput from '../components/ui/TextInput';
 import TaskType from '../components/post-errand/TaskType';
 import LocationPicker from '../components/post-errand/LocationPicker';

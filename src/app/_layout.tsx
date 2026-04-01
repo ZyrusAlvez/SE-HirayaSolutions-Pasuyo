@@ -2,9 +2,9 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { useColorScheme } from "nativewind";
 import * as SplashScreen from "expo-splash-screen";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../utils/supabase";
 import { Session } from "@supabase/supabase-js";
-import { consumePendingRedirect } from "../lib/redirectStore";
+import { consumePendingRedirect } from "../utils/redirectStore";
 import { Platform } from "react-native";
 import "../global.css";
 
