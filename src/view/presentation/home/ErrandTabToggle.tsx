@@ -10,7 +10,7 @@ interface Props {
 
 export default function ErrandTabToggle({ tab, onTabChange }: Props) {
   return (
-    <View className="flex-row mx-6 mt-4 mb-2 bg-gray-100 rounded-xl p-1">
+    <View className="flex-row mx-6 mt-4 mb-2 bg-red-100 rounded-xl p-1">
       <TouchableOpacity
         className={`flex-1 py-2 rounded-lg flex-row items-center justify-center gap-1 ${tab === 'onsite' ? 'bg-white shadow' : ''}`}
         onPress={() => onTabChange('onsite')}
