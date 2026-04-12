@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../utils/supabase';
-import Header from '../components/layout/Header';
-import NavBar from '../components/layout/NavBar';
+import Header from '@/view/components/Header';
+import NavBar from '@/view/components/NavBar';
 
 interface Notification {
   id: string;

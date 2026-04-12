@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { fetchProvinces, fetchCities, fetchBarangays, Province, City, Barangay } from '../../utils/psgc';
 import AddressDropdown from './AddressDropdown';
 import { toast } from 'burnt';
-import TextInput from '../ui/TextInput';
+import TextInput from '../../view/components/TextInput';
 
 interface Step2Props {
   addressType: 'House' | 'Apartment' | 'Building';

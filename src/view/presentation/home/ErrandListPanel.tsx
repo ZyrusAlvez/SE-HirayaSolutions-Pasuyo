@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import SortBar, { SortState } from './SortBar';
 
-const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
+const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
 if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
 

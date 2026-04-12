@@ -23,12 +23,6 @@ export type Errand = {
   poster_is_verified?: boolean;
 };
 
-export type CurrentUser = {
-  id: string;
-  avatarUrl: string | null;
-  isVerified: boolean;
-};
-
 type Result<T> = { success: true; data: T } | { success: false; error: string };
 
 export const fetchErrand = async (id: string): Promise<Result<Errand>> => {
@@ -42,21 +36,6 @@ export const fetchErrand = async (id: string): Promise<Result<Errand>> => {
   return { success: true, data: data as Errand };
 };
 
-export const loadCurrentUser = async (): Promise<Result<CurrentUser | null>> => {
-  const { data: { user } } = await errandModel.getCurrentUser();
-  if (!user) return { success: true, data: null };
-
-  const rawUrl = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
-  const avatarUrl = rawUrl && rawUrl !== 'default' ? rawUrl : null;
-
-  const { data: profile } = await errandModel.getUserVerification(user.id);
-
-  return {
-    success: true,
-    data: { id: user.id, avatarUrl, isVerified: profile?.verified ?? false },
-  };
-};
-
 export const formatDeadline = (deadline?: string): string | null =>
   deadline
     ? new Date(deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -64,3 +43,15 @@ export const formatDeadline = (deadline?: string): string | null =>
 
 export const formatPostedOn = (createdAt: string): string =>
   new Date(createdAt).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+export const fetchErrands = async (): Promise<Result<Errand[]>> => {
+  const { data, error } = await errandModel.fetchAvailableErrands();
+  if (error) return { success: false, error: 'Failed to fetch errands' };
+  return { success: true, data: (data ?? []) as Errand[] };
+};
+
+export const filterOnsiteErrands = (errands: Errand[]) =>
+  errands.filter(e => !e.is_remote && e.location_lat && e.location_lng);
+
+export const filterRemoteErrands = (errands: Errand[]) =>
+  errands.filter(e => e.is_remote);

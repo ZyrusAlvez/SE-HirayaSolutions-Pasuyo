@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView } fr
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 import { toast } from '@/utils/toast';
-import TextInput from '@/components/ui/TextInput';
+import TextInput from '@/view/components/TextInput';
 import Budget from '@/components/post-errand/Budget';
 import Deadline from '@/components/post-errand/Deadline';
 import ImageUploader from '@/components/post-errand/ImageUploader';

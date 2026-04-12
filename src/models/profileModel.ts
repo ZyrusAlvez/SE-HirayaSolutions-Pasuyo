@@ -30,4 +30,6 @@ export const uploadAvatar = async (uri: string, name: string, email: string): Pr
   return `${data.publicUrl}?t=${Date.now()}`;
 };
 
-export const signOut = () => supabase.auth.signOut();
+
+export const getUserVerification = (userId: string) =>
+  supabase.from('profiles').select('verified').eq('id', userId).single();

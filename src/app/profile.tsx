@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from '@/utils/toast';
-import { loadProfile, pickAvatar, saveProfile, logout } from '@/controllers/profileController';
+import { loadProfile, pickAvatar, saveProfile } from '@/controllers/profileController';
 import type { VerificationStatus, ProfileInfo } from '@/controllers/profileController';
+import { logout } from '@/controllers/authController';
 import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
 import AvatarPicker from '@/view/presentation/profile/AvatarPicker';
 import VerificationBadge from '@/view/presentation/profile/VerificationBadge';
@@ -11,7 +12,7 @@ import ProfileInfoCard from '@/view/presentation/profile/ProfileInfoCard';
 import SkeletonLoading from '@/view/presentation/profile/SkeletonLoading';
 import ProfileActions from '@/view/presentation/profile/ProfileActions';
 
-const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
+import DEFAULT_AVATAR from '../assets/images/default_profile.jpg';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -32,7 +33,9 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     loadProfile().then((result) => {
-      if (result.success) {
+      if (!result.success) {
+        toast({ title: result.error, preset: 'error' });
+      } else if (result.data) {
         const { displayName: name, email: mail, avatarUrl: url, verificationStatus: status, profileInfo: info } = result.data;
         setDisplayName(name);
         setOriginalName(name);
@@ -40,8 +43,6 @@ export default function ProfileScreen() {
         if (url) setAvatarUrl({ uri: url });
         setVerificationStatus(status);
         setProfileInfo(info);
-      } else {
-        toast({ title: result.error || 'Failed to load profile', preset: 'error' });
       }
       setLoading(false);
     });

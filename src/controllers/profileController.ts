@@ -13,6 +13,7 @@ export type ProfileInfo = {
 };
 
 export type ProfileData = {
+  id: string;
   displayName: string;
   email: string;
   avatarUrl: string | null;
@@ -22,9 +23,9 @@ export type ProfileData = {
 
 type Result<T = void> = { success: true; data: T } | { success: false; error: string };
 
-export const loadProfile = async (): Promise<Result<ProfileData>> => {
+export const loadProfile = async (): Promise<Result<ProfileData | null>> => {
   const { data: { user } } = await profileModel.getUser();
-  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!user) return { success: true, data: null };
 
   const name = user.user_metadata.name || user.user_metadata.full_name || '';
   const rawUrl = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
@@ -54,7 +55,7 @@ export const loadProfile = async (): Promise<Result<ProfileData>> => {
 
   return {
     success: true,
-    data: { displayName, email: user.email || '', avatarUrl, verificationStatus, profileInfo },
+    data: { id: user.id, displayName, email: user.email || '', avatarUrl, verificationStatus, profileInfo },
   };
 };
 
@@ -105,10 +106,4 @@ export const saveProfile = async (
   if (error) return { success: false, error: 'Failed to update profile' };
 
   return { success: true, data: { finalAvatarUrl } };
-};
-
-export const logout = async (): Promise<Result> => {
-  const { error } = await profileModel.signOut();
-  if (error) return { success: false, error: 'Logout failed' };
-  return { success: true, data: undefined };
 };

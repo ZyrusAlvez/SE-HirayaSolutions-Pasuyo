@@ -8,9 +8,8 @@ import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { toast } from '../utils/toast';
-import { postErrandStore } from '../utils/postErrandStore';
 import { supabase } from '../utils/supabase';
-import TextInput from '../components/ui/TextInput';
+import TextInput from '../view/components/TextInput';
 import TaskType from '../components/post-errand/TaskType';
 import LocationPicker from '../components/post-errand/LocationPicker';
 import Budget from '../components/post-errand/Budget';
@@ -110,7 +109,6 @@ export default function PostErrandScreen() {
         await supabase.from('errands').update({ images: imageUrls }).eq('id', inserted.id);
       }
 
-      postErrandStore.set({ expandId: inserted.id, tab: isRemote ? 'remote' : 'onsite' });
       toast({ title: 'Errand posted!', preset: 'done' });
       router.replace('/');
     } catch (e: any) {

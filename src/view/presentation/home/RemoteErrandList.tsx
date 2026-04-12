@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import SortBar, { SortState } from './SortBar';
 
-const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
+const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
 interface Errand {
   id: string;

@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchErrand, loadCurrentUser, formatDeadline, formatPostedOn } from '@/controllers/errandController';
+import { fetchErrand, formatDeadline, formatPostedOn } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
-import Header from '@/components/layout/Header';
-import NavBar from '@/components/layout/NavBar';
-import GuestHeader from '@/components/layout/GuestHeader';
+import { loadProfile } from '@/controllers/profileController';
+import Header from '@/view/components/Header';
+import NavBar from '@/view/components/NavBar';
+import GuestHeader from '@/view/components/GuestHeader';
 import DetailHeader from '@/view/presentation/errand/DetailHeader';
 import DetailCard from '@/view/presentation/errand/DetailCard';
 import PosterCard from '@/view/presentation/errand/PosterCard';
@@ -33,11 +34,11 @@ export default function ErrandDetailScreen() {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    loadCurrentUser().then((result) => {
+    loadProfile().then((result) => {
       if (result.success && result.data) {
         setCurrentUserId(result.data.id);
         if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
-        setIsVerified(result.data.isVerified);
+        setIsVerified(result.data.verificationStatus === 'verified');
       } else {
         setIsGuest(true);
       }
