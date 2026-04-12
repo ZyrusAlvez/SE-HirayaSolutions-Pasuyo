@@ -1,21 +1,12 @@
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-type VerificationStatus = 'verified' | 'pending' | 'not_verified';
-
-type ProfileInfo = {
-  gender?: string;
-  date_of_birth?: string;
-  address_province?: string;
-  address_city?: string;
-  address_barangay?: string;
-};
+import type { VerificationStatus, ProfileData } from '@/models/profileModel';
 
 type Props = {
   contentWidth: number | undefined;
   isLarge: boolean;
   verificationStatus: VerificationStatus;
-  profileInfo: ProfileInfo | null;
+  profileInfo: ProfileData | null;
   displayName: string;
   email: string;
   onNameChange: (name: string) => void;

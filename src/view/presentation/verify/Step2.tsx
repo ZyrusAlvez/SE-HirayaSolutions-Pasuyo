@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { fetchProvinces, fetchCities, fetchBarangays, Province, City, Barangay } from '../../utils/psgc';
+import { fetchProvinces, fetchCities, fetchBarangays, Province, City, Barangay } from '../../../utils/psgc';
 import AddressDropdown from './AddressDropdown';
 import { toast } from 'burnt';
-import TextInput from '../../view/components/TextInput';
+import TextInput from '../../components/TextInput';
 
 interface Step2Props {
   addressType: 'House' | 'Apartment' | 'Building';

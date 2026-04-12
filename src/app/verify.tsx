@@ -3,13 +3,12 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowD
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { toast } from '../utils/toast';
-import Step1 from '../components/verify/Step1';
-import Step2 from '../components/verify/Step2';
-import Step3 from '../components/verify/Step3';
-import Step4 from '../components/verify/Step4';
-import SuccessScreen from '../components/verify/SuccessScreen';
-import { supabase } from '../utils/supabase';
-import { archiveCurrentFiles, uploadFile } from '../utils/verificationService';
+import { validateVerifyStep, submitVerification, VerifyFormState } from '../controllers/profileController';
+import Step1 from '../view/presentation/verify/Step1';
+import Step2 from '../view/presentation/verify/Step2';
+import Step3 from '../view/presentation/verify/Step3';
+import Step4 from '../view/presentation/verify/Step4';
+import SuccessScreen from '../view/presentation/verify/SuccessScreen';
 
 export default function VerifyScreen() {
   const router = useRouter();
@@ -43,108 +42,24 @@ export default function VerifyScreen() {
   const [idFrontUri, setIdFrontUri] = useState<string | null>(null);
   const [idBackUri, setIdBackUri] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const userId = user.id;
-
-      // 1. Archive existing files
-      await archiveCurrentFiles(userId);
-
-      // 2. Upload new files
-      const [utilityFrontUrl, utilityBackUrl, idFrontUrl, idBackUrl] = await Promise.all([
-        uploadFile(utilityBillFrontUri!, `${userId}/current/utility-bill-front.jpg`),
-        uploadFile(utilityBillBackUri!, `${userId}/current/utility-bill-back.jpg`),
-        uploadFile(idFrontUri!, `${userId}/current/id-front.jpg`),
-        uploadFile(idBackUri!, `${userId}/current/id-back.jpg`),
-      ]);
-
-      // 3. Upsert profile
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: userId,
-        first_name: firstName,
-        middle_name: middleName,
-        last_name: lastName,
-        suffix,
-        gender,
-        date_of_birth: dateOfBirth!.toISOString().split('T')[0],
-        address_type: addressType,
-        address_province: province!.name,
-        address_city: city!.name,
-        address_barangay: barangay!.name,
-        address_street: street,
-        address_house_no: houseNo,
-        address_building: buildingName,
-        address_unit: unitNo,
-        address_floor: floor,
-        address_block_lot: blockLot,
-        address_phase_subdivision: phase,
-        utility_bill_type: utilityBillType.toLowerCase(),
-        utility_bill_front_url: utilityFrontUrl,
-        utility_bill_back_url: utilityBackUrl,
-        id_type: idType,
-        id_front_url: idFrontUrl,
-        id_back_url: idBackUrl,
-        pending_verification: true,
-        verified: false,
-        verification_submitted_at: new Date().toISOString(),
-      });
-      if (profileError) throw new Error(`Failed to save profile: ${profileError.message}`);
-
-      // 4. Update auth user metadata
-      const { error: metaError } = await supabase.auth.updateUser({
-        data: { name: `${firstName} ${lastName}` },
-      });
-      if (metaError) throw new Error(`Failed to update user metadata: ${metaError.message}`);
-
-      setStep(5);
-    } catch (err: any) {
-      toast({ title: err.message ?? 'Submission failed. Please try again.', preset: 'error' });
-    } finally {
-      setSubmitting(false);
-    }
+  const formState: VerifyFormState = {
+    firstName, middleName, lastName, suffix, gender,
+    dateOfBirth, addressType, province, city, barangay,
+    houseNo, street, buildingName, unitNo, floor, blockLot, phase,
+    utilityBillType, utilityBillFrontUri, utilityBillBackUri,
+    idType, idFrontUri, idBackUri,
   };
 
-  const handleNext = () => {
-    if (step === 1) {
-      if (!firstName.trim()) { toast({ title: 'First name is required', preset: 'error' }); return; }
-      if (!lastName.trim()) { toast({ title: 'Last name is required', preset: 'error' }); return; }
-      if (!gender) { toast({ title: 'Gender is required', preset: 'error' }); return; }
-      if (!dateOfBirth) { toast({ title: 'Date of birth is required', preset: 'error' }); return; }
-    }
-    if (step === 2) {
-      if (!province) { toast({ title: 'Province is required', preset: 'error' }); return; }
-      if (!city) { toast({ title: 'City is required', preset: 'error' }); return; }
-      if (!barangay) { toast({ title: 'Barangay is required', preset: 'error' }); return; }
-      if (addressType === 'House') {
-        if (!houseNo.trim()) { toast({ title: 'House number is required', preset: 'error' }); return; }
-        if (!street.trim()) { toast({ title: 'Street is required', preset: 'error' }); return; }
-      }
-      if (addressType === 'Apartment') {
-        if (!buildingName.trim()) { toast({ title: 'Building name is required', preset: 'error' }); return; }
-        if (!unitNo.trim()) { toast({ title: 'Unit number is required', preset: 'error' }); return; }
-        if (!street.trim()) { toast({ title: 'Street is required', preset: 'error' }); return; }
-      }
-      if (addressType === 'Building') {
-        if (!buildingName.trim()) { toast({ title: 'Building name is required', preset: 'error' }); return; }
-        if (!floor.trim()) { toast({ title: 'Floor is required', preset: 'error' }); return; }
-        if (!unitNo.trim()) { toast({ title: 'Unit number is required', preset: 'error' }); return; }
-        if (!street.trim()) { toast({ title: 'Street is required', preset: 'error' }); return; }
-      }
-    }
-    if (step === 3) {
-      if (!utilityBillType) { toast({ title: 'Please select a bill type', preset: 'error' }); return; }
-      if (!utilityBillFrontUri) { toast({ title: 'Front photo is required', preset: 'error' }); return; }
-      if (!utilityBillBackUri) { toast({ title: 'Back photo is required', preset: 'error' }); return; }
-    }
+  const handleNext = async () => {
+    const error = validateVerifyStep(step, formState);
+    if (error) { toast({ title: error, preset: 'error' }); return; }
+
     if (step === 4) {
-      if (!idType) { toast({ title: 'Please select an ID type', preset: 'error' }); return; }
-      if (!idFrontUri) { toast({ title: 'Front photo is required', preset: 'error' }); return; }
-      if (!idBackUri) { toast({ title: 'Back photo is required', preset: 'error' }); return; }
-      handleSubmit();
+      setSubmitting(true);
+      const result = await submitVerification(formState);
+      setSubmitting(false);
+      if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
+      setStep(5);
       return;
     }
 
@@ -160,7 +75,7 @@ export default function VerifyScreen() {
   const isLarge = width >= 768;
   const contentWidth = isLarge ? Math.min(width * 0.55, 640) : undefined;
 
-  if (step === 5) return <SuccessScreen />
+  if (step === 5) return <SuccessScreen />;
 
   return (
     <View className="flex-1 bg-white">

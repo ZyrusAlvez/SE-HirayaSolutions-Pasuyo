@@ -1,25 +1,10 @@
 import * as profileModel from '@/models/profileModel';
+import type { VerificationStatus, ProfileData, VerifyFormState } from '@/models/profileModel';
 import { validateImageAsset } from '@/utils/imageValidation';
 import * as ImagePicker from 'expo-image-picker';
+import { archiveCurrentFiles, uploadFile } from '@/utils/verificationService';
 
-export type VerificationStatus = 'verified' | 'pending' | 'not_verified';
-
-export type ProfileInfo = {
-  gender?: string;
-  date_of_birth?: string;
-  address_province?: string;
-  address_city?: string;
-  address_barangay?: string;
-};
-
-export type ProfileData = {
-  id: string;
-  displayName: string;
-  email: string;
-  avatarUrl: string | null;
-  verificationStatus: VerificationStatus;
-  profileInfo: ProfileInfo | null;
-};
+export type { VerificationStatus, ProfileData, VerifyFormState };
 
 type Result<T = void> = { success: true; data: T } | { success: false; error: string };
 
@@ -35,7 +20,7 @@ export const loadProfile = async (): Promise<Result<ProfileData | null>> => {
 
   let displayName = name;
   let verificationStatus: VerificationStatus = 'not_verified';
-  let profileInfo: ProfileInfo | null = null;
+  let profileInfo: Partial<ProfileData> = {};
 
   if (profile) {
     if (profile.verified) {
@@ -55,7 +40,7 @@ export const loadProfile = async (): Promise<Result<ProfileData | null>> => {
 
   return {
     success: true,
-    data: { id: user.id, displayName, email: user.email || '', avatarUrl, verificationStatus, profileInfo },
+    data: { id: user.id, displayName, email: user.email || '', avatarUrl, verificationStatus, ...profileInfo },
   };
 };
 
@@ -106,4 +91,80 @@ export const saveProfile = async (
   if (error) return { success: false, error: 'Failed to update profile' };
 
   return { success: true, data: { finalAvatarUrl } };
+};
+
+export const validateVerifyStep = (step: number, s: VerifyFormState): string | null => {
+  if (step === 1) {
+    if (!s.firstName.trim()) return 'First name is required';
+    if (!s.lastName.trim()) return 'Last name is required';
+    if (!s.gender) return 'Gender is required';
+    if (!s.dateOfBirth) return 'Date of birth is required';
+  }
+  if (step === 2) {
+    if (!s.province) return 'Province is required';
+    if (!s.city) return 'City is required';
+    if (!s.barangay) return 'Barangay is required';
+    if (s.addressType === 'House') {
+      if (!s.houseNo.trim()) return 'House number is required';
+      if (!s.street.trim()) return 'Street is required';
+    }
+    if (s.addressType === 'Apartment') {
+      if (!s.buildingName.trim()) return 'Building name is required';
+      if (!s.unitNo.trim()) return 'Unit number is required';
+      if (!s.street.trim()) return 'Street is required';
+    }
+    if (s.addressType === 'Building') {
+      if (!s.buildingName.trim()) return 'Building name is required';
+      if (!s.floor.trim()) return 'Floor is required';
+      if (!s.unitNo.trim()) return 'Unit number is required';
+      if (!s.street.trim()) return 'Street is required';
+    }
+  }
+  if (step === 3) {
+    if (!s.utilityBillType) return 'Please select a bill type';
+    if (!s.utilityBillFrontUri) return 'Front photo is required';
+    if (!s.utilityBillBackUri) return 'Back photo is required';
+  }
+  if (step === 4) {
+    if (!s.idType) return 'Please select an ID type';
+    if (!s.idFrontUri) return 'Front photo is required';
+    if (!s.idBackUri) return 'Back photo is required';
+  }
+  return null;
+};
+
+export const submitVerification = async (s: VerifyFormState): Promise<Result<void>> => {
+  try {
+    const { data: { user } } = await profileModel.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    if (!s.dateOfBirth || !s.province || !s.city || !s.barangay)
+      throw new Error('Missing required fields');
+    if (!s.utilityBillFrontUri || !s.utilityBillBackUri || !s.idFrontUri || !s.idBackUri)
+      throw new Error('Missing required file uploads');
+
+    const userId = user.id;
+    await archiveCurrentFiles(userId);
+
+    const [utilityFrontUrl, utilityBackUrl, idFrontUrl, idBackUrl] = await Promise.all([
+      uploadFile(s.utilityBillFrontUri, `${userId}/current/utility-bill-front.jpg`),
+      uploadFile(s.utilityBillBackUri, `${userId}/current/utility-bill-back.jpg`),
+      uploadFile(s.idFrontUri, `${userId}/current/id-front.jpg`),
+      uploadFile(s.idBackUri, `${userId}/current/id-back.jpg`),
+    ]);
+
+    const { error: profileError } = await profileModel.upsertVerificationProfile(userId, s, {
+      utilityFrontUrl, utilityBackUrl, idFrontUrl, idBackUrl,
+    });
+    if (profileError) throw new Error(`Failed to save profile: ${profileError.message}`);
+
+    const { error: metaError } = await profileModel.updateUserMeta({
+      name: `${s.firstName} ${s.lastName}`,
+    });
+    if (metaError) throw new Error(`Failed to update user metadata: ${metaError.message}`);
+
+    return { success: true, data: undefined };
+  } catch (err: any) {
+    return { success: false, error: err.message ?? 'Submission failed. Please try again.' };
+  }
 };

@@ -3,7 +3,7 @@ import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from '@/utils/toast';
 import { loadProfile, pickAvatar, saveProfile } from '@/controllers/profileController';
-import type { VerificationStatus, ProfileInfo } from '@/controllers/profileController';
+import type { VerificationStatus, ProfileData } from '@/controllers/profileController';
 import { logout } from '@/controllers/authController';
 import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
 import AvatarPicker from '@/view/presentation/profile/AvatarPicker';
@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('not_verified');
-  const [profileInfo, setProfileInfo] = useState<ProfileInfo | null>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
 
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
@@ -36,13 +36,13 @@ export default function ProfileScreen() {
       if (!result.success) {
         toast({ title: result.error, preset: 'error' });
       } else if (result.data) {
-        const { displayName: name, email: mail, avatarUrl: url, verificationStatus: status, profileInfo: info } = result.data;
+        const { displayName: name, email: mail, avatarUrl: url, verificationStatus: status } = result.data;
         setDisplayName(name);
         setOriginalName(name);
         setEmail(mail);
         if (url) setAvatarUrl({ uri: url });
         setVerificationStatus(status);
-        setProfileInfo(info);
+        setProfileData(result.data);
       }
       setLoading(false);
     });
@@ -103,7 +103,7 @@ export default function ProfileScreen() {
           contentWidth={contentWidth}
           isLarge={isLarge}
           verificationStatus={verificationStatus}
-          profileInfo={profileInfo}
+          profileInfo={profileData}
           displayName={displayName}
           email={email}
           onNameChange={setDisplayName}

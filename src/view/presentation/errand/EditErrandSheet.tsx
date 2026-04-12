@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 import { toast } from '@/utils/toast';
 import TextInput from '@/view/components/TextInput';
-import Budget from '@/components/post-errand/Budget';
-import Deadline from '@/components/post-errand/Deadline';
-import ImageUploader from '@/components/post-errand/ImageUploader';
-import AddressDetails from '@/components/post-errand/AddressDetails';
-import TaskType from '@/components/post-errand/TaskType';
-import LocationPicker from '@/components/post-errand/LocationPicker';
-import LocationMap from '@/components/post-errand/LocationMap';
+import Budget from '@/view/presentation/post-errand/Budget';
+import Deadline from '@/view/presentation/post-errand/Deadline';
+import ImageUploader from '@/view/presentation/post-errand/ImageUploader';
+import AddressDetails from '@/view/presentation/post-errand/AddressDetails';
+import TaskType from '@/view/presentation/post-errand/TaskType';
+import LocationPicker from '@/view/presentation/post-errand/LocationPicker';
+import LocationMap from '@/view/presentation/post-errand/LocationMap';
 
 const ACCENT = '#FEA405';
 

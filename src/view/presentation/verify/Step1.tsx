@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import TextInput from '../../view/components/TextInput';
-import DateInput from '../../view/components/DateInput';
+import TextInput from '../../components/TextInput';
+import DateInput from '../../components/DateInput';
 
 interface Step1Props {
   firstName: string;
