@@ -4,11 +4,11 @@ import { useRouter } from 'expo-router';
 import { toast } from '@/utils/toast';
 import { loadProfile, pickAvatar, saveProfile, logout } from '@/controllers/profileController';
 import type { VerificationStatus, ProfileInfo } from '@/controllers/profileController';
-import ProfileHeader from '@/components/profile/ProfileHeader';
-import AvatarPicker from '@/components/profile/AvatarPicker';
-import VerificationBadge from '@/components/profile/VerificationBadge';
-import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
-import SkeletonLoading from '@/components/profile/SkeletonLoading';
+import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
+import AvatarPicker from '@/view/presentation/profile/AvatarPicker';
+import VerificationBadge from '@/view/presentation/profile/VerificationBadge';
+import ProfileInfoCard from '@/view/presentation/profile/ProfileInfoCard';
+import SkeletonLoading from '@/view/presentation/profile/SkeletonLoading';
 import ProfileActions from '@/view/presentation/profile/ProfileActions';
 
 const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
