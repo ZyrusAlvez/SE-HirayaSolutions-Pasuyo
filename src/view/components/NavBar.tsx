@@ -41,12 +41,12 @@ export default function NavBar() {
     if (isActive(path)) {
       router.push('/');
     } else {
-      router.push(path);
+      router.push(path as any);
     }
   };
 
   return (
-    <View className={`bg-white px-6 flex-row justify-around border-t border-gray-100 ${Platform.OS === 'web' ? 'py-2' : 'py-4'}`}>
+    <View className={`bg-white px-6 flex flex-row justify-between border-t border-gray-100 ${Platform.OS === 'web' ? 'py-2' : 'py-4'}`}>
       <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/chat')}>
         <Ionicons name="chatbubble-outline" size={24} color={isActive('/chat') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/chat') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Chat</Text>

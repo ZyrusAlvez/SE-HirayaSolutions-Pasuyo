@@ -1,6 +1,5 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
-import { useColorScheme } from "nativewind";
 import * as SplashScreen from "expo-splash-screen";
 import { supabase } from "../utils/supabase";
 import { Session } from "@supabase/supabase-js";
@@ -20,7 +19,6 @@ export default function RootLayout() {
   const [loading, setLoading] = useState(true);
   const segments = useSegments();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {

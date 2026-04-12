@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { signup, googleAuth } from '@/controllers/authController';
+import { signup, loginWithGoogle } from '@/controllers/authController';
 import { toast } from '@/utils/toast';
 import { setPendingRedirect } from '@/utils/redirectStore';
 import SignupForm from '@/view/presentation/signup/SignupForm';
@@ -33,7 +33,7 @@ export default function SignupScreen() {
   const handleGoogleSignup = async () => {
     setLoading(true);
     if (redirect) setPendingRedirect(redirect);
-    const result = await googleAuth();
+    const result = await loginWithGoogle();
     setLoading(false);
     if (!result.success) toast({ title: result.error!, preset: 'error' });
   };
