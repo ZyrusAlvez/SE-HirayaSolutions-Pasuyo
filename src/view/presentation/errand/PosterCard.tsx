@@ -2,7 +2,7 @@ import { View, Text, Image } from 'react-native';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 
 const ACCENT = '#FEA405';
-const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
+const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
 interface Props {
   name?: string;

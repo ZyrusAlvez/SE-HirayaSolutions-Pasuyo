@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../utils/supabase';
-import { toast } from '../../utils/toast';
-import TextInput from '../ui/TextInput';
-import Budget from '../post-errand/Budget';
-import Deadline from '../post-errand/Deadline';
-import ImageUploader from '../post-errand/ImageUploader';
-import AddressDetails from '../post-errand/AddressDetails';
-import TaskType from '../post-errand/TaskType';
-import LocationPicker from '../post-errand/LocationPicker';
-import LocationMap from '../post-errand/LocationMap';
+import { supabase } from '@/utils/supabase';
+import { toast } from '@/utils/toast';
+import TextInput from '@/components/ui/TextInput';
+import Budget from '@/components/post-errand/Budget';
+import Deadline from '@/components/post-errand/Deadline';
+import ImageUploader from '@/components/post-errand/ImageUploader';
+import AddressDetails from '@/components/post-errand/AddressDetails';
+import TaskType from '@/components/post-errand/TaskType';
+import LocationPicker from '@/components/post-errand/LocationPicker';
+import LocationMap from '@/components/post-errand/LocationMap';
 
 const ACCENT = '#FEA405';
 

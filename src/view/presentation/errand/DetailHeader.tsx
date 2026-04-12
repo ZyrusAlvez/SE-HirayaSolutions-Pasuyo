@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { toast } from '../../utils/toast';
+import { toast } from '@/utils/toast';
 
 interface Props {
   isRemote: boolean;

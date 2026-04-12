@@ -2,41 +2,21 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../utils/supabase';
-import Header from '../../components/layout/Header';
-import NavBar from '../../components/layout/NavBar';
-import GuestHeader from '../../components/layout/GuestHeader';
-import DetailHeader from '../../components/errand/DetailHeader';
-import DetailCard from '../../components/errand/DetailCard';
-import PosterCard from '../../components/errand/PosterCard';
-import ImageLightbox from '../../components/errand/ImageLightbox';
-import SkeletonLoading from '../../components/errand/SkeletonLoading';
-import OwnerActions from '../../components/errand/OwnerActions';
-import EditErrandSheet from '../../components/errand/EditErrandSheet';
+import { fetchErrand, loadCurrentUser, formatDeadline, formatPostedOn } from '@/controllers/errandController';
+import type { Errand } from '@/controllers/errandController';
+import Header from '@/components/layout/Header';
+import NavBar from '@/components/layout/NavBar';
+import GuestHeader from '@/components/layout/GuestHeader';
+import DetailHeader from '@/view/presentation/errand/DetailHeader';
+import DetailCard from '@/view/presentation/errand/DetailCard';
+import PosterCard from '@/view/presentation/errand/PosterCard';
+import OwnerActions from '@/view/presentation/errand/OwnerActions';
+import EditErrandSheet from '@/view/presentation/errand/EditErrandSheet';
+import SkeletonLoading from '@/view/presentation/errand/SkeletonLoading';
+import ImageLightbox from '@/view/presentation/errand/ImageLightbox';
 
 const ACCENT = '#FEA405';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
-
-interface Errand {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  is_remote: boolean;
-  status: 'Available' | 'Expired' | 'In Progress' | 'Completed';
-  location_lat: number | null;
-  location_lng: number | null;
-  location_name?: string;
-  address_details?: string;
-  budget?: number;
-  deadline?: string;
-  images?: string[];
-  created_at: string;
-  poster_name?: string;
-  poster_avatar?: string;
-  poster_rating?: number;
-  poster_is_verified?: boolean;
-}
 
 export default function ErrandDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -53,13 +33,11 @@ export default function ErrandDetailScreen() {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setCurrentUserId(user.id);
-        const url = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
-        if (url && url !== 'default') setAvatarUrl({ uri: url });
-        supabase.from('profiles').select('verified').eq('id', user.id).single()
-          .then(({ data }) => { if (data?.verified) setIsVerified(true); });
+    loadCurrentUser().then((result) => {
+      if (result.success && result.data) {
+        setCurrentUserId(result.data.id);
+        if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
+        setIsVerified(result.data.isVerified);
       } else {
         setIsGuest(true);
       }
@@ -67,19 +45,10 @@ export default function ErrandDetailScreen() {
   }, []);
 
   useEffect(() => {
-    supabase
-      .from('errands_with_profiles')
-      .select('*')
-      .eq('id', id)
-      .single()
-      .then(({ data, error }) => {
-        console.log('errand fetch:', data, error);
-        if (data && data.status === 'Available' && data.deadline && new Date(data.deadline) < new Date()) {
-          data.status = 'Expired';
-        }
-        setErrand(data);
-        setLoading(false);
-      });
+    fetchErrand(id).then((result) => {
+      if (result.success) setErrand(result.data);
+      setLoading(false);
+    });
   }, [id]);
 
   const headerEl = isGuest ? <GuestHeader /> : <Header avatarUrl={avatarUrl} isVerified={isVerified} />;
@@ -110,15 +79,6 @@ export default function ErrandDetailScreen() {
   }
 
   const isOwner = currentUserId === errand.user_id;
-
-  const deadline = errand.deadline
-    ? new Date(errand.deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
-    : null;
-
-  const postedOn = new Date(errand.created_at).toLocaleDateString('en-PH', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
-
   const images = errand.images ?? [];
 
   return (
@@ -153,7 +113,7 @@ export default function ErrandDetailScreen() {
               description={errand.description}
               status={errand.status}
               budget={errand.budget}
-              deadline={deadline}
+              deadline={formatDeadline(errand.deadline)}
               locationName={errand.location_name}
               addressDetails={errand.address_details}
               locationLat={errand.location_lat}
@@ -168,7 +128,7 @@ export default function ErrandDetailScreen() {
             avatar={errand.poster_avatar}
             rating={errand.poster_rating}
             isVerified={errand.poster_is_verified}
-            postedOn={postedOn}
+            postedOn={formatPostedOn(errand.created_at)}
           />
 
           {errand.status === 'Available' && !isOwner && (

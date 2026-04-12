@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ErrandMinimap from './ErrandMinimap';
+import ErrandMinimap from '@/view/presentation/errand/ErrandMinimap';
 
 const ACCENT = '#FEA405';
 
