@@ -1,8 +1,8 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { toast } from '../../utils/toast';
-import { validateImageAsset, ACCEPTED_EXTENSIONS, MAX_FILE_SIZE_MB } from '../../utils/imageValidation';
+import { toast } from '../../../utils/toast';
+import { validateImageAsset, ACCEPTED_EXTENSIONS, MAX_FILE_SIZE_MB } from '../../../utils/imageValidation';
 
 interface Props {
   images: string[];

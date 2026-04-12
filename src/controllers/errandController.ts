@@ -1,4 +1,5 @@
 import * as errandModel from '@/models/errandModel';
+import { supabase } from '@/utils/supabase';
 
 export type ErrandStatus = 'Available' | 'Expired' | 'In Progress' | 'Completed';
 
@@ -55,3 +56,72 @@ export const filterOnsiteErrands = (errands: Errand[]) =>
 
 export const filterRemoteErrands = (errands: Errand[]) =>
   errands.filter(e => e.is_remote);
+
+export type PinnedLocation = { lat: number; lng: number; name: string };
+
+export interface PostErrandParams {
+  title: string;
+  description: string;
+  isRemote: boolean;
+  pinnedLocation: PinnedLocation | null;
+  addressDetails: string;
+  budget: string;
+  deadline: Date | null;
+  images: string[];
+}
+
+const uploadErrandImages = async (userId: string, errandId: string, images: string[]): Promise<string[]> => {
+  const urls: string[] = [];
+  for (const uri of images) {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const ext = blob.type.split('/')[1] ?? 'jpg';
+    const fileName = `${userId}/${errandId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from('errand-images').upload(fileName, blob, { contentType: blob.type });
+    if (!error) {
+      const { data } = supabase.storage.from('errand-images').getPublicUrl(fileName);
+      urls.push(data.publicUrl);
+    }
+  }
+  return urls;
+};
+
+export const postErrand = async (
+  params: PostErrandParams,
+): Promise<{ success: true } | { success: false; error: string }> => {
+  const { title, description, isRemote, pinnedLocation, addressDetails, budget, deadline, images } = params;
+
+  if (!title.trim()) return { success: false, error: 'Please enter a title.' };
+  if (!description.trim()) return { success: false, error: 'Please enter a description.' };
+  if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: inserted, error: insertError } = await supabase.from('errands').insert({
+      user_id: user.id,
+      title: title.trim(),
+      description: description.trim(),
+      is_remote: isRemote,
+      location_lat: pinnedLocation?.lat ?? null,
+      location_lng: pinnedLocation?.lng ?? null,
+      location_name: pinnedLocation?.name ?? null,
+      address_details: addressDetails.trim() || null,
+      budget: budget ? parseFloat(budget) : null,
+      deadline: deadline ? deadline.toISOString() : null,
+      images: [],
+    }).select('id').single();
+
+    if (insertError) throw insertError;
+
+    if (images.length > 0) {
+      const imageUrls = await uploadErrandImages(user.id, inserted.id, images);
+      await supabase.from('errands').update({ images: imageUrls }).eq('id', inserted.id);
+    }
+
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message ?? 'Something went wrong' };
+  }
+};

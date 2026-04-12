@@ -8,15 +8,15 @@ import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { toast } from '../utils/toast';
-import { supabase } from '../utils/supabase';
+import { postErrand } from '../controllers/errandController';
 import TextInput from '../view/components/TextInput';
-import TaskType from '../components/post-errand/TaskType';
-import LocationPicker from '../components/post-errand/LocationPicker';
-import Budget from '../components/post-errand/Budget';
-import Deadline from '../components/post-errand/Deadline';
-import ImageUploader from '../components/post-errand/ImageUploader';
-import LocationMap from '../components/post-errand/LocationMap';
-import AddressDetails from '../components/post-errand/AddressDetails';
+import TaskType from '../view/presentation/post-errand/TaskType';
+import LocationPicker from '../view/presentation/post-errand/LocationPicker';
+import Budget from '../view/presentation/post-errand/Budget';
+import Deadline from '../view/presentation/post-errand/Deadline';
+import ImageUploader from '../view/presentation/post-errand/ImageUploader';
+import LocationMap from '../view/presentation/post-errand/LocationMap';
+import AddressDetails from '../view/presentation/post-errand/AddressDetails';
 
 const ACCENT = '#FEA405';
 
@@ -60,62 +60,18 @@ export default function PostErrandScreen() {
     setPinnedLocation({ lat, lng, name });
   }, []);
 
-  const uploadImages = async (userId: string, errandId: string): Promise<string[]> => {
-    const urls: string[] = [];
-    for (const uri of images) {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const ext = blob.type.split('/')[1] ?? 'jpg';
-      const fileName = `${userId}/${errandId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('errand-images').upload(fileName, blob, {
-        contentType: blob.type,
-      });
-      if (!error) {
-        const { data } = supabase.storage.from('errand-images').getPublicUrl(fileName);
-        urls.push(data.publicUrl);
-      }
-    }
-    return urls;
-  };
-
   const handleSubmit = async () => {
-    if (!title.trim()) return Alert.alert('Required', 'Please enter a title.');
-    if (!description.trim()) return Alert.alert('Required', 'Please enter a description.');
-    if (!isRemote && !pinnedLocation) return Alert.alert('Required', 'Please pin a location for onsite errands.');
-
     setSubmitting(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { data: inserted, error: insertError } = await supabase.from('errands').insert({
-        user_id: user.id,
-        title: title.trim(),
-        description: description.trim(),
-        is_remote: isRemote,
-        location_lat: pinnedLocation?.lat ?? null,
-        location_lng: pinnedLocation?.lng ?? null,
-        location_name: pinnedLocation?.name ?? null,
-        address_details: addressDetails.trim() || null,
-        budget: budget ? parseFloat(budget) : null,
-        deadline: deadline ? deadline.toISOString() : null,
-        images: [],
-      }).select('id').single();
-
-      if (insertError) throw insertError;
-
-      if (images.length > 0) {
-        const imageUrls = await uploadImages(user.id, inserted.id);
-        await supabase.from('errands').update({ images: imageUrls }).eq('id', inserted.id);
-      }
-
-      toast({ title: 'Errand posted!', preset: 'done' });
-      router.replace('/');
-    } catch (e: any) {
-      toast({ title: e.message ?? 'Something went wrong', preset: 'error' });
-    } finally {
-      setSubmitting(false);
+    const result = await postErrand(
+      { title, description, isRemote, pinnedLocation, addressDetails, budget, deadline, images },
+    );
+    setSubmitting(false);
+    if (!result.success) {
+      if (result.error) Alert.alert('Required', result.error);
+      return;
     }
+    toast({ title: 'Errand posted!', preset: 'done' });
+    router.replace('/');
   };
 
   return (
