@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchLogs, subscribeToLogs, LogEntry } from '../../controllers/adminController';
+import { getLogs, getLogsSubscription, LogEntry } from '../../controllers/adminController';
 import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 import { supabaseAdmin } from '../../utils/supabase';
 
@@ -20,7 +20,7 @@ export default function AdminLogsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const loadLogs = async () => {
-    const result = await fetchLogs();
+    const result = await getLogs();
     if (result.success && result.data) setLogs(result.data);
     setLoading(false);
   };
@@ -33,7 +33,7 @@ export default function AdminLogsScreen() {
 
   useEffect(() => {
     loadLogs();
-    const channel = subscribeToLogs(loadLogs);
+    const channel = getLogsSubscription(loadLogs);
     return () => { supabaseAdmin.removeChannel(channel); };
   }, []);
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../utils/supabase';
-import { fetchErrands, Errand } from '../../controllers/adminController';
+import { getErrands, Errand } from '../../controllers/adminController';
 import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 import ErrandCard from '../../view/presentation/admin/ErrandCard';
 
@@ -19,7 +19,7 @@ export default function AdminErrandsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const loadErrands = async () => {
-    const result = await fetchErrands();
+    const result = await getErrands();
     if (result.success && result.data) setErrands(result.data);
     setLoading(false);
   };

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchUserDetail, setUserActiveStatus, UserDetail } from '../../../controllers/adminController';
+import { getUserDetail, updateUserActiveStatus, UserDetail } from '../../../controllers/adminController';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
 import VerificationBadge from '../../../view/components/VerificationBadge';
 
@@ -18,7 +18,7 @@ export default function UserDetailScreen() {
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
-    fetchUserDetail(id).then(result => {
+    getUserDetail(id).then(result => {
       if (result.success && result.data) setUser(result.data);
       setLoading(false);
     });
@@ -28,7 +28,7 @@ export default function UserDetailScreen() {
     const suspending = modal.type === 'suspend';
     setModal({ visible: false, type: null });
     setActing(true);
-    await setUserActiveStatus(id!, suspending);
+    await updateUserActiveStatus(id!, suspending);
     setUser(prev => prev ? { ...prev, is_active: !suspending } : prev);
     setActing(false);
   };

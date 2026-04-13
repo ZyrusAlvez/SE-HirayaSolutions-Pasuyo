@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchVerificationProfile, resolveVerification, VerificationProfile } from '../../../controllers/adminController';
+import { getVerificationProfile, updateVerificationStatus, VerificationProfile } from '../../../controllers/adminController';
 
 const ACCENT = '#FEA405';
 
@@ -15,7 +15,7 @@ export default function VerificationDetailScreen() {
   const [modal, setModal] = useState<{ visible: boolean; type: 'approve' | 'reject' | null }>({ visible: false, type: null });
 
   useEffect(() => {
-    fetchVerificationProfile(id!).then(result => {
+    getVerificationProfile(id!).then(result => {
       if (result.success && result.data) setProfile(result.data);
       setLoading(false);
     });
@@ -25,7 +25,7 @@ export default function VerificationDetailScreen() {
     const approved = modal.type === 'approve';
     setModal({ visible: false, type: null });
     setActing(true);
-    await resolveVerification(id!, approved);
+    await updateVerificationStatus(id!, approved);
     setActing(false);
     router.back();
   };

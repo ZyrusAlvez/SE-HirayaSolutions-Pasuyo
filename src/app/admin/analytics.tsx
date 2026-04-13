@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { LineChart, PieChart } from 'react-native-chart-kit';
-import { fetchAnalytics, AnalyticsData } from '../../controllers/adminController';
+import { getAnalytics, AnalyticsData } from '../../controllers/adminController';
 import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 
 const ACCENT = '#FEA405';
+
+const STATUS_COLORS: Record<string, string> = {
+  'Available':   '#22C55E',
+  'In Progress': '#3B82F6',
+  'Completed':   '#9CA3AF',
+  'Expired':     '#EF4444',
+};
 
 export default function AdminAnalyticsScreen() {
   const { width } = useWindowDimensions();
@@ -14,7 +21,7 @@ export default function AdminAnalyticsScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnalytics().then(result => {
+    getAnalytics().then(result => {
       if (result.success && result.data) setAnalytics(result.data);
       setLoading(false);
     });
@@ -59,7 +66,12 @@ export default function AdminAnalyticsScreen() {
             <Text className="text-sm font-bold text-gray-700 mb-4">Errand Status Breakdown</Text>
             {analytics?.pieData.length ? (
               <PieChart
-                data={analytics.pieData}
+                data={analytics.pieData.map(({ name, count }) => ({
+                  name, count,
+                  color: STATUS_COLORS[name] ?? '#D1D5DB',
+                  legendFontColor: '#6B7280',
+                  legendFontSize: 12,
+                }))}
                 width={chartWidth}
                 height={200}
                 chartConfig={chartConfig}

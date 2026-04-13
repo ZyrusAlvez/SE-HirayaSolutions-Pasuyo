@@ -70,7 +70,7 @@ export interface LogEntry {
 
 export interface AnalyticsData {
   lineData: { labels: string[]; data: number[] };
-  pieData: { name: string; count: number; color: string; legendFontColor: string; legendFontSize: number }[];
+  pieData: { name: string; count: number }[];
 }
 
 const getAdmin = () => {
@@ -78,22 +78,22 @@ const getAdmin = () => {
   return supabaseAdmin;
 };
 
-export const fetchAdminUsers = () =>
+export const getAdminUsers = () =>
   getAdmin()
     .from('admin_user_profiles')
     .select('id, display_name, email, verified, role, created_at, rating, pending_verification, avatar_url, verification_submitted_at, id_type');
 
-export const fetchUserIsActive = (id: string) =>
+export const getUserIsActive = (id: string) =>
   getAdmin().from('profiles').select('is_active').eq('id', id).maybeSingle();
 
-export const fetchUserDetail = (id: string) =>
+export const getUserDetail = (id: string) =>
   getAdmin()
     .from('admin_user_profiles')
     .select('id, display_name, email, avatar_url, verified, role, rating, created_at')
     .eq('id', id)
     .single();
 
-export const fetchVerificationProfile = (id: string) =>
+export const getVerificationProfile = (id: string) =>
   getAdmin()
     .from('profiles')
     .select('id, first_name, middle_name, last_name, suffix, gender, date_of_birth, address_province, address_city, address_barangay, id_type, id_front_url, id_back_url, utility_bill_type, utility_bill_front_url, utility_bill_back_url, verification_submitted_at')
@@ -106,27 +106,27 @@ export const updateUserActiveStatus = (id: string, is_active: boolean) =>
 export const updateVerificationStatus = (id: string, verified: boolean) =>
   getAdmin().from('profiles').update({ verified, pending_verification: false }).eq('id', id);
 
-export const fetchAdminErrands = () =>
+export const getAdminErrands = () =>
   getAdmin()
     .from('errands_with_profiles')
     .select('id, title, poster_name, budget, status, is_remote, created_at');
 
-export const fetchAdminLogs = () =>
+export const getAdminLogs = () =>
   getAdmin()
     .from('admin_logs')
     .select('id, action, details, created_at, admin_id, target_user_id')
     .order('created_at', { ascending: false });
 
-export const subscribeToAdminLogs = (callback: () => void) =>
+export const getAdminLogsSubscription = (callback: () => void) =>
   getAdmin()
     .channel('admin-logs')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_logs' }, callback)
     .subscribe();
 
-export const fetchErrandsForAnalytics = () =>
+export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
 
-export const insertAdminLog = async (action: string, targetUserId: string, details: string) => {
+export const postAdminLog = async (action: string, targetUserId: string, details: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   return getAdmin().from('admin_logs').insert({
     admin_id: user?.id,

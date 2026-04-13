@@ -6,21 +6,14 @@ export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry
 
 type Result<T = undefined> = { success: boolean; error: string; data?: T };
 
-const STATUS_COLORS: Record<string, string> = {
-  'Available':   '#22C55E',
-  'In Progress': '#3B82F6',
-  'Completed':   '#9CA3AF',
-  'Expired':     '#EF4444',
-};
-
-export const fetchUsers = async (): Promise<Result<FullUserProfile[]>> => {
+export const getUsers = async (): Promise<Result<FullUserProfile[]>> => {
   try {
-    const { data, error } = await adminModel.fetchAdminUsers();
+    const { data, error } = await adminModel.getAdminUsers();
     if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch users' };
 
     const users = await Promise.all(
       data.map(async (user) => {
-        const { data: profileData } = await adminModel.fetchUserIsActive(user.id);
+        const { data: profileData } = await adminModel.getUserIsActive(user.id);
         return { ...user, is_active: profileData?.is_active ?? true } as FullUserProfile;
       })
     );
@@ -30,21 +23,21 @@ export const fetchUsers = async (): Promise<Result<FullUserProfile[]>> => {
   }
 };
 
-export const fetchUserDetail = async (id: string): Promise<Result<UserDetail>> => {
+export const getUserDetail = async (id: string): Promise<Result<UserDetail>> => {
   try {
-    const { data, error } = await adminModel.fetchUserDetail(id);
+    const { data, error } = await adminModel.getUserDetail(id);
     if (error || !data) return { success: false, error: error?.message ?? 'User not found' };
 
-    const { data: profileData } = await adminModel.fetchUserIsActive(id);
+    const { data: profileData } = await adminModel.getUserIsActive(id);
     return { success: true, error: '', data: { ...data, is_active: profileData?.is_active ?? true } as UserDetail };
   } catch {
     return { success: false, error: 'Failed to fetch user' };
   }
 };
 
-export const fetchVerificationProfile = async (id: string): Promise<Result<VerificationProfile>> => {
+export const getVerificationProfile = async (id: string): Promise<Result<VerificationProfile>> => {
   try {
-    const { data, error } = await adminModel.fetchVerificationProfile(id);
+    const { data, error } = await adminModel.getVerificationProfile(id);
     if (error || !data) return { success: false, error: error?.message ?? 'Profile not found' };
     return { success: true, error: '', data: data as VerificationProfile };
   } catch {
@@ -52,7 +45,7 @@ export const fetchVerificationProfile = async (id: string): Promise<Result<Verif
   }
 };
 
-export const setUserActiveStatus = async (id: string, suspend: boolean): Promise<Result> => {
+export const updateUserActiveStatus = async (id: string, suspend: boolean): Promise<Result> => {
   try {
     const { error } = await adminModel.updateUserActiveStatus(id, !suspend);
     if (error) return { success: false, error: error.message };
@@ -64,7 +57,7 @@ export const setUserActiveStatus = async (id: string, suspend: boolean): Promise
         ? 'Your account has been suspended. Please contact support for more information.'
         : 'Your account has been restored. You can now access Pasuyo again.',
     );
-    await adminModel.insertAdminLog(
+    await adminModel.postAdminLog(
       suspend ? 'SUSPENDED_USER' : 'RESTORED_USER',
       id,
       `Admin ${suspend ? 'suspended' : 'restored'} user ${id}`,
@@ -75,7 +68,7 @@ export const setUserActiveStatus = async (id: string, suspend: boolean): Promise
   }
 };
 
-export const resolveVerification = async (id: string, approve: boolean): Promise<Result> => {
+export const updateVerificationStatus = async (id: string, approve: boolean): Promise<Result> => {
   try {
     const { error } = await adminModel.updateVerificationStatus(id, approve);
     if (error) return { success: false, error: error.message };
@@ -87,7 +80,7 @@ export const resolveVerification = async (id: string, approve: boolean): Promise
         ? 'Your identity has been verified. You now have full access to Pasuyo.'
         : 'Your verification request was rejected. Please resubmit with valid documents.',
     );
-    await adminModel.insertAdminLog(
+    await adminModel.postAdminLog(
       approve ? 'APPROVED_VERIFICATION' : 'REJECTED_VERIFICATION',
       id,
       `Admin ${approve ? 'approved' : 'rejected'} verification for user ${id}`,
@@ -98,9 +91,9 @@ export const resolveVerification = async (id: string, approve: boolean): Promise
   }
 };
 
-export const fetchErrands = async (): Promise<Result<Errand[]>> => {
+export const getErrands = async (): Promise<Result<Errand[]>> => {
   try {
-    const { data, error } = await adminModel.fetchAdminErrands();
+    const { data, error } = await adminModel.getAdminErrands();
     if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch errands' };
     return { success: true, error: '', data: data as Errand[] };
   } catch {
@@ -108,9 +101,9 @@ export const fetchErrands = async (): Promise<Result<Errand[]>> => {
   }
 };
 
-export const fetchLogs = async (): Promise<Result<LogEntry[]>> => {
+export const getLogs = async (): Promise<Result<LogEntry[]>> => {
   try {
-    const { data, error } = await adminModel.fetchAdminLogs();
+    const { data, error } = await adminModel.getAdminLogs();
     if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch logs' };
     return { success: true, error: '', data: data as LogEntry[] };
   } catch {
@@ -118,12 +111,12 @@ export const fetchLogs = async (): Promise<Result<LogEntry[]>> => {
   }
 };
 
-export const subscribeToLogs = (callback: () => void) =>
-  adminModel.subscribeToAdminLogs(callback);
+export const getLogsSubscription = (callback: () => void) =>
+  adminModel.getAdminLogsSubscription(callback);
 
-export const fetchAnalytics = async (): Promise<Result<AnalyticsData>> => {
+export const getAnalytics = async (): Promise<Result<AnalyticsData>> => {
   try {
-    const { data, error } = await adminModel.fetchErrandsForAnalytics();
+    const { data, error } = await adminModel.getErrandsForAnalytics();
     if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch analytics' };
 
     const today = new Date();
@@ -141,12 +134,7 @@ export const fetchAnalytics = async (): Promise<Result<AnalyticsData>> => {
 
     const statusCounts: Record<string, number> = {};
     data.forEach(e => { statusCounts[e.status] = (statusCounts[e.status] ?? 0) + 1; });
-    const pieData = Object.entries(statusCounts).map(([name, count]) => ({
-      name, count,
-      color: STATUS_COLORS[name] ?? '#D1D5DB',
-      legendFontColor: '#6B7280',
-      legendFontSize: 12,
-    }));
+    const pieData = Object.entries(statusCounts).map(([name, count]) => ({ name, count }));
 
     return { success: true, error: '', data: { lineData: { labels, data: counts }, pieData } };
   } catch {

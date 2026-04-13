@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../utils/supabase';
-import { fetchUsers, FullUserProfile } from '../../controllers/adminController';
+import { getUsers, FullUserProfile } from '../../controllers/adminController';
 import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 import UserCard from '../../view/presentation/admin/UserCard';
 import VerificationCard, { PendingUser } from '../../view/presentation/admin/VerificationCard';
@@ -28,7 +28,7 @@ export default function AdminAccountsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const loadUsers = async () => {
-    const result = await fetchUsers();
+    const result = await getUsers();
     if (result.success && result.data) setUsers(result.data);
     setLoading(false);
   };
