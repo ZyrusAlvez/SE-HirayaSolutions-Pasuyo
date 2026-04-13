@@ -1,30 +1,49 @@
 import * as errandModel from '@/models/errandModel';
-import { supabase } from '@/utils/supabase';
+import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/models/errandModel';
+import * as ImagePicker from 'expo-image-picker';
 
-export type ErrandStatus = 'Available' | 'Expired' | 'In Progress' | 'Completed';
+export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
-export type Errand = {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  is_remote: boolean;
-  status: ErrandStatus;
-  location_lat: number | null;
-  location_lng: number | null;
-  location_name?: string;
-  address_details?: string;
-  budget?: number;
-  deadline?: string;
-  images?: string[];
-  created_at: string;
-  poster_name?: string;
-  poster_avatar?: string;
-  poster_rating?: number;
-  poster_is_verified?: boolean;
-};
+export const ACCEPTED_EXTENSIONS = ['JPG', 'JPEG', 'PNG', 'WebP'];
+export const MAX_FILE_SIZE_MB = 5;
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
+
+const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const inferMime = (asset: { mimeType?: string | null; fileName?: string | null; uri?: string | null }) => {
+  if (asset.mimeType) return asset.mimeType;
+  const ext = (asset.fileName ?? asset.uri ?? '').split('.').pop()?.toLowerCase() ?? '';
+  return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext] ?? '');
+};
+
+export const pickErrandImages = async (
+  remaining: number,
+): Promise<{ uris: string[]; errors: string[] }> => {
+  let result;
+  try {
+    result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, quality: 0.8 });
+  } catch {
+    return { uris: [], errors: ['Some files could not be read. Use JPG, PNG, or WebP.'] };
+  }
+  if (result.canceled) return { uris: [], errors: [] };
+
+  const errors: string[] = [];
+  const uris: string[] = [];
+  for (const asset of result.assets.slice(0, remaining)) {
+    const mime = inferMime(asset);
+    if (!ACCEPTED_MIME_TYPES.includes(mime))
+      errors.push(`"${asset.fileName ?? 'File'}" is not a supported type. Use JPG, PNG, or WebP.`);
+    else if (asset.fileSize && asset.fileSize > MAX_BYTES)
+      errors.push(`"${asset.fileName ?? 'File'}" exceeds the ${MAX_FILE_SIZE_MB}MB size limit.`);
+    else
+      uris.push(asset.uri);
+  }
+  if (result.assets.length > remaining)
+    errors.push(`Only ${remaining} more image${remaining === 1 ? '' : 's'} allowed. Extra selections were ignored.`);
+  return { uris, errors };
+};
 
 export const fetchErrand = async (id: string): Promise<Result<Errand>> => {
   const { data, error } = await errandModel.getErrandById(id);
@@ -57,35 +76,6 @@ export const filterOnsiteErrands = (errands: Errand[]) =>
 export const filterRemoteErrands = (errands: Errand[]) =>
   errands.filter(e => e.is_remote);
 
-export type PinnedLocation = { lat: number; lng: number; name: string };
-
-export interface PostErrandParams {
-  title: string;
-  description: string;
-  isRemote: boolean;
-  pinnedLocation: PinnedLocation | null;
-  addressDetails: string;
-  budget: string;
-  deadline: Date | null;
-  images: string[];
-}
-
-const uploadErrandImages = async (userId: string, errandId: string, images: string[]): Promise<string[]> => {
-  const urls: string[] = [];
-  for (const uri of images) {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    const ext = blob.type.split('/')[1] ?? 'jpg';
-    const fileName = `${userId}/${errandId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('errand-images').upload(fileName, blob, { contentType: blob.type });
-    if (!error) {
-      const { data } = supabase.storage.from('errand-images').getPublicUrl(fileName);
-      urls.push(data.publicUrl);
-    }
-  }
-  return urls;
-};
-
 export const postErrand = async (
   params: PostErrandParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
@@ -96,28 +86,15 @@ export const postErrand = async (
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await errandModel.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data: inserted, error: insertError } = await supabase.from('errands').insert({
-      user_id: user.id,
-      title: title.trim(),
-      description: description.trim(),
-      is_remote: isRemote,
-      location_lat: pinnedLocation?.lat ?? null,
-      location_lng: pinnedLocation?.lng ?? null,
-      location_name: pinnedLocation?.name ?? null,
-      address_details: addressDetails.trim() || null,
-      budget: budget ? parseFloat(budget) : null,
-      deadline: deadline ? deadline.toISOString() : null,
-      images: [],
-    }).select('id').single();
-
+    const { data: inserted, error: insertError } = await errandModel.insertErrand({ ...params, userId: user.id });
     if (insertError) throw insertError;
 
     if (images.length > 0) {
-      const imageUrls = await uploadErrandImages(user.id, inserted.id, images);
-      await supabase.from('errands').update({ images: imageUrls }).eq('id', inserted.id);
+      const imageUrls = await errandModel.uploadErrandImages(user.id, inserted.id, images);
+      await errandModel.updateErrandImages(inserted.id, imageUrls);
     }
 
     return { success: true };

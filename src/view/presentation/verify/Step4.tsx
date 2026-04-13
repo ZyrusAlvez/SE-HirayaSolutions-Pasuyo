@@ -1,8 +1,7 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { toast } from '../../../utils/toast';
-import { validateImageAsset } from '../../../utils/imageValidation';
+import { pickVerificationImage } from '../../../controllers/profileController';
 
 const ID_TYPES = [
   { label: "Driver's License",  recommended: true  },
@@ -27,20 +26,10 @@ export default function Step4({
   idBackUri, setIdBackUri,
 }: Step4Props) {
   const pickImage = async (side: 'front' | 'back') => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') { toast({ title: 'Permission required to access photos', preset: 'error' }); return; }
-    let result;
-    try {
-      result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-    } catch {
-      toast({ title: 'Only JPG, PNG, or WebP images are allowed', preset: 'error' }); return;
-    }
-    if (result.canceled) return;
-    const asset = result.assets[0];
-    const validation = await validateImageAsset(asset);
-    if (!validation.ok) { toast({ title: validation.error, preset: 'error' }); return; }
-    if (side === 'front') setIdFrontUri(asset.uri);
-    else setIdBackUri(asset.uri);
+    const result = await pickVerificationImage();
+    if (!result.success) { if (result.error) toast({ title: result.error, preset: 'error' }); return; }
+    if (side === 'front') setIdFrontUri(result.data);
+    else setIdBackUri(result.data);
   };
 
   const UploadSlot = ({

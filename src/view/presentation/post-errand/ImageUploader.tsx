@@ -1,8 +1,7 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { toast } from '../../../utils/toast';
-import { validateImageAsset, ACCEPTED_EXTENSIONS, MAX_FILE_SIZE_MB } from '../../../utils/imageValidation';
+import { pickErrandImages, ACCEPTED_EXTENSIONS, MAX_FILE_SIZE_MB } from '../../../controllers/errandController';
 
 interface Props {
   images: string[];
@@ -17,36 +16,10 @@ export default function ImageUploader({ images, errors, onChange, onErrors }: Pr
 
   const pickImages = async () => {
     if (remaining <= 0) return;
-    let result;
-    try {
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsMultipleSelection: true,
-        quality: 0.8,
-      });
-    } catch (e: any) {
-      const msg = 'Some files could not be read. Use JPG, PNG, or WebP.';
-      onErrors([msg]);
-      toast({ title: msg, preset: 'error' });
-      return;
-    }
-    if (result.canceled) return;
-
-    const errs: string[] = [];
-    const validUris: string[] = [];
-    for (const asset of result.assets.slice(0, remaining)) {
-      const validation = await validateImageAsset(asset);
-      if (!validation.ok) errs.push(validation.error);
-      else validUris.push(asset.uri);
-    }
-    if (result.assets.length > remaining) {
-      const msg = `Only ${remaining} more image${remaining === 1 ? '' : 's'} allowed. Extra selections were ignored.`;
-      errs.push(msg);
-      toast({ title: msg, preset: 'error' });
-    }
+    const { uris, errors: errs } = await pickErrandImages(remaining);
     onErrors(errs);
-    errs.filter(e => !e.includes('allowed')).forEach((err) => toast({ title: err, preset: 'error' }));
-    if (validUris.length > 0) onChange([...images, ...validUris]);
+    errs.forEach(err => toast({ title: err, preset: 'error' }));
+    if (uris.length > 0) onChange([...images, ...uris]);
   };
 
   return (

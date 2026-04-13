@@ -1,6 +1,5 @@
 import * as profileModel from '@/models/profileModel';
 import type { VerificationStatus, ProfileData, VerifyFormState } from '@/models/profileModel';
-import { validateImageAsset } from '@/utils/imageValidation';
 import * as ImagePicker from 'expo-image-picker';
 
 export type { VerificationStatus, ProfileData, VerifyFormState };
@@ -56,15 +55,41 @@ export const pickAvatar = async (): Promise<Result<string>> => {
       quality: 0.5,
     });
   } catch {
-    return { success: false, error: 'Only JPG, PNG, or WEBP images are allowed' };
+    return { success: false, error: 'Only JPG, PNG, or WEBP images are allowed lol' };
   }
 
   if (result.canceled) return { success: false, error: '' };
 
   const asset = result.assets[0];
-  const validation = await validateImageAsset(asset);
-  if (!validation.ok) return { success: false, error: validation.error };
+  const src = asset.fileName ?? asset.uri ?? '';
+  const ext = src.split('.').pop()?.toLowerCase() ?? '';
+  const mime = asset.mimeType ?? ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext] ?? '');
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime))
+    return { success: false, error: 'Only JPG, PNG, or WebP images are allowed' };
+  if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024)
+    return { success: false, error: 'Image must be under 5MB' };
 
+  return { success: true, data: asset.uri };
+};
+
+export const pickVerificationImage = async (): Promise<Result<string>> => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') return { success: false, error: 'Permission required to access photos' };
+  let result;
+  try {
+    result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
+  } catch {
+    return { success: false, error: 'Only JPG, PNG, or WebP images are allowed' };
+  }
+  if (result.canceled) return { success: false, error: '' };
+  const asset = result.assets[0];
+  const src = asset.fileName ?? asset.uri ?? '';
+  const ext = src.split('.').pop()?.toLowerCase() ?? '';
+  const mime = asset.mimeType ?? ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext] ?? '');
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime))
+    return { success: false, error: `"${asset.fileName ?? 'File'}" is not a supported type. Use JPG, PNG, or WebP.` };
+  if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024)
+    return { success: false, error: `"${asset.fileName ?? 'File'}" exceeds the 5MB size limit.` };
   return { success: true, data: asset.uri };
 };
 
