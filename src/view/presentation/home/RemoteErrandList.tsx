@@ -47,7 +47,7 @@ export default function RemoteErrandList({ errands }: Props) {
   }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} style={{ overflow: 'visible' }}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
       <SortBar sort={sort} onSort={setSort} keys={['deadline', 'budget']} />
       <Text style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 8, marginLeft: 4 }}>Tap a row to see more info</Text>
       <View style={{ backgroundColor: 'white', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#F3F4F6' }}>
