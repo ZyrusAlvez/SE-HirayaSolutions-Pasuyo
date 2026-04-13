@@ -54,7 +54,7 @@ export interface VerifyFormState {
   idBackUri: string | null;
 }
 
-export async function archiveCurrentFiles(userId: string) {
+export async function deleteCurrentFiles(userId: string) {
   const timestamp = new Date().toISOString();
   for (const file of CURRENT_FILES) {
     const from = `${userId}/current/${file}`;
@@ -66,7 +66,7 @@ export async function archiveCurrentFiles(userId: string) {
   }
 }
 
-export async function uploadVerificationFile(uri: string, path: string): Promise<string> {
+export async function postVerificationFile(uri: string, path: string): Promise<string> {
   let blob: Blob;
 
   if (Platform.OS === 'web') {
@@ -106,13 +106,13 @@ export const getProfile = (userId: string) =>
     .eq('id', userId)
     .single();
 
-export const updateUserMeta = (data: Record<string, string>) =>
+export const postUserMeta = (data: Record<string, string>) =>
   supabase.auth.updateUser({ data });
 
-export const updateProfileAvatar = (userId: string, avatarUrl: string) =>
+export const postProfileAvatar = (userId: string, avatarUrl: string) =>
   supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId);
 
-export const uploadAvatar = async (uri: string, name: string, email: string): Promise<string> => {
+export const postAvatar = async (uri: string, name: string, email: string): Promise<string> => {
   const safeName = name.trim().replace(/\s+/g, '_');
   const safeEmail = email.replace(/[@.]/g, '_');
   const path = `profile image/${safeName}_${safeEmail}.jpg`;
@@ -128,7 +128,7 @@ export const uploadAvatar = async (uri: string, name: string, email: string): Pr
 };
 
 
-export const upsertVerificationProfile = (userId: string, s: VerifyFormState, urls: {
+export const postVerificationProfile = (userId: string, s: VerifyFormState, urls: {
   utilityFrontUrl: string;
   utilityBackUrl: string;
   idFrontUrl: string;

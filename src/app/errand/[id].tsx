@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getErrand } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
-import { loadProfile } from '@/controllers/profileController';
+import { getProfile } from '@/controllers/profileController';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
 import GuestHeader from '@/view/components/GuestHeader';
@@ -34,7 +34,7 @@ export default function ErrandDetailScreen() {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    loadProfile().then((result) => {
+    getProfile().then((result) => {
       if (result.success && result.data) {
         setCurrentUserId(result.data.id);
         if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });

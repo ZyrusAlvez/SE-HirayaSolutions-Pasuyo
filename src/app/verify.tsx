@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, useWindowD
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { toast } from '../utils/toast';
-import { validateVerifyStep, submitVerification, VerifyFormState } from '../controllers/profileController';
+import { getVerifyStepError, postVerification, VerifyFormState } from '../controllers/profileController';
 import Step1 from '../view/presentation/verify/Step1';
 import Step2 from '../view/presentation/verify/Step2';
 import Step3 from '../view/presentation/verify/Step3';
@@ -51,12 +51,12 @@ export default function VerifyScreen() {
   };
 
   const handleNext = async () => {
-    const error = validateVerifyStep(step, formState);
+    const error = getVerifyStepError(step, formState);
     if (error) { toast({ title: error, preset: 'error' }); return; }
 
     if (step === 4) {
       setSubmitting(true);
-      const result = await submitVerification(formState);
+      const result = await postVerification(formState);
       setSubmitting(false);
       if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
       setStep(5);

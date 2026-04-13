@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from '@/utils/toast';
-import { loadProfile, pickAvatar, saveProfile } from '@/controllers/profileController';
+import { getProfile, getAvatarImage, updateProfile } from '@/controllers/profileController';
 import type { VerificationStatus, ProfileData } from '@/controllers/profileController';
 import { logout } from '@/controllers/authController';
 import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   const isDirty = displayName !== originalName || !!pendingImageUri;
 
   useEffect(() => {
-    loadProfile().then((result) => {
+    getProfile().then((result) => {
       if (!result.success) {
         toast({ title: result.error, preset: 'error' });
       } else if (result.data) {
@@ -49,7 +49,7 @@ export default function ProfileScreen() {
   }, []);
 
   const handlePickAvatar = async () => {
-    const result = await pickAvatar();
+    const result = await getAvatarImage();
     if (!result.success) {
       if (result.error) toast({ title: result.error, preset: 'error' });
       return;
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     setSaving(true);
-    const result = await saveProfile(displayName, pendingImageUri);
+    const result = await updateProfile(displayName, pendingImageUri);
     setSaving(false);
     if (!result.success) {
       toast({ title: result.error, preset: 'error' });

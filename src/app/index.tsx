@@ -4,7 +4,7 @@ import { useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
 import { getErrands } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
-import { loadProfile } from '@/controllers/profileController';
+import { getProfile } from '@/controllers/profileController';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
 import ErrandTabToggle from '@/view/presentation/home/ErrandTabToggle';
@@ -25,7 +25,7 @@ export default function HomeScreen() {
   const [expandId, setExpandId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    loadProfile().then((result) => {
+    getProfile().then((result) => {
       if (result.success && result.data) {
         if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
         setVerificationStatus(result.data.verificationStatus);

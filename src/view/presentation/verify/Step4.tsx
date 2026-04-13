@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { toast } from '../../../utils/toast';
-import { pickVerificationImage } from '../../../controllers/profileController';
+import { getVerificationImage } from '../../../controllers/profileController';
 
 const ID_TYPES = [
   { label: "Driver's License",  recommended: true  },
@@ -26,7 +26,7 @@ export default function Step4({
   idBackUri, setIdBackUri,
 }: Step4Props) {
   const pickImage = async (side: 'front' | 'back') => {
-    const result = await pickVerificationImage();
+    const result = await getVerificationImage();
     if (!result.success) { if (result.error) toast({ title: result.error, preset: 'error' }); return; }
     if (side === 'front') setIdFrontUri(result.data);
     else setIdBackUri(result.data);

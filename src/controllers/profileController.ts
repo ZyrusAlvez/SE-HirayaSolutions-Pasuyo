@@ -6,7 +6,7 @@ export type { VerificationStatus, ProfileData, VerifyFormState };
 
 type Result<T = void> = { success: true; data: T } | { success: false; error: string };
 
-export const loadProfile = async (): Promise<Result<ProfileData | null>> => {
+export const getProfile = async (): Promise<Result<ProfileData | null>> => {
   const { data: { user } } = await profileModel.getUser();
   if (!user) return { success: true, data: null };
 
@@ -42,7 +42,7 @@ export const loadProfile = async (): Promise<Result<ProfileData | null>> => {
   };
 };
 
-export const pickAvatar = async (): Promise<Result<string>> => {
+export const getAvatarImage = async (): Promise<Result<string>> => {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== 'granted') return { success: false, error: 'Permission required' };
 
@@ -72,7 +72,7 @@ export const pickAvatar = async (): Promise<Result<string>> => {
   return { success: true, data: asset.uri };
 };
 
-export const pickVerificationImage = async (): Promise<Result<string>> => {
+export const getVerificationImage = async (): Promise<Result<string>> => {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== 'granted') return { success: false, error: 'Permission required to access photos' };
   let result;
@@ -93,7 +93,7 @@ export const pickVerificationImage = async (): Promise<Result<string>> => {
   return { success: true, data: asset.uri };
 };
 
-export const saveProfile = async (
+export const updateProfile = async (
   displayName: string,
   pendingImageUri: string | null,
 ): Promise<Result<{ finalAvatarUrl: string | null }>> => {
@@ -106,18 +106,18 @@ export const saveProfile = async (
   let finalAvatarUrl: string | null = null;
 
   if (pendingImageUri) {
-    finalAvatarUrl = await profileModel.uploadAvatar(pendingImageUri, displayName, user.email || '');
+    finalAvatarUrl = await profileModel.postAvatar(pendingImageUri, displayName, user.email || '');
     updates.custom_avatar_url = finalAvatarUrl;
-    await profileModel.updateProfileAvatar(user.id, finalAvatarUrl);
+    await profileModel.postProfileAvatar(user.id, finalAvatarUrl);
   }
 
-  const { error } = await profileModel.updateUserMeta(updates);
+  const { error } = await profileModel.postUserMeta(updates);
   if (error) return { success: false, error: 'Failed to update profile' };
 
   return { success: true, data: { finalAvatarUrl } };
 };
 
-export const validateVerifyStep = (step: number, s: VerifyFormState): string | null => {
+export const getVerifyStepError = (step: number, s: VerifyFormState): string | null => {
   if (step === 1) {
     if (!s.firstName.trim()) return 'First name is required';
     if (!s.lastName.trim()) return 'Last name is required';
@@ -157,7 +157,7 @@ export const validateVerifyStep = (step: number, s: VerifyFormState): string | n
   return null;
 };
 
-export const submitVerification = async (s: VerifyFormState): Promise<Result<void>> => {
+export const postVerification = async (s: VerifyFormState): Promise<Result<void>> => {
   try {
     const { data: { user } } = await profileModel.getUser();
     if (!user) throw new Error('Not authenticated');
@@ -168,21 +168,21 @@ export const submitVerification = async (s: VerifyFormState): Promise<Result<voi
       throw new Error('Missing required file uploads');
 
     const userId = user.id;
-    await profileModel.archiveCurrentFiles(userId);
+    await profileModel.deleteCurrentFiles(userId);
 
     const [utilityFrontUrl, utilityBackUrl, idFrontUrl, idBackUrl] = await Promise.all([
-      profileModel.uploadVerificationFile(s.utilityBillFrontUri, `${userId}/current/utility-bill-front.jpg`),
-      profileModel.uploadVerificationFile(s.utilityBillBackUri, `${userId}/current/utility-bill-back.jpg`),
-      profileModel.uploadVerificationFile(s.idFrontUri, `${userId}/current/id-front.jpg`),
-      profileModel.uploadVerificationFile(s.idBackUri, `${userId}/current/id-back.jpg`),
+      profileModel.postVerificationFile(s.utilityBillFrontUri, `${userId}/current/utility-bill-front.jpg`),
+      profileModel.postVerificationFile(s.utilityBillBackUri, `${userId}/current/utility-bill-back.jpg`),
+      profileModel.postVerificationFile(s.idFrontUri, `${userId}/current/id-front.jpg`),
+      profileModel.postVerificationFile(s.idBackUri, `${userId}/current/id-back.jpg`),
     ]);
 
-    const { error: profileError } = await profileModel.upsertVerificationProfile(userId, s, {
+    const { error: profileError } = await profileModel.postVerificationProfile(userId, s, {
       utilityFrontUrl, utilityBackUrl, idFrontUrl, idBackUrl,
     });
     if (profileError) throw new Error(`Failed to save profile: ${profileError.message}`);
 
-    const { error: metaError } = await profileModel.updateUserMeta({
+    const { error: metaError } = await profileModel.postUserMeta({
       name: `${s.firstName} ${s.lastName}`,
     });
     if (metaError) throw new Error(`Failed to update user metadata: ${metaError.message}`);
