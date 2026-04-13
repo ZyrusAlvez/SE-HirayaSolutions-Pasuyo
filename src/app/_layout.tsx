@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { supabase } from "../utils/supabase";
 import { Session } from "@supabase/supabase-js";
-import { consumePendingRedirect } from "../utils/redirectStore";
 import { Platform } from "react-native";
 import "../global.css";
 
@@ -56,8 +55,7 @@ export default function RootLayout() {
         if (data?.is_active === false) {
           router.replace('/suspended');
         } else {
-          const dest = consumePendingRedirect();
-          router.replace((dest as any) || '/');
+          router.replace('/');
         }
       });
     } else if (session && !inAuthGroup && !inAdminGroup && !isPublic && !isSuspended) {

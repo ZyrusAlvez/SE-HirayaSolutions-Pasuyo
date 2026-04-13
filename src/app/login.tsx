@@ -3,7 +3,6 @@ import { View, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { login, loginWithGoogle } from '@/controllers/authController';
 import { toast } from '@/utils/toast';
-import { setPendingRedirect } from '@/utils/redirectStore';
 import LoginForm from '@/view/presentation/login/LoginForm';
 
 export default function LoginScreen() {
@@ -18,7 +17,6 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     setLoading(true);
-    if (redirect) setPendingRedirect(redirect);
     const result = await login(email, password);
     setLoading(false);
 
@@ -31,7 +29,6 @@ export default function LoginScreen() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    if (redirect) setPendingRedirect(redirect);
     const result = await loginWithGoogle();
     setLoading(false);
     if (!result.success) toast({ title: result.error!, preset: 'error' });

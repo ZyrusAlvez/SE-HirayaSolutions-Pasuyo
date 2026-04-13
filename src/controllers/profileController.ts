@@ -2,7 +2,6 @@ import * as profileModel from '@/models/profileModel';
 import type { VerificationStatus, ProfileData, VerifyFormState } from '@/models/profileModel';
 import { validateImageAsset } from '@/utils/imageValidation';
 import * as ImagePicker from 'expo-image-picker';
-import { archiveCurrentFiles, uploadFile } from '@/utils/verificationService';
 
 export type { VerificationStatus, ProfileData, VerifyFormState };
 
@@ -144,13 +143,13 @@ export const submitVerification = async (s: VerifyFormState): Promise<Result<voi
       throw new Error('Missing required file uploads');
 
     const userId = user.id;
-    await archiveCurrentFiles(userId);
+    await profileModel.archiveCurrentFiles(userId);
 
     const [utilityFrontUrl, utilityBackUrl, idFrontUrl, idBackUrl] = await Promise.all([
-      uploadFile(s.utilityBillFrontUri, `${userId}/current/utility-bill-front.jpg`),
-      uploadFile(s.utilityBillBackUri, `${userId}/current/utility-bill-back.jpg`),
-      uploadFile(s.idFrontUri, `${userId}/current/id-front.jpg`),
-      uploadFile(s.idBackUri, `${userId}/current/id-back.jpg`),
+      profileModel.uploadVerificationFile(s.utilityBillFrontUri, `${userId}/current/utility-bill-front.jpg`),
+      profileModel.uploadVerificationFile(s.utilityBillBackUri, `${userId}/current/utility-bill-back.jpg`),
+      profileModel.uploadVerificationFile(s.idFrontUri, `${userId}/current/id-front.jpg`),
+      profileModel.uploadVerificationFile(s.idBackUri, `${userId}/current/id-back.jpg`),
     ]);
 
     const { error: profileError } = await profileModel.upsertVerificationProfile(userId, s, {
