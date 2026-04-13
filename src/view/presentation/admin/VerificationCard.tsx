@@ -1,8 +1,7 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-
-const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
+import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
 
 export interface PendingUser {
   id: string;

@@ -2,22 +2,10 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../../utils/supabase';
+import { fetchUserDetail, setUserActiveStatus, UserDetail } from '../../../controllers/adminController';
+import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
 
 const ACCENT = '#FEA405';
-const DEFAULT_AVATAR = require('../../../assets/images/default_profile.jpg');
-
-interface UserDetail {
-  id: string;
-  display_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  verified: boolean;
-  role: string | null;
-  rating: number | null;
-  created_at: string;
-  is_active: boolean;
-}
 
 export default function UserDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,82 +16,33 @@ export default function UserDetailScreen() {
   const [modal, setModal] = useState<{ visible: boolean; type: 'suspend' | 'restore' | null }>({ visible: false, type: null });
 
   useEffect(() => {
-    if (!id) {
+    if (!id) { setLoading(false); return; }
+    fetchUserDetail(id).then(result => {
+      if (result.success && result.data) setUser(result.data);
       setLoading(false);
-      return;
-    }
-    
-    supabaseAdmin
-      .from('admin_user_profiles')
-      .select('id, display_name, email, avatar_url, verified, role, rating, created_at')
-      .eq('id', id)
-      .single()
-      .then(async ({ data, error }) => {
-        if (error) {
-          console.error('Error fetching user:', error);
-          setLoading(false);
-          return;
-        }
-        
-        const { data: profileData } = await supabaseAdmin
-          .from('profiles')
-          .select('is_active')
-          .eq('id', id)
-          .maybeSingle();
-        
-        setUser(data ? { ...data, is_active: profileData?.is_active ?? true } : null);
-        setLoading(false);
-      });
+    });
   }, [id]);
-
-  const logAction = async (action: string) => {
-    const { data: { user: admin } } = await supabase.auth.getUser();
-    await supabaseAdmin.from('admin_logs').insert({
-      admin_id: admin?.id,
-      action,
-      target_user_id: id,
-      details: `Admin ${action.toLowerCase()} user ${id}`,
-    });
-  };
-
-  const notify = async (suspended: boolean) => {
-    await supabaseAdmin.from('notifications').insert({
-      user_id: id,
-      title: suspended ? 'Account Suspended' : 'Account Restored',
-      message: suspended
-        ? 'Your account has been suspended. Please contact support for more information.'
-        : 'Your account has been restored. You can now access Pasuyo again.',
-    });
-  };
 
   const handleConfirm = async () => {
     const suspending = modal.type === 'suspend';
     setModal({ visible: false, type: null });
     setActing(true);
-
-    await supabaseAdmin.from('profiles').update({ is_active: !suspending }).eq('id', id);
-
-    await notify(suspending);
-    await logAction(suspending ? 'SUSPENDED_USER' : 'RESTORED_USER');
+    await setUserActiveStatus(id!, suspending);
     setUser(prev => prev ? { ...prev, is_active: !suspending } : prev);
     setActing(false);
   };
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
-        <Text className="text-gray-400 text-sm">Loading...</Text>
-      </View>
-    );
-  }
+  if (loading) return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
+      <Text className="text-gray-400 text-sm">Loading...</Text>
+    </View>
+  );
 
-  if (!user) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
-        <Text className="text-gray-400 text-sm">User not found</Text>
-      </View>
-    );
-  }
+  if (!user) return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
+      <Text className="text-gray-400 text-sm">User not found</Text>
+    </View>
+  );
 
   const joinedDate = new Date(user.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -116,7 +55,6 @@ export default function UserDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      {/* Confirm Modal */}
       <Modal visible={modal.visible} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
           <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 24, width: '100%', maxWidth: 360 }}>
@@ -126,7 +64,7 @@ export default function UserDetailScreen() {
             <Text style={{ fontSize: 13, color: '#6B7280', marginBottom: 24 }}>
               {modal.type === 'suspend'
                 ? 'This will block the user from logging in. Are you sure?'
-                : 'This will restore the user\'s access. Are you sure?'}
+                : "This will restore the user's access. Are you sure?"}
             </Text>
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
@@ -150,7 +88,6 @@ export default function UserDetailScreen() {
         </View>
       </Modal>
 
-      {/* Header */}
       <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-4 flex-row items-center gap-3`}>
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -159,7 +96,6 @@ export default function UserDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
-        {/* Avatar + name */}
         <View className="bg-white rounded-2xl p-4 border border-gray-100 items-center gap-2">
           <Image
             source={user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
@@ -181,7 +117,6 @@ export default function UserDetailScreen() {
           </View>
         </View>
 
-        {/* Info */}
         <View className="bg-white rounded-2xl p-4 border border-gray-100">
           <Text className="text-sm font-bold text-gray-700 mb-2">Account Info</Text>
           <InfoRow label="Email" value={user.email ?? '—'} />
@@ -191,7 +126,6 @@ export default function UserDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Action button */}
       <View className="bg-white border-t border-gray-100 px-4 py-4">
         <TouchableOpacity
           onPress={() => setModal({ visible: true, type: user.is_active ? 'suspend' : 'restore' })}

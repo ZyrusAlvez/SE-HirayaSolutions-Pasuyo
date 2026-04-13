@@ -2,31 +2,9 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../../utils/supabase';
+import { fetchVerificationProfile, resolveVerification, VerificationProfile } from '../../../controllers/adminController';
 
 const ACCENT = '#FEA405';
-
-interface VerificationProfile {
-  id: string;
-  display_name: string | null;
-  email: string | null;
-  first_name: string | null;
-  middle_name: string | null;
-  last_name: string | null;
-  suffix: string | null;
-  gender: string | null;
-  date_of_birth: string | null;
-  address_province: string | null;
-  address_city: string | null;
-  address_barangay: string | null;
-  id_type: string | null;
-  id_front_url: string | null;
-  id_back_url: string | null;
-  utility_bill_type: string | null;
-  utility_bill_front_url: string | null;
-  utility_bill_back_url: string | null;
-  verification_submitted_at: string | null;
-}
 
 export default function VerificationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,70 +12,35 @@ export default function VerificationDetailScreen() {
   const [profile, setProfile] = useState<VerificationProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
-
-  useEffect(() => {
-    supabaseAdmin
-      .from('profiles')
-      .select('id, first_name, middle_name, last_name, suffix, gender, date_of_birth, address_province, address_city, address_barangay, id_type, id_front_url, id_back_url, utility_bill_type, utility_bill_front_url, utility_bill_back_url, verification_submitted_at')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        setProfile(data);
-        setLoading(false);
-      });
-  }, [id]);
-
-  const logAction = async (action: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabaseAdmin.from('admin_logs').insert({
-      admin_id: user?.id,
-      action,
-      target_user_id: id,
-      details: `Admin ${action.toLowerCase()} verification for user ${id}`,
-    });
-  };
-
-  const notify = async (approved: boolean) => {
-    await supabaseAdmin.from('notifications').insert({
-      user_id: id,
-      title: approved ? 'Verification Approved' : 'Verification Rejected',
-      message: approved
-        ? 'Your identity has been verified. You now have full access to Pasuyo.'
-        : 'Your verification request was rejected. Please resubmit with valid documents.',
-    });
-  };
-
   const [modal, setModal] = useState<{ visible: boolean; type: 'approve' | 'reject' | null }>({ visible: false, type: null });
 
-  const handleApprove = () => setModal({ visible: true, type: 'approve' });
-  const handleReject = () => setModal({ visible: true, type: 'reject' });
+  useEffect(() => {
+    fetchVerificationProfile(id!).then(result => {
+      if (result.success && result.data) setProfile(result.data);
+      setLoading(false);
+    });
+  }, [id]);
 
   const handleConfirm = async () => {
     const approved = modal.type === 'approve';
     setModal({ visible: false, type: null });
     setActing(true);
-    await supabaseAdmin.from('profiles').update({ verified: approved, pending_verification: false }).eq('id', id);
-    await notify(approved);
-    await logAction(approved ? 'APPROVED_VERIFICATION' : 'REJECTED_VERIFICATION');
+    await resolveVerification(id!, approved);
     setActing(false);
     router.back();
   };
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
-        <Text className="text-gray-400 text-sm">Loading...</Text>
-      </View>
-    );
-  }
+  if (loading) return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
+      <Text className="text-gray-400 text-sm">Loading...</Text>
+    </View>
+  );
 
-  if (!profile) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
-        <Text className="text-gray-400 text-sm">User not found</Text>
-      </View>
-    );
-  }
+  if (!profile) return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
+      <Text className="text-gray-400 text-sm">User not found</Text>
+    </View>
+  );
 
   const fullName = [profile.first_name, profile.middle_name, profile.last_name, profile.suffix].filter(Boolean).join(' ') || '—';
   const address = [profile.address_barangay, profile.address_city, profile.address_province].filter(Boolean).join(', ') || '—';
@@ -131,7 +74,6 @@ export default function VerificationDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      {/* Confirm Modal */}
       <Modal visible={modal.visible} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
           <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 24, width: '100%', maxWidth: 360 }}>
@@ -140,8 +82,8 @@ export default function VerificationDetailScreen() {
             </Text>
             <Text style={{ fontSize: 13, color: '#6B7280', marginBottom: 24 }}>
               {modal.type === 'approve'
-                ? 'Are you sure you want to approve this user\'s verification?'
-                : 'Are you sure you want to reject this user\'s verification?'}
+                ? "Are you sure you want to approve this user's verification?"
+                : "Are you sure you want to reject this user's verification?"}
             </Text>
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
@@ -164,7 +106,7 @@ export default function VerificationDetailScreen() {
           </View>
         </View>
       </Modal>
-      {/* Header */}
+
       <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-4 flex-row items-center gap-3`}>
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -173,7 +115,6 @@ export default function VerificationDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
-        {/* Personal Info */}
         <View className="bg-white rounded-2xl p-4 border border-gray-100">
           <Text className="text-sm font-bold text-gray-700 mb-2">Personal Information</Text>
           <InfoRow label="Full Name" value={fullName} />
@@ -182,7 +123,6 @@ export default function VerificationDetailScreen() {
           <InfoRow label="Address" value={address} />
         </View>
 
-        {/* ID Images */}
         <View className="bg-white rounded-2xl p-4 border border-gray-100">
           <Text className="text-sm font-bold text-gray-700 mb-1">ID Documents</Text>
           <Text className="text-xs text-gray-400 mb-2">{profile.id_type || 'No ID type specified'}</Text>
@@ -191,10 +131,9 @@ export default function VerificationDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Actions */}
       <View className="bg-white border-t border-gray-100 px-4 py-4 flex-row gap-3">
         <TouchableOpacity
-          onPress={handleReject}
+          onPress={() => setModal({ visible: true, type: 'reject' })}
           disabled={acting}
           activeOpacity={0.85}
           className="flex-1 border-2 border-red-400 rounded-2xl py-3 items-center"
@@ -202,7 +141,7 @@ export default function VerificationDetailScreen() {
           <Text className="text-red-500 font-bold text-sm">Reject</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={handleApprove}
+          onPress={() => setModal({ visible: true, type: 'approve' })}
           disabled={acting}
           activeOpacity={0.85}
           style={{ backgroundColor: ACCENT }}

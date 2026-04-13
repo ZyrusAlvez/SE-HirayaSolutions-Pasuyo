@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../utils/supabase';
-import AdminNavBar from '../../components/admin/AdminNavBar';
-import UserCard, { UserProfile } from '../../components/admin/UserCard';
-import VerificationCard, { PendingUser } from '../../components/admin/VerificationCard';
+import { supabase } from '../../utils/supabase';
+import { fetchUsers, FullUserProfile } from '../../controllers/adminController';
+import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
+import UserCard from '../../view/presentation/admin/UserCard';
+import VerificationCard, { PendingUser } from '../../view/presentation/admin/VerificationCard';
 
 const ACCENT = '#FEA405';
 
@@ -19,14 +20,6 @@ const SORT_OPTIONS: { label: string; value: SortKey }[] = [
   { label: 'Suspended', value: 'suspended' },
 ];
 
-interface FullUserProfile extends UserProfile {
-  pending_verification: boolean;
-  avatar_url: string | null;
-  verification_submitted_at: string | null;
-  id_type: string | null;
-  is_active: boolean;
-}
-
 export default function AdminAccountsScreen() {
   const [users, setUsers] = useState<FullUserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,44 +27,22 @@ export default function AdminAccountsScreen() {
   const [sort, setSort] = useState<SortKey>('newest');
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchUsers = async () => {
-    const { data } = await supabaseAdmin
-      .from('admin_user_profiles')
-      .select('id, display_name, email, verified, role, created_at, rating, pending_verification, avatar_url, verification_submitted_at, id_type');
-    
-    if (data) {
-      const usersWithStatus = await Promise.all(
-        data.map(async (user) => {
-          const { data: profileData } = await supabaseAdmin
-            .from('profiles')
-            .select('is_active')
-            .eq('id', user.id)
-            .maybeSingle();
-          return { ...user, is_active: profileData?.is_active ?? true };
-        })
-      );
-      setUsers(usersWithStatus as FullUserProfile[]);
-    }
+  const loadUsers = async () => {
+    const result = await fetchUsers();
+    if (result.success && result.data) setUsers(result.data);
     setLoading(false);
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchUsers();
+    await loadUsers();
     setRefreshing(false);
   }, []);
 
   useEffect(() => {
-    fetchUsers();
-
-    // Poll every 5 seconds for updates
-    const interval = setInterval(() => {
-      fetchUsers();
-    }, 5000);
-
-    return () => { 
-      clearInterval(interval);
-    };
+    loadUsers();
+    const interval = setInterval(loadUsers, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const filtered = useMemo(() => {

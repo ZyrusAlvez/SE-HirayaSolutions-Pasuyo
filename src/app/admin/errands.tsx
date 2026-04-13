@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../utils/supabase';
-import AdminNavBar from '../../components/admin/AdminNavBar';
-import ErrandCard, { Errand } from '../../components/admin/ErrandCard';
+import { supabase } from '../../utils/supabase';
+import { fetchErrands, Errand } from '../../controllers/adminController';
+import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
+import ErrandCard from '../../view/presentation/admin/ErrandCard';
 
 const ACCENT = '#FEA405';
 
 type FilterKey = 'All' | 'Available' | 'In Progress' | 'Completed' | 'Expired';
-
 const FILTERS: FilterKey[] = ['All', 'Available', 'In Progress', 'Completed', 'Expired'];
 
 export default function AdminErrandsScreen() {
@@ -18,36 +18,26 @@ export default function AdminErrandsScreen() {
   const [filter, setFilter] = useState<FilterKey>('All');
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchErrands = async () => {
-    const { data } = await supabaseAdmin
-      .from('errands_with_profiles')
-      .select('id, title, poster_name, budget, status, is_remote, created_at');
-    if (data) setErrands(data as Errand[]);
+  const loadErrands = async () => {
+    const result = await fetchErrands();
+    if (result.success && result.data) setErrands(result.data);
     setLoading(false);
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchErrands();
+    await loadErrands();
     setRefreshing(false);
   }, []);
 
   useEffect(() => {
-    fetchErrands();
-
-    // Poll every 5 seconds for updates
-    const interval = setInterval(() => {
-      fetchErrands();
-    }, 5000);
-
-    return () => { 
-      clearInterval(interval);
-    };
+    loadErrands();
+    const interval = setInterval(loadErrands, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const filtered = useMemo(() => {
     let list = [...errands];
-
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(e =>
@@ -55,9 +45,7 @@ export default function AdminErrandsScreen() {
         (e.poster_name ?? '').toLowerCase().includes(q)
       );
     }
-
     if (filter !== 'All') list = list.filter(e => e.status === filter);
-
     return list;
   }, [errands, search, filter]);
 

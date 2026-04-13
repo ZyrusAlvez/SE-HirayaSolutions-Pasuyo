@@ -1,19 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase, supabaseAdmin } from '../../utils/supabase';
-import AdminNavBar from '../../components/admin/AdminNavBar';
+import { fetchLogs, subscribeToLogs, LogEntry } from '../../controllers/adminController';
+import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
+import { supabaseAdmin } from '../../utils/supabase';
 
 const ACCENT = '#FEA405';
-
-interface LogEntry {
-  id: string;
-  action: string;
-  details: string | null;
-  created_at: string;
-  admin_id: string | null;
-  target_user_id: string | null;
-}
 
 const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
   APPROVED_VERIFICATION: { bg: '#DCFCE7', text: '#15803D' },
@@ -27,29 +19,21 @@ export default function AdminLogsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchLogs = async () => {
-    const { data } = await supabaseAdmin
-      .from('admin_logs')
-      .select('id, action, details, created_at, admin_id, target_user_id')
-      .order('created_at', { ascending: false });
-    if (data) setLogs(data as LogEntry[]);
+  const loadLogs = async () => {
+    const result = await fetchLogs();
+    if (result.success && result.data) setLogs(result.data);
     setLoading(false);
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchLogs();
+    await loadLogs();
     setRefreshing(false);
   }, []);
 
   useEffect(() => {
-    fetchLogs();
-
-    const channel = supabaseAdmin
-      .channel('admin-logs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_logs' }, () => fetchLogs())
-      .subscribe();
-
+    loadLogs();
+    const channel = subscribeToLogs(loadLogs);
     return () => { supabaseAdmin.removeChannel(channel); };
   }, []);
 
