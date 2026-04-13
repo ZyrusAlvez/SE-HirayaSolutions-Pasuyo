@@ -1,7 +1,7 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { toast } from '../../../utils/toast';
-import { pickErrandImages, ACCEPTED_EXTENSIONS, MAX_FILE_SIZE_MB } from '../../../controllers/errandController';
+import { selectErrandImages, ACCEPTED_EXTENSIONS, MAX_FILE_SIZE_MB } from '../../../controllers/errandController';
 
 interface Props {
   images: string[];
@@ -16,7 +16,7 @@ export default function ImageUploader({ images, errors, onChange, onErrors }: Pr
 
   const pickImages = async () => {
     if (remaining <= 0) return;
-    const { uris, errors: errs } = await pickErrandImages(remaining);
+    const { uris, errors: errs } = await selectErrandImages(remaining);
     onErrors(errs);
     errs.forEach(err => toast({ title: err, preset: 'error' }));
     if (uris.length > 0) onChange([...images, ...uris]);

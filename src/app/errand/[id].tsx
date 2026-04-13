@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchErrand, formatDeadline, formatPostedOn } from '@/controllers/errandController';
+import { getErrand } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
 import { loadProfile } from '@/controllers/profileController';
 import Header from '@/view/components/Header';
@@ -46,7 +46,7 @@ export default function ErrandDetailScreen() {
   }, []);
 
   useEffect(() => {
-    fetchErrand(id).then((result) => {
+    getErrand(id).then((result) => {
       if (result.success) setErrand(result.data);
       setLoading(false);
     });
@@ -114,7 +114,7 @@ export default function ErrandDetailScreen() {
               description={errand.description}
               status={errand.status}
               budget={errand.budget}
-              deadline={formatDeadline(errand.deadline)}
+              deadline={errand.deadline ? new Date(errand.deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : null}
               locationName={errand.location_name}
               addressDetails={errand.address_details}
               locationLat={errand.location_lat}
@@ -129,7 +129,7 @@ export default function ErrandDetailScreen() {
             avatar={errand.poster_avatar}
             rating={errand.poster_rating}
             isVerified={errand.poster_is_verified}
-            postedOn={formatPostedOn(errand.created_at)}
+            postedOn={new Date(errand.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
           />
 
           {errand.status === 'Available' && !isOwner && (

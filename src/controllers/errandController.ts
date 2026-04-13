@@ -18,7 +18,7 @@ const inferMime = (asset: { mimeType?: string | null; fileName?: string | null; 
   return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext] ?? '');
 };
 
-export const pickErrandImages = async (
+export const selectErrandImages = async (
   remaining: number,
 ): Promise<{ uris: string[]; errors: string[] }> => {
   let result;
@@ -45,7 +45,7 @@ export const pickErrandImages = async (
   return { uris, errors };
 };
 
-export const fetchErrand = async (id: string): Promise<Result<Errand>> => {
+export const getErrand = async (id: string): Promise<Result<Errand>> => {
   const { data, error } = await errandModel.getErrandById(id);
   if (error || !data) return { success: false, error: 'Errand not found' };
 
@@ -56,25 +56,11 @@ export const fetchErrand = async (id: string): Promise<Result<Errand>> => {
   return { success: true, data: data as Errand };
 };
 
-export const formatDeadline = (deadline?: string): string | null =>
-  deadline
-    ? new Date(deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
-    : null;
-
-export const formatPostedOn = (createdAt: string): string =>
-  new Date(createdAt).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-
-export const fetchErrands = async (): Promise<Result<Errand[]>> => {
-  const { data, error } = await errandModel.fetchAvailableErrands();
+export const getErrands = async (): Promise<Result<Errand[]>> => {
+  const { data, error } = await errandModel.getAvailableErrands();
   if (error) return { success: false, error: 'Failed to fetch errands' };
   return { success: true, data: (data ?? []) as Errand[] };
 };
-
-export const filterOnsiteErrands = (errands: Errand[]) =>
-  errands.filter(e => !e.is_remote && e.location_lat && e.location_lng);
-
-export const filterRemoteErrands = (errands: Errand[]) =>
-  errands.filter(e => e.is_remote);
 
 export const postErrand = async (
   params: PostErrandParams,
@@ -89,11 +75,11 @@ export const postErrand = async (
     const { data: { user } } = await errandModel.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data: inserted, error: insertError } = await errandModel.insertErrand({ ...params, userId: user.id });
+    const { data: inserted, error: insertError } = await errandModel.postErrand({ ...params, userId: user.id });
     if (insertError) throw insertError;
 
     if (images.length > 0) {
-      const imageUrls = await errandModel.uploadErrandImages(user.id, inserted.id, images);
+      const imageUrls = await errandModel.postImages(user.id, inserted.id, images);
       await errandModel.updateErrandImages(inserted.id, imageUrls);
     }
 

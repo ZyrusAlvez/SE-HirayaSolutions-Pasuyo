@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Alert, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
-import { fetchErrands, filterOnsiteErrands, filterRemoteErrands } from '@/controllers/errandController';
+import { getErrands } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
 import { loadProfile } from '@/controllers/profileController';
 import Header from '@/view/components/Header';
@@ -36,7 +36,7 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => {
     setExpandId(undefined);
     if (!hasLoaded.current) setLoadingErrands(true);
-    fetchErrands().then((result) => {
+    getErrands().then((result) => {
       if (result.success) setErrands(result.data);
       setLoadingErrands(false);
       hasLoaded.current = true;
@@ -63,8 +63,8 @@ export default function HomeScreen() {
           {tab === 'onsite'
             ? (loadingErrands || !location)
               ? <SkeletonLoading />
-              : <OnsiteMap errands={filterOnsiteErrands(errands) as any[]} location={location} expandId={expandId} />
-            : <RemoteErrandList errands={filterRemoteErrands(errands)} />
+              : <OnsiteMap errands={errands.filter(e => !e.is_remote && e.location_lat && e.location_lng) as any[]} location={location} expandId={expandId} />
+            : <RemoteErrandList errands={errands.filter(e => e.is_remote)} />
           }
         </View>
       </View>

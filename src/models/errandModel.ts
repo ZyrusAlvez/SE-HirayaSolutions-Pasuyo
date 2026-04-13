@@ -36,7 +36,7 @@ export interface PostErrandParams {
   images: string[];
 }
 
-export const uploadErrandImages = async (userId: string, errandId: string, images: string[]): Promise<string[]> => {
+export const postImages = async (userId: string, errandId: string, images: string[]): Promise<string[]> => {
   const urls: string[] = [];
   for (const uri of images) {
     const response = await fetch(uri);
@@ -54,7 +54,7 @@ export const uploadErrandImages = async (userId: string, errandId: string, image
 
 export const getUser = () => supabase.auth.getUser();
 
-export const insertErrand = (params: PostErrandParams & { userId: string }) =>
+export const postErrand = (params: PostErrandParams & { userId: string }) =>
   supabase.from('errands').insert({
     user_id: params.userId,
     title: params.title.trim(),
@@ -75,7 +75,7 @@ export const updateErrandImages = (errandId: string, imageUrls: string[]) =>
 export const getErrandById = (id: string) =>
   supabase.from('errands_with_profiles').select('*').eq('id', id).single();
 
-export const fetchAvailableErrands = () =>
+export const getAvailableErrands = () =>
   supabase
     .from('errands_with_profiles')
     .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images, poster_name, poster_avatar, poster_is_verified')
