@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -22,6 +23,7 @@ interface Props {
 
 export default function UserCard({ user }: Props) {
   const router = useRouter();
+  const [avatarError, setAvatarError] = useState(false);
   const fullName = user.display_name || 'No name set';
   const joinedDate = new Date(user.created_at).toLocaleDateString('en-PH', {
     year: 'numeric', month: 'short', day: 'numeric',
@@ -34,7 +36,8 @@ export default function UserCard({ user }: Props) {
       className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-3 border border-gray-100"
     >
       <Image
-        source={user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
+        source={!avatarError && user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
+        onError={() => setAvatarError(true)}
         style={{ width: 44, height: 44, borderRadius: 22 }}
         resizeMode="cover"
       />

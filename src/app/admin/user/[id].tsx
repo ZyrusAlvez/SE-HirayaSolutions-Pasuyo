@@ -3,8 +3,9 @@ import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal } from
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getUserDetail, updateUserActiveStatus, UserDetail } from '../../../controllers/adminController';
-import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
 import VerificationBadge from '../../../view/components/VerificationBadge';
+
+const DEFAULT_AVATAR = require('../../../assets/images/default_profile.jpg');
 
 const ACCENT = '#FEA405';
 
@@ -14,6 +15,7 @@ export default function UserDetailScreen() {
   const [user, setUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const [modal, setModal] = useState<{ visible: boolean; type: 'suspend' | 'restore' | null }>({ visible: false, type: null });
 
   useEffect(() => {
@@ -99,7 +101,8 @@ export default function UserDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
         <View className="bg-white rounded-2xl p-4 border border-gray-100 items-center gap-2">
           <Image
-            source={user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
+            source={!avatarError && user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
+            onError={() => setAvatarError(true)}
             style={{ width: 72, height: 72, borderRadius: 36 }}
             resizeMode="cover"
           />

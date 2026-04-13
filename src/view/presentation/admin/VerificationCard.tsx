@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -19,6 +20,7 @@ interface Props {
 
 export default function VerificationCard({ user }: Props) {
   const router = useRouter();
+  const [avatarError, setAvatarError] = useState(false);
   const submittedAt = user.verification_submitted_at
     ? new Date(user.verification_submitted_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
     : '—';
@@ -30,7 +32,8 @@ export default function VerificationCard({ user }: Props) {
       className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-3 border border-gray-100"
     >
       <Image
-        source={user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
+        source={!avatarError && user.avatar_url ? { uri: user.avatar_url } : DEFAULT_AVATAR}
+        onError={() => setAvatarError(true)}
         style={{ width: 44, height: 44, borderRadius: 22 }}
         resizeMode="cover"
       />
