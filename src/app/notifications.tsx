@@ -2,58 +2,39 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../utils/supabase';
+import {
+  getNotifications,
+  updateNotificationRead,
+  updateAllNotificationsRead,
+  getNotificationsSubscription,
+} from '@/controllers/notificationController';
+import type { Notification } from '@/controllers/notificationController';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-}
 
 export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (data) setNotifications(data);
+  const loadNotifications = async () => {
+    const result = await getNotifications();
+    if (result.success) setNotifications(result.data);
     setLoading(false);
   };
 
   const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', id);
+    await updateNotificationRead(id);
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
   const markAllAsRead = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    await updateAllNotificationsRead();
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   useEffect(() => {
-    fetchNotifications();
-
-    const channel = supabase
-      .channel('notifications-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
-        fetchNotifications();
-      })
-      .subscribe();
-
+    loadNotifications();
+    const channel = getNotificationsSubscription(loadNotifications);
     return () => { supabase.removeChannel(channel); };
   }, []);
 

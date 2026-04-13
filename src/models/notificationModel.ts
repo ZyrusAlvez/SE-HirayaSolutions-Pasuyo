@@ -1,6 +1,25 @@
-import { supabaseAdmin } from '../utils/supabase';
+import { supabase, supabaseAdmin } from '../utils/supabase';
 
-export const insertNotification = (userId: string, title: string, message: string) => {
+export const postNotification = (userId: string, title: string, message: string) => {
   if (!supabaseAdmin) throw new Error('Admin client not available');
   return supabaseAdmin.from('notifications').insert({ user_id: userId, title, message });
 };
+
+export const getNotifications = async (userId: string) =>
+  supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+export const updateNotificationRead = (id: string) =>
+  supabase.from('notifications').update({ read: true }).eq('id', id);
+
+export const updateAllNotificationsRead = (userId: string) =>
+  supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false);
+
+export const getNotificationsSubscription = (callback: () => void) =>
+  supabase
+    .channel('notifications-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, callback)
+    .subscribe();

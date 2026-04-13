@@ -1,6 +1,6 @@
 import * as adminModel from '../models/adminModel';
 import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData } from '../models/adminModel';
-import { sendNotification } from './notificationController';
+import { postNotification } from './notificationController';
 
 export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData };
 
@@ -50,7 +50,7 @@ export const updateUserActiveStatus = async (id: string, suspend: boolean): Prom
     const { error } = await adminModel.updateUserActiveStatus(id, !suspend);
     if (error) return { success: false, error: error.message };
 
-    await sendNotification(
+    await postNotification(
       id,
       suspend ? 'Account Suspended' : 'Account Restored',
       suspend
@@ -73,7 +73,7 @@ export const updateVerificationStatus = async (id: string, approve: boolean): Pr
     const { error } = await adminModel.updateVerificationStatus(id, approve);
     if (error) return { success: false, error: error.message };
 
-    await sendNotification(
+    await postNotification(
       id,
       approve ? 'Verification Approved' : 'Verification Rejected',
       approve
