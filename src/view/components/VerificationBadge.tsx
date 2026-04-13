@@ -2,9 +2,24 @@ import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 
-type Status = 'verified' | 'pending' | 'not_verified';
+export type VerificationStatus = 'verified' | 'pending' | 'not_verified';
 
-export default function VerificationBadge({ status }: { status: Status }) {
+interface Props {
+  status: VerificationStatus;
+  /** 'badge' shows the full pill label (default), 'icon' shows just the verified checkmark overlay */
+  variant?: 'badge' | 'icon';
+}
+
+export default function VerificationBadge({ status, variant = 'badge' }: Props) {
+  if (variant === 'icon') {
+    if (status !== 'verified') return null;
+    return (
+      <View style={{ position: 'absolute', bottom: -2, right: -2, backgroundColor: '#fff', borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
+        <MaterialIcons name="verified" size={14} color="#1D9BF0" />
+      </View>
+    );
+  }
+
   if (status === 'verified') {
     return (
       <View className="mt-2 px-3 py-1 rounded-full flex-row items-center gap-1 bg-blue-50">

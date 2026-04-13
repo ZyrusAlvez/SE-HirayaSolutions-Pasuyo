@@ -2,6 +2,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
+import VerificationBadge from '../../components/VerificationBadge';
 
 export interface PendingUser {
   id: string;
@@ -39,9 +40,7 @@ export default function VerificationCard({ user }: Props) {
         <Text className="text-xs text-gray-400 mt-0.5">Submitted {submittedAt}</Text>
       </View>
       <View className="items-end gap-1">
-        <View className="bg-yellow-100 px-2 py-1 rounded-full">
-          <Text className="text-xs font-medium text-yellow-700">Pending</Text>
-        </View>
+        <VerificationBadge status="pending" />
         <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
       </View>
     </TouchableOpacity>

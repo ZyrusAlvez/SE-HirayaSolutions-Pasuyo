@@ -2,6 +2,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
+import VerificationBadge from '../../components/VerificationBadge';
 
 export interface UserProfile {
   id: string;
@@ -40,19 +41,12 @@ export default function UserCard({ user }: Props) {
       <View className="flex-1">
         <View className="flex-row items-center gap-1">
           <Text className="text-sm font-semibold text-gray-900">{fullName}</Text>
-          {user.verified && (
-            <Ionicons name="checkmark-circle" size={14} color="#FEA405" />
-          )}
         </View>
         <Text className="text-xs text-gray-500" numberOfLines={1}>{user.email ?? '—'}</Text>
         <Text className="text-xs text-gray-400 mt-0.5">Joined {joinedDate}</Text>
       </View>
-      <View style={{ gap: 4 }}>
-        <View className={`px-2 py-1 rounded-full ${user.verified ? 'bg-green-100' : 'bg-gray-100'}`}>
-          <Text className={`text-xs font-medium ${user.verified ? 'text-green-700' : 'text-gray-500'}`}>
-            {user.verified ? 'Verified' : 'Unverified'}
-          </Text>
-        </View>
+      <View style={{ gap: 4, alignItems: 'flex-end' }}>
+        <VerificationBadge status={user.verified ? 'verified' : 'not_verified'} />
         {user.is_active === false && (
           <View className="px-2 py-1 rounded-full bg-red-100">
             <Text className="text-xs font-medium text-red-500">Suspended</Text>

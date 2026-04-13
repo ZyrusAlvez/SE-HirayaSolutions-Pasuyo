@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchUserDetail, setUserActiveStatus, UserDetail } from '../../../controllers/adminController';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
+import VerificationBadge from '../../../view/components/VerificationBadge';
 
 const ACCENT = '#FEA405';
 
@@ -103,12 +104,8 @@ export default function UserDetailScreen() {
             resizeMode="cover"
           />
           <Text className="text-base font-bold text-gray-900">{user.display_name || 'No name set'}</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View className={`px-2 py-1 rounded-full ${user.verified ? 'bg-green-100' : 'bg-gray-100'}`}>
-              <Text className={`text-xs font-medium ${user.verified ? 'text-green-700' : 'text-gray-500'}`}>
-                {user.verified ? 'Verified' : 'Unverified'}
-              </Text>
-            </View>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <VerificationBadge status={user.verified ? 'verified' : 'not_verified'} />
             <View className={`px-2 py-1 rounded-full ${user.is_active ? 'bg-blue-100' : 'bg-red-100'}`}>
               <Text className={`text-xs font-medium ${user.is_active ? 'text-blue-700' : 'text-red-500'}`}>
                 {user.is_active ? 'Active' : 'Suspended'}

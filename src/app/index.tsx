@@ -17,7 +17,7 @@ const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
-  const [isVerified, setIsVerified] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<'verified' | 'pending' | 'not_verified'>('not_verified');
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loadingErrands, setLoadingErrands] = useState(true);
   const hasLoaded = useRef(false);
@@ -28,7 +28,7 @@ export default function HomeScreen() {
     loadProfile().then((result) => {
       if (result.success && result.data) {
         if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
-        setIsVerified(result.data.verificationStatus === 'verified');
+        setVerificationStatus(result.data.verificationStatus);
       }
     });
   }, []);
@@ -56,7 +56,7 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <Header avatarUrl={avatarUrl} isVerified={isVerified} />
+      <Header avatarUrl={avatarUrl} verificationStatus={verificationStatus} />
       <View style={[{ flex: 1 }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
         <ErrandTabToggle tab={tab} onTabChange={setTab} />
         <View className="flex-1 px-6 pb-4">

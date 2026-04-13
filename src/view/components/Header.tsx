@@ -1,16 +1,18 @@
 import { View, TouchableOpacity, Image, Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons';
+import VerificationBadge from './VerificationBadge';
 import { useRouter } from 'expo-router';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
+import type { VerificationStatus } from './VerificationBadge';
+
 interface Props {
   avatarUrl?: any;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatus;
 }
 
-export default function Header({ avatarUrl, isVerified }: Props) {
+export default function Header({ avatarUrl, verificationStatus }: Props) {
   const router = useRouter();
   const isWeb = Platform.OS === 'web';
   return (
@@ -31,11 +33,7 @@ export default function Header({ avatarUrl, isVerified }: Props) {
               style={{ width: 34, height: 34, borderRadius: 17 }}
               resizeMode="cover"
             />
-            {isVerified && (
-              <View style={{ position: 'absolute', bottom: -2, right: -2, backgroundColor: '#fff', borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
-                <MaterialIcons name="verified" size={14} color="#1D9BF0" />
-              </View>
-            )}
+            <VerificationBadge status={verificationStatus ?? 'not_verified'} variant="icon" />
           </View>
         </TouchableOpacity>
       </View>

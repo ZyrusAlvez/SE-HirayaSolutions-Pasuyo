@@ -7,7 +7,7 @@ import type { VerificationStatus, ProfileData } from '@/controllers/profileContr
 import { logout } from '@/controllers/authController';
 import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
 import AvatarPicker from '@/view/presentation/profile/AvatarPicker';
-import VerificationBadge from '@/view/presentation/profile/VerificationBadge';
+import VerificationBadge from '@/view/components/VerificationBadge';
 import ProfileInfoCard from '@/view/presentation/profile/ProfileInfoCard';
 import SkeletonLoading from '@/view/presentation/profile/SkeletonLoading';
 import ProfileActions from '@/view/presentation/profile/ProfileActions';
