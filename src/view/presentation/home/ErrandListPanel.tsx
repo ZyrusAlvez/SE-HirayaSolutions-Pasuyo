@@ -35,13 +35,16 @@ interface Props {
   userLng?: number;
 }
 
-function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggle }: {
+function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggle, sortKey, userLat, userLng }: {
   e: Errand; isLast: boolean;
   onSelect: (e: Errand) => void;
   onClose: () => void;
   onMoreInfo: (e: Errand) => void;
   expanded: boolean;
   onToggle: () => void;
+  sortKey: string;
+  userLat?: number;
+  userLng?: number;
 }) {
   const animValue = useRef(new Animated.Value(0)).current;
 
@@ -76,10 +79,30 @@ function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggl
           </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          {e.budget != null && (
-            <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: '#D97706' }}>₱{e.budget}</Text>
+          {sortKey === 'deadline' ? (
+            e.deadline ? (
+              <View style={{ backgroundColor: '#FEF2F2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#EF4444' }}>
+                  {new Date(e.deadline).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
+                </Text>
+              </View>
+            ) : (
+              <View style={{ backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#9CA3AF' }}>No deadline</Text>
+              </View>
+            )
+          ) : sortKey === 'distance' && userLat != null && userLng != null ? (
+            <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#3B82F6' }}>
+                {haversineKm(userLat, userLng, e.location_lat, e.location_lng).toFixed(1)} km
+              </Text>
             </View>
+          ) : (
+            e.budget != null && (
+              <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#D97706' }}>₱{e.budget}</Text>
+              </View>
+            )
           )}
           <Animated.View style={{ transform: [{ rotate: animValue.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
             <Ionicons name="chevron-down" size={14} color="#9CA3AF" />
@@ -174,6 +197,9 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
             onMoreInfo={onMoreInfo}
             expanded={activeId === e.id}
             onToggle={() => toggle(e.id)}
+            sortKey={sort.key}
+            userLat={userLat}
+            userLng={userLng}
           />
         ))}
       </ScrollView>
