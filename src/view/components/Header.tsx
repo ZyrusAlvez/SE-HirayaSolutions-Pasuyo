@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import VerificationBadge from './VerificationBadge';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../utils/supabase';
+import { getUnreadCount, getNotificationsSubscription, removeNotificationsSubscription } from '../../controllers/notificationController';
 import NotificationsPanel from './NotificationsPanel';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
@@ -25,21 +25,12 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
 
   useEffect(() => {
     const fetchUnread = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-      setUnreadCount(count || 0);
+      const count = await getUnreadCount();
+      setUnreadCount(count);
     };
     fetchUnread();
-    const channel = supabase
-      .channel(channelRef.current)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, fetchUnread)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const channel = getNotificationsSubscription(channelRef.current, fetchUnread);
+    return () => { removeNotificationsSubscription(channel); };
   }, []);
 
   return (
@@ -54,7 +45,7 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
           resizeMode="contain"
         />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
-          <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} />
+          <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} onUnreadChange={setUnreadCount} />
           <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7} style={{ marginRight: 8 }}>
             <View>
               <Ionicons name="notifications-outline" size={22} color="#6B7280" />

@@ -1,35 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, Platform, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { supabase } from '../../utils/supabase';
 import {
   getNotifications,
   updateNotificationRead,
   updateAllNotificationsRead,
   getNotificationsSubscription,
+  removeNotificationsSubscription,
 } from '@/controllers/notificationController';
 import type { Notification } from '@/controllers/notificationController';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
+  onUnreadChange?: (count: number) => void;
 }
 
-export default function NotificationsPanel({ visible, onClose }: Props) {
+export default function NotificationsPanel({ visible, onClose, onUnreadChange }: Props) {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const channelName = useRef(`notifications-panel-${Date.now()}`);
 
   const loadNotifications = async () => {
     const result = await getNotifications();
-    if (result.success) setNotifications(result.data);
+    if (result.success) {
+      setNotifications(result.data);
+      onUnreadChange?.(result.data.filter(n => !n.is_read).length);
+    }
     setLoading(false);
   };
 
+  const loadRef = useRef(loadNotifications);
+  useEffect(() => { loadRef.current = loadNotifications; });
+
   const markAsRead = async (id: string, action?: string) => {
-    await updateNotificationRead(id);
-    await loadNotifications();
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === id ? { ...n, is_read: true } : n);
+      onUnreadChange?.(updated.filter(n => !n.is_read).length);
+      return updated;
+    });
+    updateNotificationRead(id);
     if (action) {
       onClose();
       router.push(action as any);
@@ -37,15 +49,16 @@ export default function NotificationsPanel({ visible, onClose }: Props) {
   };
 
   const markAllAsRead = async () => {
-    await updateAllNotificationsRead();
-    await loadNotifications();
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    onUnreadChange?.(0);
+    updateAllNotificationsRead();
   };
 
   useEffect(() => {
     if (!visible) return;
-    loadNotifications();
-    const channel = getNotificationsSubscription(loadNotifications);
-    return () => { supabase.removeChannel(channel); };
+    loadRef.current();
+    const channel = getNotificationsSubscription(channelName.current, () => loadRef.current());
+    return () => { removeNotificationsSubscription(channel); };
   }, [visible]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;

@@ -29,6 +29,18 @@ export const getNotifications = async (): Promise<Result<Notification[]>> => {
   }
 };
 
+export const getUnreadCount = async (): Promise<number> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return 0;
+    const { count } = await notificationModel.getUnreadCount(user.id);
+    return count || 0;
+  } catch {
+    return 0;
+  }
+};
+
+
 export const updateNotificationRead = async (id: string): Promise<Result> => {
   try {
     const { error } = await notificationModel.updateNotificationRead(id);
@@ -52,5 +64,8 @@ export const updateAllNotificationsRead = async (): Promise<Result> => {
   }
 };
 
-export const getNotificationsSubscription = (callback: () => void) =>
-  notificationModel.getNotificationsSubscription(callback);
+export const getNotificationsSubscription = (channelName: string, callback: () => void) =>
+  notificationModel.getNotificationsSubscription(channelName, callback);
+
+export const removeNotificationsSubscription = (channel: ReturnType<typeof notificationModel.getNotificationsSubscription>) =>
+  notificationModel.removeNotificationsSubscription(channel);
