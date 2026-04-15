@@ -13,7 +13,7 @@ interface Props {
 }
 
 const LABELS: Record<SortKey, string> = { deadline: 'Deadline', budget: 'Budget', distance: 'Distance' };
-const DIR_LABELS: Record<SortDir, string> = { asc: 'Low → High', desc: 'High → Low' };
+const DIR_LABELS: Record<SortDir, string> = { asc: 'Increasing', desc: 'Decreasing' };
 const DIR_ICONS: Record<SortDir, string> = { asc: 'arrow-up-outline', desc: 'arrow-down-outline' };
 
 function Dropdown<T extends string>({
