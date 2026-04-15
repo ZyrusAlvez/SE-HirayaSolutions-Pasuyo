@@ -80,11 +80,15 @@ function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggl
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {sortKey === 'deadline' ? (
-            e.deadline && (
+            e.deadline ? (
               <View style={{ backgroundColor: '#FEF2F2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
                 <Text style={{ fontSize: 11, fontWeight: '600', color: '#EF4444' }}>
                   {new Date(e.deadline).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
                 </Text>
+              </View>
+            ) : (
+              <View style={{ backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#9CA3AF' }}>No deadline</Text>
               </View>
             )
           ) : sortKey === 'distance' && userLat != null && userLng != null ? (

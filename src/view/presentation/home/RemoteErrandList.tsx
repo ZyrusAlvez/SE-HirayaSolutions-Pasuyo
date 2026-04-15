@@ -74,10 +74,24 @@ export default function RemoteErrandList({ errands }: Props) {
                 </View>
               </View>
             </View>
-            {e.budget != null && (
-              <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: '#D97706' }}>₱{e.budget}</Text>
-              </View>
+            {sort.key === 'deadline' ? (
+              e.deadline ? (
+                <View style={{ backgroundColor: '#FEF2F2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#EF4444' }}>
+                    {new Date(e.deadline).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#9CA3AF' }}>No deadline</Text>
+                </View>
+              )
+            ) : (
+              e.budget != null && (
+                <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#D97706' }}>₱{e.budget}</Text>
+                </View>
+              )
             )}
           </TouchableOpacity>
         ))}
