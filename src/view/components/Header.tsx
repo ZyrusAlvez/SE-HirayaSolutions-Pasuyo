@@ -4,6 +4,7 @@ import VerificationBadge from './VerificationBadge';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../utils/supabase';
+import NotificationsPanel from './NotificationsPanel';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
@@ -18,6 +19,7 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
   const router = useRouter();
   const isWeb = Platform.OS === 'web';
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const channelRef = useRef(`header-notifications-${Date.now()}`);
 
@@ -52,7 +54,8 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
           resizeMode="contain"
         />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <TouchableOpacity onPress={() => router.push('/notifications')} activeOpacity={0.7}>
+          <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} />
+          <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7}>
             <View>
               <Ionicons name="notifications-outline" size={26} color="#374151" />
               {unreadCount > 0 && (

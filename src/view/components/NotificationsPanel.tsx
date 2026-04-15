@@ -1,0 +1,113 @@
+import { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Modal, Platform, StatusBar } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../../utils/supabase';
+import {
+  getNotifications,
+  updateNotificationRead,
+  updateAllNotificationsRead,
+  getNotificationsSubscription,
+} from '@/controllers/notificationController';
+import type { Notification } from '@/controllers/notificationController';
+
+interface Props {
+  visible: boolean;
+  onClose: () => void;
+}
+
+export default function NotificationsPanel({ visible, onClose }: Props) {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadNotifications = async () => {
+    const result = await getNotifications();
+    if (result.success) setNotifications(result.data);
+    setLoading(false);
+  };
+
+  const markAsRead = async (id: string) => {
+    await updateNotificationRead(id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const markAllAsRead = async () => {
+    await updateAllNotificationsRead();
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  useEffect(() => {
+    if (!visible) return;
+    loadNotifications();
+    const channel = getNotificationsSubscription(loadNotifications);
+    return () => { supabase.removeChannel(channel); };
+  }, [visible]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0;
+  const topOffset = Platform.OS === 'web' ? 52 : 100 + statusBarHeight;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose}>
+        <View
+          style={{ position: 'absolute', top: topOffset, right: 16, width: 320, maxHeight: 480, backgroundColor: 'white', borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8, overflow: 'hidden' }}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>Notifications</Text>
+                {unreadCount > 0 && <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{unreadCount} unread</Text>}
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {unreadCount > 0 && (
+                  <TouchableOpacity onPress={markAllAsRead} activeOpacity={0.7}>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#FEA405' }}>Mark all read</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+                  <Ionicons name="close" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {loading ? (
+              <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                <Text style={{ color: '#9CA3AF', fontSize: 13 }}>Loading...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={notifications}
+                keyExtractor={item => item.id}
+                style={{ maxHeight: 400 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => !item.read && markAsRead(item.id)}
+                    style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F9FAFB', backgroundColor: item.read ? 'white' : '#FFF7ED' }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                      <View style={{ width: 7, height: 7, borderRadius: 4, marginTop: 5, backgroundColor: item.read ? 'transparent' : '#FEA405' }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827' }}>{item.title}</Text>
+                        <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{item.message}</Text>
+                        <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>
+                          {new Date(item.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                    <Ionicons name="notifications-outline" size={40} color="#E5E7EB" />
+                    <Text style={{ color: '#9CA3AF', fontSize: 13, marginTop: 8 }}>No notifications yet</Text>
+                  </View>
+                }
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
