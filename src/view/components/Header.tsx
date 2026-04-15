@@ -53,11 +53,11 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
           style={{ width: isWeb ? 100 : 120, height: isWeb ? 32 : 40 }}
           resizeMode="contain"
         />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
           <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} />
-          <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7} style={{ marginRight: 8 }}>
             <View>
-              <Ionicons name="notifications-outline" size={26} color="#374151" />
+              <Ionicons name="notifications-outline" size={22} color="#6B7280" />
               {unreadCount > 0 && (
                 <View style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
                   <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
