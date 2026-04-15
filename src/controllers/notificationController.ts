@@ -1,19 +1,14 @@
 import * as notificationModel from '../models/notificationModel';
+import type { NotificationRow } from '../models/notificationModel';
 import { supabase } from '../utils/supabase';
 
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-}
+export interface Notification extends NotificationRow {}
 
 type Result<T = void> = { success: true; data: T } | { success: false; error: string };
 
-export const postNotification = async (userId: string, title: string, message: string): Promise<Result> => {
+export const postNotification = async (userId: string, title: string, message: string, action?: string): Promise<Result> => {
   try {
-    const { error } = await notificationModel.postNotification(userId, title, message);
+    const { error } = await notificationModel.postNotification(userId, title, message, action);
     if (error) return { success: false, error: error.message };
     return { success: true, data: undefined };
   } catch {
@@ -33,6 +28,18 @@ export const getNotifications = async (): Promise<Result<Notification[]>> => {
     return { success: false, error: 'Failed to fetch notifications' };
   }
 };
+
+export const getUnreadCount = async (): Promise<number> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return 0;
+    const { count } = await notificationModel.getUnreadCount(user.id);
+    return count || 0;
+  } catch {
+    return 0;
+  }
+};
+
 
 export const updateNotificationRead = async (id: string): Promise<Result> => {
   try {
@@ -57,5 +64,8 @@ export const updateAllNotificationsRead = async (): Promise<Result> => {
   }
 };
 
-export const getNotificationsSubscription = (callback: () => void) =>
-  notificationModel.getNotificationsSubscription(callback);
+export const getNotificationsSubscription = (channelName: string, callback: () => void) =>
+  notificationModel.getNotificationsSubscription(channelName, callback);
+
+export const removeNotificationsSubscription = (channel: ReturnType<typeof notificationModel.getNotificationsSubscription>) =>
+  notificationModel.removeNotificationsSubscription(channel);

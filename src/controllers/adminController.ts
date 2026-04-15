@@ -79,6 +79,7 @@ export const updateVerificationStatus = async (id: string, approve: boolean): Pr
       approve
         ? 'Your identity has been verified. You now have full access to Pasuyo.'
         : 'Your verification request was rejected. Please resubmit with valid documents.',
+      '/profile',
     );
     await adminModel.postAdminLog(
       approve ? 'APPROVED_VERIFICATION' : 'REJECTED_VERIFICATION',
