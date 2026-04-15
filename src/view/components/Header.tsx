@@ -31,7 +31,7 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('read', false);
+        .eq('is_read', false);
       setUnreadCount(count || 0);
     };
     fetchUnread();

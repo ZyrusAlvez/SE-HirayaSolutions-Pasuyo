@@ -1,19 +1,14 @@
 import * as notificationModel from '../models/notificationModel';
+import type { NotificationRow } from '../models/notificationModel';
 import { supabase } from '../utils/supabase';
 
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-}
+export interface Notification extends NotificationRow {}
 
 type Result<T = void> = { success: true; data: T } | { success: false; error: string };
 
-export const postNotification = async (userId: string, title: string, message: string): Promise<Result> => {
+export const postNotification = async (userId: string, title: string, message: string, action?: string): Promise<Result> => {
   try {
-    const { error } = await notificationModel.postNotification(userId, title, message);
+    const { error } = await notificationModel.postNotification(userId, title, message, action);
     if (error) return { success: false, error: error.message };
     return { success: true, data: undefined };
   } catch {

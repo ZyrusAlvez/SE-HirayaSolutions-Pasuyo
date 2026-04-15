@@ -1,8 +1,18 @@
 import { supabase, supabaseAdmin } from '../utils/supabase';
 
-export const postNotification = (userId: string, title: string, message: string) => {
+export interface NotificationRow {
+  id: string;
+  user_id: string | null;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  action: string | null;
+}
+
+export const postNotification = (userId: string, title: string, message: string, action?: string) => {
   if (!supabaseAdmin) throw new Error('Admin client not available');
-  return supabaseAdmin.from('notifications').insert({ user_id: userId, title, message });
+  return supabaseAdmin.from('notifications').insert({ user_id: userId, title, message, action });
 };
 
 export const getNotifications = async (userId: string) =>
@@ -13,10 +23,10 @@ export const getNotifications = async (userId: string) =>
     .order('created_at', { ascending: false });
 
 export const updateNotificationRead = (id: string) =>
-  supabase.from('notifications').update({ read: true }).eq('id', id);
+  supabase.from('notifications').update({ is_read: true }).eq('id', id);
 
 export const updateAllNotificationsRead = (userId: string) =>
-  supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false);
+  supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
 
 export const getNotificationsSubscription = (callback: () => void) =>
   supabase

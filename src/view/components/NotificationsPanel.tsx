@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, Platform, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { supabase } from '../../utils/supabase';
 import {
   getNotifications,
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function NotificationsPanel({ visible, onClose }: Props) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,14 +27,18 @@ export default function NotificationsPanel({ visible, onClose }: Props) {
     setLoading(false);
   };
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = async (id: string, action?: string) => {
     await updateNotificationRead(id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    await loadNotifications();
+    if (action) {
+      onClose();
+      router.push(action as any);
+    }
   };
 
   const markAllAsRead = async () => {
     await updateAllNotificationsRead();
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    await loadNotifications();
   };
 
   useEffect(() => {
@@ -42,7 +48,7 @@ export default function NotificationsPanel({ visible, onClose }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, [visible]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
   const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0;
   const topOffset = Platform.OS === 'web' ? 52 : 100 + statusBarHeight;
 
@@ -82,11 +88,11 @@ export default function NotificationsPanel({ visible, onClose }: Props) {
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => !item.read && markAsRead(item.id)}
-                    style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F9FAFB', backgroundColor: item.read ? 'white' : '#FFF7ED' }}
+                    onPress={() => markAsRead(item.id, item.action ?? undefined)}
+                    style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F9FAFB', backgroundColor: item.is_read ? 'white' : '#FFF7ED' }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                      <View style={{ width: 7, height: 7, borderRadius: 4, marginTop: 5, backgroundColor: item.read ? 'transparent' : '#FEA405' }} />
+                      <View style={{ width: 7, height: 7, borderRadius: 4, marginTop: 5, backgroundColor: item.is_read ? 'transparent' : '#FEA405' }} />
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827' }}>{item.title}</Text>
                         <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{item.message}</Text>
