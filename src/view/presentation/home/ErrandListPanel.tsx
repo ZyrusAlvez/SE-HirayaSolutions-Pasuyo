@@ -35,7 +35,7 @@ interface Props {
   userLng?: number;
 }
 
-function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggle, sortKey }: {
+function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggle, sortKey, userLat, userLng }: {
   e: Errand; isLast: boolean;
   onSelect: (e: Errand) => void;
   onClose: () => void;
@@ -43,6 +43,8 @@ function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggl
   expanded: boolean;
   onToggle: () => void;
   sortKey: string;
+  userLat?: number;
+  userLng?: number;
 }) {
   const animValue = useRef(new Animated.Value(0)).current;
 
@@ -85,6 +87,12 @@ function ErrandRow({ e, isLast, onSelect, onClose, onMoreInfo, expanded, onToggl
                 </Text>
               </View>
             )
+          ) : sortKey === 'distance' && userLat != null && userLng != null ? (
+            <View style={{ backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#3B82F6' }}>
+                {haversineKm(userLat, userLng, e.location_lat, e.location_lng).toFixed(1)} km
+              </Text>
+            </View>
           ) : (
             e.budget != null && (
               <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
@@ -186,6 +194,8 @@ function ErrandListContent({ errands, onSelect, onClose, expandedId: initialExpa
             expanded={activeId === e.id}
             onToggle={() => toggle(e.id)}
             sortKey={sort.key}
+            userLat={userLat}
+            userLng={userLng}
           />
         ))}
       </ScrollView>
