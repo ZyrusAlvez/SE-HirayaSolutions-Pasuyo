@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { TextInput, View, Text, TouchableOpacity, TextInputProps } from 'react-native';
+import { useState, useEffect } from 'react';
+import { TextInput, View, Text, TouchableOpacity, TextInputProps, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface PasswordInputProps extends Omit<TextInputProps, 'secureTextEntry'> {
@@ -9,6 +9,14 @@ interface PasswordInputProps extends Omit<TextInputProps, 'secureTextEntry'> {
 
 export default function PasswordInput({ label, required, className = '', ...props }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const style = document.createElement('style');
+    style.textContent = 'input[type=password]::-ms-reveal, input[type=password]::-ms-clear { display: none; }';
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
 
   return (
     <View className="mb-4">
@@ -22,6 +30,7 @@ export default function PasswordInput({ label, required, className = '', ...prop
           className={`flex-1 py-4 text-base outline-none ${className}`}
           placeholderTextColor="#9CA3AF"
           secureTextEntry={!visible}
+          style={{ WebkitTextSecurity: visible ? 'none' : 'disc' } as any}
           {...props}
         />
         <TouchableOpacity onPress={() => setVisible(v => !v)} activeOpacity={0.7}>
