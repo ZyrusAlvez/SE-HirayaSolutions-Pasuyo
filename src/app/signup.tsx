@@ -9,7 +9,6 @@ export default function SignupScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
@@ -43,12 +42,10 @@ export default function SignupScreen() {
             name={name}
             email={email}
             password={password}
-            showPassword={showPassword}
             loading={loading}
             onNameChange={setName}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
-            onTogglePassword={() => setShowPassword(!showPassword)}
             onSignup={handleSignup}
             onGoogleSignup={handleGoogleSignup}
             onLogin={() => router.push(redirect ? `/login?redirect=${redirect}` : '/login')}

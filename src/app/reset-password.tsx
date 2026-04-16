@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../utils/supabase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from '../utils/toast';
+import PasswordInput from '@/view/components/PasswordInput';
 
 type Step = 'email' | 'code' | 'password';
 
@@ -15,8 +15,6 @@ export default function ResetPasswordScreen() {
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [autoSent, setAutoSent] = useState(false);
   const router = useRouter();
@@ -135,34 +133,18 @@ export default function ResetPasswordScreen() {
 
           {step === 'password' && (
             <View className="mb-6 gap-4">
-              <View className="relative">
-                <TextInput
-                  className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 pr-12 text-base"
-                  placeholder="New Password"
-                  placeholderTextColor="#9CA3AF"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity className="absolute right-4 top-4" onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color="#9CA3AF" />
-                </TouchableOpacity>
-              </View>
-              <View className="relative">
-                <TextInput
-                  className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 pr-12 text-base"
-                  placeholder="Confirm Password"
-                  placeholderTextColor="#9CA3AF"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={!showConfirm}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity className="absolute right-4 top-4" onPress={() => setShowConfirm(!showConfirm)}>
-                  <Ionicons name={showConfirm ? 'eye-off' : 'eye'} size={22} color="#9CA3AF" />
-                </TouchableOpacity>
-              </View>
+              <PasswordInput
+                placeholder="New Password"
+                value={password}
+                onChangeText={setPassword}
+                autoCapitalize="none"
+              />
+              <PasswordInput
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                autoCapitalize="none"
+              />
               <Text className="text-xs text-gray-400">Min. 6 characters</Text>
             </View>
           )}
