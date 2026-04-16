@@ -8,7 +8,6 @@ import LoginForm from '@/view/presentation/login/LoginForm';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
@@ -41,11 +40,9 @@ export default function LoginScreen() {
           <LoginForm
             email={email}
             password={password}
-            showPassword={showPassword}
             loading={loading}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
-            onTogglePassword={() => setShowPassword(!showPassword)}
             onLogin={handleLogin}
             onGoogleLogin={handleGoogleLogin}
             onForgotPassword={() => router.push('/reset-password')}

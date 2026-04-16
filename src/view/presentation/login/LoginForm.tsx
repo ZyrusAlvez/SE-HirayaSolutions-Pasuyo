@@ -1,14 +1,12 @@
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import PasswordInput from '@/view/components/PasswordInput';
 
 type Props = {
   email: string;
   password: string;
-  showPassword: boolean;
   loading: boolean;
   onEmailChange: (v: string) => void;
   onPasswordChange: (v: string) => void;
-  onTogglePassword: () => void;
   onLogin: () => void;
   onGoogleLogin: () => void;
   onForgotPassword: () => void;
@@ -18,11 +16,9 @@ type Props = {
 export default function LoginForm({
   email,
   password,
-  showPassword,
   loading,
   onEmailChange,
   onPasswordChange,
-  onTogglePassword,
   onLogin,
   onGoogleLogin,
   onForgotPassword,
@@ -51,22 +47,12 @@ export default function LoginForm({
         />
       </View>
 
-      <View className="mb-6">
-        <View className="relative">
-          <TextInput
-            className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 pr-12 text-base"
-            placeholder="Password"
-            placeholderTextColor="#9CA3AF"
-            value={password}
-            onChangeText={onPasswordChange}
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity className="absolute right-4 top-4" onPress={onTogglePassword}>
-            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <PasswordInput
+        placeholder="Password"
+        value={password}
+        onChangeText={onPasswordChange}
+        autoCapitalize="none"
+      />
 
       <View className="flex-row items-center my-6">
         <View className="flex-1 h-px bg-gray-200" />
