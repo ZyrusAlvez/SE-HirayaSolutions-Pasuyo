@@ -1,13 +1,13 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../utils/supabase';
+import { logout } from '../controllers/authController';
 import { useRouter } from 'expo-router';
 
 export default function SuspendedScreen() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await logout();
     router.replace('/login');
   };
 
