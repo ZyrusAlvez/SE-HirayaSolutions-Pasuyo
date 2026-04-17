@@ -123,6 +123,9 @@ export const getAdminLogsSubscription = (callback: () => void) =>
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_logs' }, callback)
     .subscribe();
 
+export const removeLogsSubscription = (channel: ReturnType<typeof getAdminLogsSubscription>) =>
+  getAdmin().removeChannel(channel);
+
 export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
 

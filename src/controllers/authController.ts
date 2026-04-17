@@ -55,3 +55,51 @@ export const logout = async (): Promise<AuthResult> => {
     return { success: false, error: 'Logout failed' };
   }
 };
+
+export const getSession = () => authModel.getSession();
+
+export const onAuthStateChange = (callback: Parameters<typeof authModel.onAuthStateChange>[0]) =>
+  authModel.onAuthStateChange(callback);
+
+export const getUserActiveAndRole = (userId: string) => authModel.getUserActiveAndRole(userId);
+
+export const sendResetCode = async (email: string): Promise<AuthResult> => {
+  try {
+    const { data: exists, error: rpcError } = await authModel.checkEmailExists(email);
+    if (rpcError || !exists) return { success: false, error: 'No account found with that email' };
+    const { error } = await authModel.resetPasswordForEmail(email);
+    if (error) return { success: false, error: 'Failed to send reset email' };
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Failed to send reset email' };
+  }
+};
+
+export const verifyResetCode = async (email: string, token: string): Promise<AuthResult> => {
+  try {
+    const { error } = await authModel.verifyOtp(email, token);
+    if (error) return { success: false, error: 'Invalid OTP' };
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Invalid OTP' };
+  }
+};
+
+export const updatePassword = async (password: string, confirmPassword: string): Promise<AuthResult> => {
+  if (!password || !confirmPassword) return { success: false, error: 'Please fill in all fields' };
+  if (password !== confirmPassword) return { success: false, error: 'Passwords do not match' };
+  if (password.length < 6) return { success: false, error: 'Password must be at least 6 characters' };
+  try {
+    const { error } = await authModel.updatePassword(password);
+    if (error) {
+      await authModel.signOut();
+      const msg = error.message.toLowerCase().includes('same') || (error as any).status === 422
+        ? 'New password must be different from your current password'
+        : 'Failed to update password';
+      return { success: false, error: msg };
+    }
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Failed to update password' };
+  }
+};

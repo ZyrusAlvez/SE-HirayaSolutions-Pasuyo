@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
-import { supabase } from '../utils/supabase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from '../utils/toast';
+import { sendResetCode, verifyResetCode, updatePassword } from '@/controllers/authController';
 import PasswordInput from '@/view/components/PasswordInput';
 
 type Step = 'email' | 'code' | 'password';
@@ -27,18 +27,10 @@ export default function ResetPasswordScreen() {
 
   const sendCode = async (target: string) => {
     setLoading(true);
-
-    const { data: exists, error: rpcError } = await supabase.rpc('check_email_exists', { email_input: target });
-    if (rpcError || !exists) {
-      setLoading(false);
-      toast({ title: 'No account found with that email', preset: 'error' });
-      return;
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(target);
+    const result = await sendResetCode(target);
     setLoading(false);
-    if (error) {
-      toast({ title: 'Failed to send reset email', preset: 'error' });
+    if (!result.success) {
+      toast({ title: result.error, preset: 'error' });
     } else {
       toast({ title: 'Code sent! Check your inbox.', preset: 'done' });
       setStep('code');
@@ -53,27 +45,17 @@ export default function ResetPasswordScreen() {
   const handleVerifyCode = async () => {
     if (!token) { toast({ title: 'Please enter the code', preset: 'error' }); return; }
     setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
+    const result = await verifyResetCode(email, token);
     setLoading(false);
-    if (error) { toast({ title: 'Invalid OTP', preset: 'error' }); return; }
+    if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
     setStep('password');
   };
 
   const handleUpdatePassword = async () => {
-    if (!password || !confirmPassword) { toast({ title: 'Please fill in all fields', preset: 'error' }); return; }
-    if (password !== confirmPassword) { toast({ title: 'Passwords do not match', preset: 'error' }); return; }
-    if (password.length < 6) { toast({ title: 'Password must be at least 6 characters', preset: 'error' }); return; }
     setLoading(true);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) {
-      await supabase.auth.signOut();
-      setLoading(false);
-      const msg = updateError.message.toLowerCase().includes('same') || updateError.status === 422
-        ? 'New password must be different from your current password'
-        : 'Failed to update password';
-      toast({ title: msg, preset: 'error' }); return;
-    }
+    const result = await updatePassword(password, confirmPassword);
     setLoading(false);
+    if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
     toast({ title: 'Password updated!', preset: 'done' });
     router.replace(fromProfile ? '/profile' : '/');
   };

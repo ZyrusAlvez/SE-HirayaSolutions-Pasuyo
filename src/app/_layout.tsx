@@ -1,9 +1,9 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
-import * as SplashScreen from "expo-splash-screen";
-import { supabase } from "../utils/supabase";
+import { preventAutoHideAsync, hideAsync } from "expo-splash-screen";
 import { Session } from "@supabase/supabase-js";
 import { Platform } from "react-native";
+import { getSession, onAuthStateChange, getUserActiveAndRole, logout } from "../controllers/authController";
 import "../global.css";
 
 let Toaster: any = null;
@@ -11,7 +11,7 @@ if (Platform.OS === 'web') {
   Toaster = require('sonner').Toaster;
 }
 
-SplashScreen.preventAutoHideAsync();
+preventAutoHideAsync();
 
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null);
@@ -20,18 +20,17 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.log('Session error:', error);
-        // Clear any bad session
-        supabase.auth.signOut();
+        logout();
       }
       setSession(session);
       setLoading(false);
-      SplashScreen.hideAsync();
+      hideAsync();
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
@@ -50,8 +49,7 @@ export default function RootLayout() {
     if (!session && !inAuthGroup && !isPublic && !isSuspended) {
       router.replace('/login');
     } else if (session && inAuthGroup && !isResetPassword) {
-      // Check suspension before redirecting
-      supabase.from('profiles').select('is_active').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+      getUserActiveAndRole(session.user.id).then(({ data }) => {
         if (data?.is_active === false) {
           router.replace('/suspended');
         } else {
@@ -59,7 +57,7 @@ export default function RootLayout() {
         }
       });
     } else if (session && !inAuthGroup && !inAdminGroup && !isPublic && !isSuspended) {
-      supabase.from('profiles').select('role, is_active').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+      getUserActiveAndRole(session.user.id).then(({ data }) => {
         if (data?.is_active === false) {
           router.replace('/suspended');
         } else if (data?.role === 'admin') {

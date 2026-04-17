@@ -62,6 +62,80 @@ export const getErrands = async (): Promise<Result<Errand[]>> => {
   return { success: true, data: (data ?? []) as Errand[] };
 };
 
+export type ErrandEditParams = {
+  title: string;
+  description: string;
+  isRemote: boolean;
+  budget: string;
+  deadline: Date | null;
+  images: string[];
+  addressDetails: string;
+  pinnedLocation: { lat: number; lng: number; name: string } | null;
+};
+
+export type ErrandUpdates = {
+  title: string;
+  description: string;
+  is_remote: boolean;
+  budget: number | null;
+  deadline: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_name: string | null;
+  address_details: string | null;
+  images: string[];
+};
+
+export const editErrand = async (
+  errandId: string,
+  params: ErrandEditParams,
+): Promise<{ success: boolean; error: string; data?: ErrandUpdates }> => {
+  const { title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation } = params;
+  if (!title.trim()) return { success: false, error: 'Title cannot be empty.' };
+  if (!description.trim()) return { success: false, error: 'Description cannot be empty.' };
+  if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
+
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const existingUrls = images.filter(uri => uri.startsWith('http'));
+    const newUris = images.filter(uri => !uri.startsWith('http'));
+    const uploadedUrls = newUris.length > 0 ? await errandModel.postImages(user.id, errandId, newUris) : [];
+    const imageUrls = [...existingUrls, ...uploadedUrls];
+
+    const updates = {
+      title: title.trim(),
+      description: description.trim(),
+      is_remote: isRemote,
+      budget: budget ? parseFloat(budget) : null,
+      deadline: deadline ? deadline.toISOString() : null,
+      location_lat: pinnedLocation?.lat ?? null,
+      location_lng: pinnedLocation?.lng ?? null,
+      location_name: pinnedLocation?.name ?? null,
+      address_details: addressDetails.trim() || null,
+      images: imageUrls,
+    };
+
+    const { error } = await errandModel.updateErrand(errandId, updates);
+    if (error) throw error;
+
+    return { success: true, error: '', data: updates };
+  } catch (e: any) {
+    return { success: false, error: e.message ?? 'Something went wrong' };
+  }
+};
+
+export const deleteErrand = async (id: string): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { error } = await errandModel.deleteErrand(id);
+    if (error) return { success: false, error: 'Failed to delete errand' };
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Failed to delete errand' };
+  }
+};
+
 export const postErrand = async (
   params: PostErrandParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {

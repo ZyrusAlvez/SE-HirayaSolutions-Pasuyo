@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Modal, Pressable } fro
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/utils/supabase';
+import { deleteErrand } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
 
 const ACCENT = '#FEA405';
@@ -20,9 +20,9 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
 
   const handleDelete = async () => {
     setDeleting(true);
-    const { error } = await supabase.from('errands').delete().eq('id', errandId);
-    if (error) {
-      toast({ title: 'Failed to delete errand', preset: 'error' });
+    const result = await deleteErrand(errandId);
+    if (!result.success) {
+      toast({ title: result.error, preset: 'error' });
       setDeleting(false);
     } else {
       setConfirmVisible(false);
