@@ -50,3 +50,15 @@ export const onAuthStateChange = (callback: (event: import('@supabase/supabase-j
   supabase.auth.onAuthStateChange(callback as Parameters<typeof supabase.auth.onAuthStateChange>[0]);
 
 export const signOut = () => supabase.auth.signOut();
+
+export const checkEmailExists = (email: string) =>
+  supabase.rpc('check_email_exists', { email_input: email });
+
+export const resetPasswordForEmail = (email: string) =>
+  supabase.auth.resetPasswordForEmail(email);
+
+export const verifyOtp = (email: string, token: string) =>
+  supabase.auth.verifyOtp({ email, token, type: 'recovery' });
+
+export const updatePassword = (password: string) =>
+  supabase.auth.updateUser({ password });
