@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '@/utils/supabase';
+import { editErrand } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
 import TextInput from '@/view/components/TextInput';
 import Budget from '@/view/presentation/post-errand/Budget';
@@ -51,69 +51,29 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
   const [showMap, setShowMap] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const uploadNewImages = async (userId: string): Promise<string[]> => {
-    const urls: string[] = [];
-    for (const uri of images) {
-      if (uri.startsWith('http')) { urls.push(uri); continue; }
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const ext = blob.type.split('/')[1] ?? 'jpg';
-      const fileName = `${userId}/${errand.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('errand-images').upload(fileName, blob, { contentType: blob.type });
-      if (!error) {
-        const { data } = supabase.storage.from('errand-images').getPublicUrl(fileName);
-        urls.push(data.publicUrl);
-      }
-    }
-    return urls;
-  };
-
   const handleSave = async () => {
-    if (!title.trim()) return Alert.alert('Required', 'Title cannot be empty.');
-    if (!description.trim()) return Alert.alert('Required', 'Description cannot be empty.');
-    if (!isRemote && !pinnedLocation) return Alert.alert('Required', 'Please pin a location for onsite errands.');
-
     setSaving(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const imageUrls = await uploadNewImages(user.id);
-
-      const dbUpdates = {
-        title: title.trim(),
-        description: description.trim(),
-        is_remote: isRemote,
-        budget: budget ? parseFloat(budget) : null,
-        deadline: deadline ? deadline.toISOString() : null,
-        location_lat: pinnedLocation?.lat ?? null,
-        location_lng: pinnedLocation?.lng ?? null,
-        location_name: pinnedLocation?.name ?? null,
-        address_details: addressDetails.trim() || null,
-        images: imageUrls,
-      };
-
-      const { error } = await supabase.from('errands').update(dbUpdates).eq('id', errand.id);
-      if (error) throw error;
-
-      toast({ title: 'Errand updated!', preset: 'done' });
-      onSaved({
-        title: dbUpdates.title,
-        description: dbUpdates.description,
-        is_remote: dbUpdates.is_remote,
-        budget: dbUpdates.budget ?? undefined,
-        deadline: dbUpdates.deadline ?? undefined,
-        location_lat: dbUpdates.location_lat,
-        location_lng: dbUpdates.location_lng,
-        location_name: dbUpdates.location_name ?? undefined,
-        address_details: dbUpdates.address_details ?? undefined,
-        images: dbUpdates.images,
-      });
-    } catch (e: any) {
-      toast({ title: e.message ?? 'Something went wrong', preset: 'error' });
-    } finally {
-      setSaving(false);
+    const result = await editErrand(errand.id, {
+      title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation,
+    });
+    setSaving(false);
+    if (!result.success) {
+      Alert.alert('Required', result.error);
+      return;
     }
+    toast({ title: 'Errand updated!', preset: 'done' });
+    onSaved({
+      title: result.data!.title,
+      description: result.data!.description,
+      is_remote: result.data!.is_remote,
+      budget: result.data!.budget ?? undefined,
+      deadline: result.data!.deadline ?? undefined,
+      location_lat: result.data!.location_lat,
+      location_lng: result.data!.location_lng,
+      location_name: result.data!.location_name ?? undefined,
+      address_details: result.data!.address_details ?? undefined,
+      images: result.data!.images,
+    });
   };
 
   return (

@@ -83,3 +83,6 @@ export const getAvailableErrands = () =>
 
 export const deleteErrand = (id: string) =>
   supabase.from('errands').delete().eq('id', id);
+
+export const updateErrand = (id: string, updates: Record<string, any>) =>
+  supabase.from('errands').update(updates).eq('id', id);
