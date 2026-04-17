@@ -16,7 +16,8 @@ export default function NavBar() {
   };
 
   return (
-    <View className={`bg-white px-6 flex flex-row justify-around border-t border-gray-100 ${Platform.OS === 'web' ? 'py-2' : 'py-4'}`}>
+    <View style={{ backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignSelf: 'center', width: '100%', maxWidth: 1200, paddingHorizontal: 24, paddingVertical: Platform.OS === 'web' ? 8 : 16 }}>
       <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/chat')}>
         <Ionicons name="chatbubble-outline" size={24} color={isActive('/chat') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/chat') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Chat</Text>
@@ -36,6 +37,7 @@ export default function NavBar() {
         <Ionicons name="list-outline" size={24} color={isActive('/tasks') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/tasks') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>My Tasks</Text>
       </TouchableOpacity>
+      </View>
     </View>
   );
 }
