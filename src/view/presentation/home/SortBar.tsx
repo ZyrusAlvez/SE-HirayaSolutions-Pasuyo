@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,16 +17,16 @@ const DIR_LABELS: Record<SortDir, string> = { asc: 'Increasing', desc: 'Decreasi
 const DIR_ICONS: Record<SortDir, string> = { asc: 'arrow-up-outline', desc: 'arrow-down-outline' };
 
 function Dropdown<T extends string>({
-  value, options, labels, icon, onChange,
+  value, options, labels, icon, onChange, open, onToggle,
 }: {
   value: T; options: T[]; labels: Record<string, string>; icon: string; onChange: (v: T) => void;
+  open: boolean; onToggle: () => void;
 }) {
-  const [open, setOpen] = useState(false);
 
   return (
     <View style={{ position: 'relative', zIndex: 10 }}>
       <TouchableOpacity
-        onPress={() => setOpen(o => !o)}
+        onPress={onToggle}
         activeOpacity={0.7}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: open ? '#FEA405' : '#E5E7EB', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}
       >
@@ -40,7 +40,7 @@ function Dropdown<T extends string>({
           {options.map((opt, i) => (
             <TouchableOpacity
               key={opt}
-              onPress={() => { onChange(opt); setOpen(false); }}
+              onPress={() => { onChange(opt); onToggle(); }}
               activeOpacity={0.7}
               style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: i < options.length - 1 ? 1 : 0, borderBottomColor: '#F3F4F6' }}
             >
@@ -57,6 +57,9 @@ function Dropdown<T extends string>({
 }
 
 export default function SortBar({ sort, onSort, keys }: Props) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const toggle = (id: string) => setOpenId(prev => prev === id ? null : id);
+
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 8, zIndex: 10 }}>
       <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>Sort:</Text>
@@ -65,6 +68,8 @@ export default function SortBar({ sort, onSort, keys }: Props) {
         options={keys}
         labels={LABELS}
         icon="grid-outline"
+        open={openId === 'key'}
+        onToggle={() => toggle('key')}
         onChange={(key) => onSort({ ...sort, key })}
       />
       <Dropdown
@@ -72,6 +77,8 @@ export default function SortBar({ sort, onSort, keys }: Props) {
         options={['asc', 'desc'] as SortDir[]}
         labels={DIR_LABELS}
         icon={DIR_ICONS[sort.dir]}
+        open={openId === 'dir'}
+        onToggle={() => toggle('dir')}
         onChange={(dir) => onSort({ ...sort, dir })}
       />
     </View>
