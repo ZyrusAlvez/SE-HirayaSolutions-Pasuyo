@@ -136,7 +136,10 @@ export default function ErrandDetailScreen() {
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={() => { if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`); }}
+                onPress={() => {
+                  if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`);
+                  else router.push(`/chat?userId=${errand.user_id}`);
+                }}
                 style={{ flex: 1, borderRadius: 16, paddingVertical: 12, alignItems: 'center', borderWidth: 2, borderColor: ACCENT }}
               >
                 <Text style={{ color: '#111827', fontWeight: '700', fontSize: 14 }}>
