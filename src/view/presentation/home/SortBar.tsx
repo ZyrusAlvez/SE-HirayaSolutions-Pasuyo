@@ -64,7 +64,7 @@ export default function SortBar({ sort, onSort, keys }: Props) {
         value={sort.key}
         options={keys}
         labels={LABELS}
-        icon="funnel-outline"
+        icon="grid-outline"
         onChange={(key) => onSort({ ...sort, key })}
       />
       <Dropdown
