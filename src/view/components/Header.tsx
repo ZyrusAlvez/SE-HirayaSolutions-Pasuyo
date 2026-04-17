@@ -2,8 +2,8 @@ import { View, TouchableOpacity, Image, Platform, StyleSheet, Text } from 'react
 import { Ionicons } from '@expo/vector-icons';
 import VerificationBadge from './VerificationBadge';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { getUnreadCount, getNotificationsSubscription, removeNotificationsSubscription } from '../../controllers/notificationController';
+import { useState } from 'react';
+import { useNotification } from '../../context/NotificationContext';
 import NotificationsPanel from './NotificationsPanel';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
@@ -18,20 +18,8 @@ interface Props {
 export default function Header({ avatarUrl, verificationStatus }: Props) {
   const router = useRouter();
   const isWeb = Platform.OS === 'web';
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { unreadCount, setUnreadCount } = useNotification();
   const [showNotifications, setShowNotifications] = useState(false);
-
-  const channelRef = useRef(`header-notifications-${Date.now()}`);
-
-  useEffect(() => {
-    const fetchUnread = async () => {
-      const count = await getUnreadCount();
-      setUnreadCount(count);
-    };
-    fetchUnread();
-    const channel = getNotificationsSubscription(channelRef.current, fetchUnread);
-    return () => { removeNotificationsSubscription(channel); };
-  }, []);
 
   return (
     <View className={`bg-white border-b border-gray-100 ${!isWeb ? 'pt-12' : 'pt-2'}`}>

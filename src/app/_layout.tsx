@@ -1,6 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { ProfileProvider } from "../context/ProfileContext";
+import { NotificationProvider } from "../context/NotificationContext";
 import { preventAutoHideAsync, hideAsync } from "expo-splash-screen";
 import { Session } from "@supabase/supabase-js";
 import { Platform } from "react-native";
@@ -72,8 +73,10 @@ export default function RootLayout() {
 
   return (
     <ProfileProvider>
-      <Stack screenOptions={{ headerShown: false }}/>
-      {Platform.OS === 'web' && Toaster && <Toaster position="top-center" richColors />}
+      <NotificationProvider>
+        <Stack screenOptions={{ headerShown: false }}/>
+        {Platform.OS === 'web' && Toaster && <Toaster position="top-center" richColors />}
+      </NotificationProvider>
     </ProfileProvider>
   );
 }
