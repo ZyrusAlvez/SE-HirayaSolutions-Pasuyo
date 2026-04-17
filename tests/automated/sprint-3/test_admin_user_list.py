@@ -20,6 +20,9 @@ ADMIN_EMAIL     = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD  = os.getenv("ADMIN_PASSWORD")
 KNOWN_USER_NAME  = os.getenv("KNOWN_USER_NAME")
 KNOWN_USER_EMAIL = os.getenv("KNOWN_USER_EMAIL")
+NEW_USER_NAME    = os.getenv("NEW_USER_NAME")
+NEW_USER_EMAIL   = os.getenv("NEW_USER_EMAIL")
+NEW_USER_PASSWORD = os.getenv("NEW_USER_PASSWORD")
 
 WAIT = 20
 
@@ -321,6 +324,58 @@ class TestAdminUserList(unittest.TestCase):
                                 f"Sort button '{sort_key}' should be visible")
         finally:
             driver.quit()
+
+    # ------------------------------------------------------------------ #
+    #  TC-ADMIN-01-05 – User list updates when new users register        #
+    # ------------------------------------------------------------------ #
+    def test_tc_admin_01_05_list_updates_when_new_user_registers(self):
+        """Positive: User list auto-updates within polling interval after new registration."""
+        admin_driver = make_driver()
+        signup_driver = make_driver()
+        try:
+            login_as_admin(admin_driver)
+            count_before = len(admin_driver.find_elements(
+                By.CSS_SELECTOR, "[data-testid^='user-card-']"
+            ))
+
+            signup_driver.get(f"{BASE_URL}/signup")
+            tid_type(signup_driver, "signup-name", NEW_USER_NAME)
+            tid_type(signup_driver, "signup-email", NEW_USER_EMAIL)
+            tid_type(signup_driver, "signup-password", NEW_USER_PASSWORD)
+            tid_click(signup_driver, "signup-btn")
+            WebDriverWait(signup_driver, WAIT).until(
+                lambda d: "/signup" not in d.current_url
+            )
+            print(f"[TC-ADMIN-01-05] Signed up {NEW_USER_EMAIL}, waiting for admin list to update...")
+
+            time.sleep(22)
+
+            count_after = len(admin_driver.find_elements(
+                By.CSS_SELECTOR, "[data-testid^='user-card-']"
+            ))
+            self.assertGreater(count_after, count_before,
+                               "User list should show more users after new registration")
+        finally:
+            admin_driver.quit()
+            signup_driver.quit()
+
+    def test_tc_admin_01_06_new_user_searchable_after_registration(self):
+        """Positive: Newly registered user is searchable by email after list updates."""
+        admin_driver = make_driver()
+        try:
+            login_as_admin(admin_driver)
+
+            tid_type(admin_driver, "admin-search-input", NEW_USER_EMAIL)
+            time.sleep(1)
+
+            email_els = admin_driver.find_elements(By.CSS_SELECTOR, "[data-testid^='user-email-']")
+            emails = [el.text.lower() for el in email_els]
+            self.assertTrue(
+                any(NEW_USER_EMAIL.lower() in e for e in emails),
+                f"Newly registered user '{NEW_USER_EMAIL}' should appear in search results"
+            )
+        finally:
+            admin_driver.quit()
 
 
 if __name__ == "__main__":
