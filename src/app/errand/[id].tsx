@@ -148,7 +148,10 @@ export default function ErrandDetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={() => { if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`); }}
+                onPress={() => {
+                  if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`);
+                  else router.push(`/chat?userId=${errand.user_id}`);
+                }}
                 style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
               >
                 <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>Accept Errand</Text>
