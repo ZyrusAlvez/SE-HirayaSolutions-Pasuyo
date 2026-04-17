@@ -41,4 +41,12 @@ export const signInWithGoogle = async () => {
 export const getUserRole = (userId: string) =>
   supabase.from('profiles').select('role').eq('id', userId).single();
 
+export const getUserActiveAndRole = (userId: string) =>
+  supabase.from('profiles').select('role, is_active').eq('id', userId).maybeSingle();
+
+export const getSession = () => supabase.auth.getSession();
+
+export const onAuthStateChange = (callback: (event: import('@supabase/supabase-js').AuthChangeEvent, session: import('@supabase/supabase-js').Session | null) => void | Promise<void>) =>
+  supabase.auth.onAuthStateChange(callback as Parameters<typeof supabase.auth.onAuthStateChange>[0]);
+
 export const signOut = () => supabase.auth.signOut();

@@ -55,3 +55,10 @@ export const logout = async (): Promise<AuthResult> => {
     return { success: false, error: 'Logout failed' };
   }
 };
+
+export const getSession = () => authModel.getSession();
+
+export const onAuthStateChange = (callback: Parameters<typeof authModel.onAuthStateChange>[0]) =>
+  authModel.onAuthStateChange(callback);
+
+export const getUserActiveAndRole = (userId: string) => authModel.getUserActiveAndRole(userId);
