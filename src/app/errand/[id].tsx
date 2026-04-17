@@ -52,7 +52,7 @@ export default function ErrandDetailScreen() {
     });
   }, [id]);
 
-  const headerEl = isGuest ? <GuestHeader /> : <Header avatarUrl={avatarUrl} isVerified={isVerified} />;
+  const headerEl = isGuest ? <GuestHeader /> : <Header avatarUrl={avatarUrl} verificationStatus={isVerified ? 'verified' : 'not_verified'} />;
 
   if (loading) {
     return (
