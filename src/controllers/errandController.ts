@@ -62,7 +62,15 @@ export const getErrands = async (): Promise<Result<Errand[]>> => {
   return { success: true, data: (data ?? []) as Errand[] };
 };
 
-export const postErrand = async (
+export const deleteErrand = async (id: string): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { error } = await errandModel.deleteErrand(id);
+    if (error) return { success: false, error: 'Failed to delete errand' };
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Failed to delete errand' };
+  }
+};
   params: PostErrandParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
   const { title, description, isRemote, pinnedLocation, addressDetails, budget, deadline, images } = params;
