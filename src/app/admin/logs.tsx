@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getLogs, getLogsSubscription, LogEntry } from '../../controllers/adminController';
+import { getLogs, getLogsSubscription, removeLogsSubscription, LogEntry } from '../../controllers/adminController';
 import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
-import { supabaseAdmin } from '../../utils/supabase';
 
 const ACCENT = '#FEA405';
 
@@ -34,7 +33,7 @@ export default function AdminLogsScreen() {
   useEffect(() => {
     loadLogs();
     const channel = getLogsSubscription(loadLogs);
-    return () => { supabaseAdmin.removeChannel(channel); };
+    return () => { removeLogsSubscription(channel); };
   }, []);
 
   const renderItem = ({ item }: { item: LogEntry }) => {

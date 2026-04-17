@@ -115,6 +115,9 @@ export const getLogs = async (): Promise<Result<LogEntry[]>> => {
 export const getLogsSubscription = (callback: () => void) =>
   adminModel.getAdminLogsSubscription(callback);
 
+export const removeLogsSubscription = (channel: ReturnType<typeof getLogsSubscription>) =>
+  adminModel.removeLogsSubscription(channel);
+
 export const getAnalytics = async (): Promise<Result<AnalyticsData>> => {
   try {
     const { data, error } = await adminModel.getErrandsForAnalytics();
