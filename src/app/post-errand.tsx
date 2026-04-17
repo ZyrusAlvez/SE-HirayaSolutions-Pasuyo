@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
-  Platform, Alert, ActivityIndicator, KeyboardAvoidingView,
+  Platform, ActivityIndicator, KeyboardAvoidingView,
   useWindowDimensions,
 } from 'react-native';
 import * as Location from 'expo-location';
@@ -67,7 +67,7 @@ export default function PostErrandScreen() {
     );
     setSubmitting(false);
     if (!result.success) {
-      if (result.error) Alert.alert('Required', result.error);
+      if (result.error) toast({ title: result.error, preset: 'error' });
       return;
     }
     toast({ title: 'Errand posted!', preset: 'done' });
