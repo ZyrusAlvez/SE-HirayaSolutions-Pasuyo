@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../utils/supabase';
 import { getUsers, FullUserProfile } from '../../controllers/adminController';
+import { logout } from '../../controllers/authController';
 import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 import UserCard from '../../view/presentation/admin/UserCard';
 import VerificationCard, { PendingUser } from '../../view/presentation/admin/VerificationCard';
@@ -76,7 +76,7 @@ export default function AdminAccountsScreen() {
           <Text className="text-xl font-bold text-gray-900">User Accounts</Text>
           <Text className="text-xs text-gray-400 mt-0.5">{users.length} total users</Text>
         </View>
-        <TouchableOpacity onPress={() => supabase.auth.signOut()} activeOpacity={0.7} style={{ padding: 8 }}>
+        <TouchableOpacity onPress={() => logout()} activeOpacity={0.7} style={{ padding: 8 }}>
           <Ionicons name="log-out-outline" size={24} color="#9CA3AF" />
         </TouchableOpacity>
       </View>

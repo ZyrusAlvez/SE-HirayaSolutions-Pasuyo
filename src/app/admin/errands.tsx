@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../utils/supabase';
 import { getErrands, Errand } from '../../controllers/adminController';
+import { logout } from '../../controllers/authController';
 import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 import ErrandCard from '../../view/presentation/admin/ErrandCard';
 
@@ -56,7 +56,7 @@ export default function AdminErrandsScreen() {
           <Text className="text-xl font-bold text-gray-900">Errands</Text>
           <Text className="text-xs text-gray-400 mt-0.5">{errands.length} total errands</Text>
         </View>
-        <TouchableOpacity onPress={() => supabase.auth.signOut()} activeOpacity={0.7} style={{ padding: 8 }}>
+        <TouchableOpacity onPress={() => logout()} activeOpacity={0.7} style={{ padding: 8 }}>
           <Ionicons name="log-out-outline" size={24} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
