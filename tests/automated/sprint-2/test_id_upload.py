@@ -400,10 +400,10 @@ class TestIDUpload(unittest.TestCase):
             self.assertTrue(remove_btn.is_displayed(), "Remove button should appear after upload")
         finally:
             driver.quit()
-     # ------------------------------------------------------------------ #
-    #  AC-04 – Uploaded ID is stored securely                            #
     # ------------------------------------------------------------------ #
-    def z_test_ac_04_successful_submission_shows_success_screen(self):
+    #  AC-04 – Uploaded ID is stored securely | Renamed for Sort Purposes #
+    # ------------------------------------------------------------------ #
+    def test_ac_08_successful_submission_shows_success_screen(self):
         """Positive: Completing all steps and submitting shows the success screen."""
         driver = make_driver()
         try:
@@ -423,8 +423,8 @@ class TestIDUpload(unittest.TestCase):
         finally:
             driver.quit()
 
-    def z_test_ac_04_01_pending_status_shown_on_profile_after_submission(self):
-        """Positive: Profile shows pending verification status after submission."""
+    def test_ac_09_pending_status_shown_on_profile_after_submission(self):
+        """Positive: Profile shows pending status after test_ac_08 submits the form."""
         driver = make_driver()
         try:
             login(driver)
