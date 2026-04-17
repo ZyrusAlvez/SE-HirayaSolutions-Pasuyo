@@ -4,7 +4,7 @@ import { useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
 import { getErrands } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
-import { getProfile } from '@/controllers/profileController';
+import { useProfile } from '@/context/ProfileContext';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
 import ErrandTabToggle from '@/view/presentation/home/ErrandTabToggle';
@@ -12,26 +12,14 @@ import OnsiteMap from '@/view/presentation/home/OnsiteMap';
 import RemoteErrandList from '@/view/presentation/home/RemoteErrandList';
 import SkeletonLoading from '@/view/presentation/home/SkeletonLoading';
 
-const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
-
 export default function HomeScreen() {
+  const { avatarUrl, verificationStatus } = useProfile();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
-  const [verificationStatus, setVerificationStatus] = useState<'verified' | 'pending' | 'not_verified'>('not_verified');
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loadingErrands, setLoadingErrands] = useState(true);
   const hasLoaded = useRef(false);
   const [tab, setTab] = useState<'onsite' | 'remote'>('onsite');
   const [expandId, setExpandId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    getProfile().then((result) => {
-      if (result.success && result.data) {
-        if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
-        setVerificationStatus(result.data.verificationStatus);
-      }
-    });
-  }, []);
 
   useFocusEffect(useCallback(() => {
     setExpandId(undefined);
