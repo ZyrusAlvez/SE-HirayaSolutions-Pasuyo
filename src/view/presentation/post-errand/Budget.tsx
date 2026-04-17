@@ -11,7 +11,11 @@ export default function Budget({ value, onChange }: Props) {
       label="Budget (₱)"
       placeholder="e.g. 500"
       value={value}
-      onChangeText={(v) => onChange(v.replace(/[^0-9.]/g, ''))}
+      onChangeText={(v) => {
+        const clean = v.replace(/[^0-9.]/g, '');
+        const [int, ...rest] = clean.split('.');
+        onChange(rest.length ? `${int}.${rest.join('')}` : clean);
+      }}
       keyboardType="decimal-pad"
     />
   );
