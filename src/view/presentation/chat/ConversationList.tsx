@@ -32,7 +32,9 @@ export default function ConversationList({ conversations, currentUserId, selecte
     <View style={{ width: 320, borderRightWidth: 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
       <Text style={{ padding: 16, fontWeight: '700', fontSize: 18, color: '#111827' }}>Messages</Text>
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 24 }} color="#6B7280" />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color="#6B7280" />
+        </View>
       ) : conversations.length === 0 ? (
         <Text style={{ padding: 16, color: '#9CA3AF', fontSize: 14 }}>No conversations yet. Start browsing errands and chat with task posters.</Text>
       ) : (
