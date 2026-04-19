@@ -4,6 +4,9 @@ import { Message } from '@/controllers/chatController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
+const getAvatarSource = (avatar: string | null | undefined) =>
+  avatar && avatar !== 'null' && avatar !== 'default' && avatar.trim() ? { uri: avatar } : DEFAULT_AVATAR;
+
 type Props = {
   messages: Message[];
   currentUserId: string;
@@ -39,7 +42,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
         <Image
-          source={otherUser?.avatar ? { uri: otherUser.avatar } : DEFAULT_AVATAR}
+          source={getAvatarSource(otherUser?.avatar)}
           style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
         />
         <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>

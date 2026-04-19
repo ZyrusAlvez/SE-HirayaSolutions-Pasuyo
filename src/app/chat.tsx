@@ -27,11 +27,11 @@ export default function ChatScreen() {
       setCurrentUserId(user.id);
 
       if (targetUserId) {
-        const result = await startConversation(targetUserId);
-        if (result.success) setSelectedId(result.data);
+        const convoResult = await startConversation(user.id, targetUserId);
+        if (convoResult.success) setSelectedId(convoResult.data);
       }
 
-      const result = await loadConversations();
+      const result = await loadConversations(user.id);
       if (result.success) setConversations(result.data);
       setLoading(false);
     })();
@@ -89,7 +89,7 @@ export default function ChatScreen() {
           otherUser={otherUser}
           loading={messagesLoading}
           selected={!!selectedId}
-          onSend={(content) => { if (selectedId) handleSendMessage(selectedId, content); }}
+          onSend={(content) => { if (selectedId) handleSendMessage(selectedId, currentUserId, content); }}
         />
       </View>
       <NavBar />
