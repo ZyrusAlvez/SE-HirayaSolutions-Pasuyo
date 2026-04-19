@@ -47,3 +47,38 @@ export const loadMessages = async (conversationId: string): Promise<Result<Messa
     return { success: false, error: 'Something went wrong' };
   }
 };
+
+export const handleSendMessage = async (
+  conversationId: string,
+  content: string,
+): Promise<Result<null>> => {
+  const trimmed = content.trim();
+  if (!trimmed) return { success: false, error: 'Message cannot be empty' };
+
+  try {
+    const { data: { user } } = await chatModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await chatModel.sendMessage(conversationId, user.id, trimmed);
+    if (error) return { success: false, error: 'Failed to send message' };
+
+    await chatModel.updateLastMessageAt(conversationId);
+    return { success: true, data: null };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const startConversation = async (otherUserId: string): Promise<Result<string>> => {
+  try {
+    const { data: { user } } = await chatModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data, error } = await chatModel.getOrCreateConversation(user.id, otherUserId);
+    if (error || !data) return { success: false, error: 'Failed to start conversation' };
+
+    return { success: true, data: data.id };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
