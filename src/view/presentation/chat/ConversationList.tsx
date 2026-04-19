@@ -33,7 +33,9 @@ export default function ConversationList({ conversations, currentUserId, selecte
       <Text style={{ padding: 16, fontWeight: '700', fontSize: 18, color: '#111827' }}>Messages</Text>
       {loading ? (
         <ActivityIndicator style={{ marginTop: 24 }} color="#6B7280" />
-      ): (
+      ) : conversations.length === 0 ? (
+        <Text style={{ padding: 16, color: '#9CA3AF', fontSize: 14 }}>No conversations yet. Start browsing errands and chat with task posters.</Text>
+      ) : (
         <FlatList
           data={conversations}
           keyExtractor={(c) => c.id}
