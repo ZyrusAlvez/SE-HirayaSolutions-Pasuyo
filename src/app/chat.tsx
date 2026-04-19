@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View, Platform, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
 import { loadConversations, loadMessages, handleSendMessage, startConversation, Conversation, Message } from '@/controllers/chatController';
@@ -82,7 +82,7 @@ export default function ChatScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <Header avatarUrl={avatarUrl} verificationStatus={verificationStatus} />
-      <View style={{ flex: 1, flexDirection: 'row' }}>
+      <View style={[{ flex: 1, flexDirection: 'row' }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
         {showList && (
           <ConversationList
             conversations={conversations}
