@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
 import { Conversation } from '@/controllers/chatController';
+import VerificationBadge from '@/view/components/VerificationBadge';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -28,8 +29,8 @@ function timeAgo(dateStr: string) {
 export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading }: Props) {
   const getOther = (c: Conversation) =>
     c.user1_id === currentUserId
-      ? { name: c.user2_name, avatar: c.user2_avatar }
-      : { name: c.user1_name, avatar: c.user1_avatar };
+      ? { name: c.user2_name, avatar: c.user2_avatar, verified: c.user2_verified }
+      : { name: c.user1_name, avatar: c.user1_avatar, verified: c.user1_verified };
 
   return (
     <View style={{ width: 320, borderRightWidth: 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
@@ -61,14 +62,12 @@ export default function ConversationList({ conversations, currentUserId, selecte
                   borderLeftColor: '#3B82F6',
                 }}
               >
-                <View>
+                <View style={{ width: 40, marginRight: 12 }}>
                   <Image
                     source={getAvatarSource(other.avatar)}
-                    style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
+                    style={{ width: 40, height: 40, borderRadius: 20 }}
                   />
-                  {unread && (
-                    <View style={{ position: 'absolute', top: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#3B82F6', borderWidth: 1.5, borderColor: '#F9FAFB' }} />
-                  )}
+                  <VerificationBadge status={other.verified ? 'verified' : 'not_verified'} variant="icon" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

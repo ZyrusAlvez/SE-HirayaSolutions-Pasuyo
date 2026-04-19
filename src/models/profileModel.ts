@@ -107,7 +107,12 @@ export type DisplayProfile = {
 };
 
 export const getDisplayProfile = async (userId: string): Promise<DisplayProfile> => {
-  const { data: profile } = await getProfile(userId);
+  const client = supabaseAdmin ?? supabase;
+  const { data: profile } = await client
+    .from('profiles')
+    .select('verified, pending_verification, first_name, last_name, avatar_url')
+    .eq('id', userId)
+    .single();
 
   const profileName = profile?.first_name || profile?.last_name
     ? [profile.first_name, profile.last_name].filter(Boolean).join(' ')
