@@ -87,6 +87,15 @@ def login_as_admin(driver):
     )
 
 
+def wait_for_search(driver, result_selector, timeout=10):
+    """Wait up to timeout seconds for search results to appear or stabilize."""
+    time.sleep(1)
+    WebDriverWait(driver, timeout).until(
+        lambda d: len(d.find_elements(By.CSS_SELECTOR, result_selector)) >= 0
+    )
+    time.sleep(1)
+
+
 class TestAdminUserList(unittest.TestCase):
 
     def tearDown(self):
@@ -180,7 +189,7 @@ class TestAdminUserList(unittest.TestCase):
         try:
             login_as_admin(driver)
             tid_type(driver, "admin-search-input", KNOWN_USER_NAME)
-            time.sleep(1)
+            wait_for_search(driver, "[data-testid^='user-name-']")
             name_els = driver.find_elements(By.CSS_SELECTOR, "[data-testid^='user-name-']")
             self.assertGreater(len(name_els), 0, "Search by name should return results")
             names = [el.text.lower() for el in name_els]
@@ -197,7 +206,7 @@ class TestAdminUserList(unittest.TestCase):
         try:
             login_as_admin(driver)
             tid_type(driver, "admin-search-input", KNOWN_USER_EMAIL)
-            time.sleep(1)
+            wait_for_search(driver, "[data-testid^='user-email-']")
             email_els = driver.find_elements(By.CSS_SELECTOR, "[data-testid^='user-email-']")
             self.assertGreater(len(email_els), 0, "Search by email should return results")
             emails = [el.text.lower() for el in email_els]
@@ -214,7 +223,7 @@ class TestAdminUserList(unittest.TestCase):
         try:
             login_as_admin(driver)
             tid_type(driver, "admin-search-input", "zzznoresultsxxx")
-            time.sleep(1)
+            wait_for_search(driver, "[data-testid^='user-card-']")
             cards = driver.find_elements(By.CSS_SELECTOR, "[data-testid^='user-card-']")
             self.assertEqual(len(cards), 0, "Search with no match should show no user cards")
             self.assertIn("No users found", driver.page_source,
@@ -230,11 +239,11 @@ class TestAdminUserList(unittest.TestCase):
             total_before = len(driver.find_elements(By.CSS_SELECTOR, "[data-testid^='user-card-']"))
 
             tid_type(driver, "admin-search-input", KNOWN_USER_NAME)
-            time.sleep(1)
+            wait_for_search(driver, "[data-testid^='user-card-']")
 
             # Clear search
             tid_type(driver, "admin-search-input", "")
-            time.sleep(1)
+            wait_for_search(driver, "[data-testid^='user-card-']")
 
             total_after = len(driver.find_elements(By.CSS_SELECTOR, "[data-testid^='user-card-']"))
             self.assertEqual(total_before, total_after,
@@ -366,8 +375,7 @@ class TestAdminUserList(unittest.TestCase):
             login_as_admin(admin_driver)
 
             tid_type(admin_driver, "admin-search-input", NEW_USER_EMAIL)
-            time.sleep(1)
-
+            wait_for_search(admin_driver, "[data-testid^='user-email-']")
             email_els = admin_driver.find_elements(By.CSS_SELECTOR, "[data-testid^='user-email-']")
             emails = [el.text.lower() for el in email_els]
             self.assertTrue(

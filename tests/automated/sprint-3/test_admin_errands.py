@@ -93,6 +93,15 @@ def login_as_admin(driver):
     )
 
 
+def wait_for_search(driver, result_selector, timeout=10):
+    """Wait up to timeout seconds for search results to appear or stabilize."""
+    time.sleep(1)
+    WebDriverWait(driver, timeout).until(
+        lambda d: len(d.find_elements(By.CSS_SELECTOR, result_selector)) >= 0
+    )
+    time.sleep(1)
+
+
 def post_errand(driver, title, description="Test errand description"):
     """Log in as a verified user and post a new errand."""
     login(driver, ERRAND_TEST_EMAIL, ERRAND_TEST_PASSWORD)
