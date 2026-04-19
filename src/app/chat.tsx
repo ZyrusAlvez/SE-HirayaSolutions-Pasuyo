@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useProfile } from '@/context/ProfileContext';
 import { loadConversations, loadMessages, Conversation, Message } from '@/controllers/chatController';
+import { subscribeToMessages } from '@/models/chatModel';
 import { supabase } from '@/utils/supabase';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
@@ -37,6 +38,25 @@ export default function ChatScreen() {
       setMessagesLoading(false);
     });
   }, [selectedId]);
+
+  useEffect(() => {
+    const channel = subscribeToMessages((payload) => {
+      const msg = payload.new as Message;
+      if (msg.conversation_id === selectedId) {
+        setMessages((prev) => [...prev, msg]);
+      }
+      setConversations((prev) =>
+        prev
+          .map((c) =>
+            c.id === msg.conversation_id
+              ? { ...c, last_message: msg.content, last_message_at: msg.created_at, unread_count: msg.sender_id !== currentUserId ? (c.unread_count ?? 0) + 1 : c.unread_count }
+              : c
+          )
+          .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
+      );
+    });
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedId, currentUserId]);
 
   const selectedConvo = conversations.find((c) => c.id === selectedId);
   const otherUser = selectedConvo

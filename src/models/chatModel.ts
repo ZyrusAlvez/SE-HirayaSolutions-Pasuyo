@@ -55,6 +55,14 @@ export const sendMessage = (conversationId: string, senderId: string, content: s
 export const updateLastMessageAt = (conversationId: string) =>
   supabase.from('conversations').update({ last_message_at: new Date().toISOString() }).eq('id', conversationId);
 
+export const subscribeToMessages = (
+  onNewMessage: (payload: any) => void,
+) =>
+  supabase
+    .channel('messages-realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, onNewMessage)
+    .subscribe();
+
 export const getOrCreateConversation = async (userAId: string, userBId: string) => {
   const [user1, user2] = [userAId, userBId].sort();
 
