@@ -1,4 +1,7 @@
-import { supabase, supabaseAdmin } from '@/utils/supabase';
+import { supabase } from '@/utils/supabase';
+import { getDisplayProfile } from '@/models/profileModel';
+
+export type { DisplayProfile } from '@/models/profileModel';
 
 export type Conversation = {
   id: string;
@@ -25,31 +28,7 @@ export const getConversations = (userId: string) =>
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
     .order('last_message_at', { ascending: false });
 
-export const getProfileById = async (userId: string) => {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name, avatar_url, verified')
-    .eq('id', userId)
-    .single();
-
-  const name = profile?.first_name || profile?.last_name
-    ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim()
-    : null;
-
-  if (name) return { name, avatar_url: profile?.avatar_url ?? null, verified: profile?.verified ?? false };
-
-  if (supabaseAdmin) {
-    const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
-    const meta = data?.user?.user_metadata;
-    return {
-      name: meta?.name || meta?.full_name || 'Unknown',
-      avatar_url: meta?.custom_avatar_url || meta?.avatar_url || null,
-      verified: false,
-    };
-  }
-
-  return { name: 'Unknown', avatar_url: null, verified: false };
-};
+export { getDisplayProfile };
 
 export const getLastMessage = (conversationId: string) =>
   supabase
@@ -68,12 +47,15 @@ export const getUnreadCount = (conversationId: string, userId: string) =>
     .eq('is_read', false)
     .neq('sender_id', userId);
 
-export const getMessages = (conversationId: string) =>
+const PAGE_SIZE = 30;
+
+export const getMessages = (conversationId: string, offset = 0) =>
   supabase
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
 
 export const sendMessage = (conversationId: string, senderId: string, content: string) =>
   supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content });

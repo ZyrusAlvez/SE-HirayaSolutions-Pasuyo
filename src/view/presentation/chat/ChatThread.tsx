@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Message } from '@/controllers/chatController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -14,6 +15,10 @@ type Props = {
   loading: boolean;
   selected: boolean;
   onSend: (content: string) => void;
+  onBack?: () => void;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  hasMore?: boolean;
 };
 
 function formatTime(dateStr: string) {
@@ -21,7 +26,49 @@ function formatTime(dateStr: string) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend }: Props) {
+const FIVE_MINUTES = 5 * 60 * 1000;
+
+function shouldShowTimeSeparator(current: Message, previous: Message | undefined) {
+  if (!previous) return true;
+  return new Date(current.created_at).getTime() - new Date(previous.created_at).getTime() > FIVE_MINUTES;
+}
+
+function formatSeparatorTime(dateStr: string) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 0) return time;
+  if (diffDays === 1) return `Yesterday ${time}`;
+  if (diffDays < 7) return `${d.toLocaleDateString([], { weekday: 'short' })} ${time}`;
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
+}
+
+function MessageBubble({ item, isMe }: { item: Message; isMe: boolean }) {
+  const [revealed, setRevealed] = useState(false);
+
+  return (
+    <Pressable
+      onPress={() => setRevealed((v) => !v)}
+      style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 4 }}
+    >
+      <View style={{
+        maxWidth: '70%',
+        backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+      }}>
+        <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
+      </View>
+      {revealed && (
+        <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{formatTime(item.created_at)}</Text>
+      )}
+    </Pressable>
+  );
+}
+
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore }: Props) {
   const [input, setInput] = useState('');
 
   if (!selected) {
@@ -41,6 +88,11 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
+        {onBack && (
+          <Pressable onPress={onBack} style={{ marginRight: 8 }}>
+            <Ionicons name="arrow-back" size={24} color="#111827" />
+          </Pressable>
+        )}
         <Image
           source={getAvatarSource(otherUser?.avatar)}
           style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
@@ -55,24 +107,28 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
         </View>
       ) : (
         <FlatList
-          data={messages}
+          data={[...messages].reverse()}
+          inverted
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 16 }}
-          renderItem={({ item }) => {
+          onEndReached={hasMore ? onLoadMore : undefined}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 12 }} color="#6B7280" /> : null}
+          renderItem={({ item, index }) => {
+            const reversed = [...messages].reverse();
+            const actualIndex = messages.length - 1 - index;
             const isMe = item.sender_id === currentUserId;
+            const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
+            const showSeparator = shouldShowTimeSeparator(item, prev);
             return (
-              <View style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
-                <View style={{
-                  maxWidth: '70%',
-                  backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}>
-                  <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
-                </View>
-                <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{formatTime(item.created_at)}</Text>
-              </View>
+              <>
+                <MessageBubble item={item} isMe={isMe} />
+                {showSeparator && (
+                  <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
+                    {formatSeparatorTime(item.created_at)}
+                  </Text>
+                )}
+              </>
             );
           }}
         />

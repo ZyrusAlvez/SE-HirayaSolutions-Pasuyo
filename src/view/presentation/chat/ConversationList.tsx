@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
 import { Conversation } from '@/controllers/chatController';
+import VerificationBadge from '@/view/components/VerificationBadge';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -13,6 +14,7 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   loading: boolean;
+  fullWidth?: boolean;
 };
 
 function timeAgo(dateStr: string) {
@@ -25,14 +27,14 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading }: Props) {
+export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading, fullWidth }: Props) {
   const getOther = (c: Conversation) =>
     c.user1_id === currentUserId
-      ? { name: c.user2_name, avatar: c.user2_avatar }
-      : { name: c.user1_name, avatar: c.user1_avatar };
+      ? { name: c.user2_name, avatar: c.user2_avatar, verified: c.user2_verified }
+      : { name: c.user1_name, avatar: c.user1_avatar, verified: c.user1_verified };
 
   return (
-    <View style={{ width: 320, borderRightWidth: 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
+    <View style={{ width: fullWidth ? '100%' : 320, borderRightWidth: fullWidth ? 0 : 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
       <Text style={{ padding: 16, fontWeight: '700', fontSize: 18, color: '#111827' }}>Messages</Text>
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -61,14 +63,12 @@ export default function ConversationList({ conversations, currentUserId, selecte
                   borderLeftColor: '#3B82F6',
                 }}
               >
-                <View>
+                <View style={{ width: 40, marginRight: 12 }}>
                   <Image
                     source={getAvatarSource(other.avatar)}
-                    style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
+                    style={{ width: 40, height: 40, borderRadius: 20 }}
                   />
-                  {unread && (
-                    <View style={{ position: 'absolute', top: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#3B82F6', borderWidth: 1.5, borderColor: '#F9FAFB' }} />
-                  )}
+                  <VerificationBadge status={other.verified ? 'verified' : 'not_verified'} variant="icon" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

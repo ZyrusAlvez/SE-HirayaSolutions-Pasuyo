@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Platform, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
 import { loadConversations, loadMessages, handleSendMessage, startConversation, Conversation, Message } from '@/controllers/chatController';
@@ -10,20 +10,27 @@ import NavBar from '@/view/components/NavBar';
 import ConversationList from '@/view/presentation/chat/ConversationList';
 import ChatThread from '@/view/presentation/chat/ChatThread';
 
+const MOBILE_BREAKPOINT = 600;
+
 export default function ChatScreen() {
   const { avatarUrl, verificationStatus } = useProfile();
   const { userId: targetUserId } = useLocalSearchParams<{ userId?: string }>();
+  const { width } = useWindowDimensions();
+  const isMobile = width < MOBILE_BREAKPOINT;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUserId, setCurrentUserId] = useState('');
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const user = session.user;
       setCurrentUserId(user.id);
 
       if (targetUserId) {
@@ -40,11 +47,28 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!selectedId) return;
     setMessagesLoading(true);
+    setMessages([]);
+    setHasMore(false);
     loadMessages(selectedId).then((result) => {
-      if (result.success) setMessages(result.data);
+      if (result.success) {
+        setMessages(result.data.messages);
+        setHasMore(result.data.hasMore);
+      }
       setMessagesLoading(false);
     });
   }, [selectedId]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!selectedId || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    loadMessages(selectedId, messages.length).then((result) => {
+      if (result.success) {
+        setMessages((prev) => [...result.data.messages, ...prev]);
+        setHasMore(result.data.hasMore);
+      }
+      setLoadingMore(false);
+    });
+  }, [selectedId, loadingMore, hasMore, messages.length]);
 
   useEffect(() => {
     const channel = subscribeToMessages((payload) => {
@@ -72,25 +96,37 @@ export default function ChatScreen() {
       : { name: selectedConvo.user1_name, avatar: selectedConvo.user1_avatar }
     : null;
 
+  const showThread = isMobile ? !!selectedId : true;
+  const showList = isMobile ? !selectedId : true;
+
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <Header avatarUrl={avatarUrl} verificationStatus={verificationStatus} />
-      <View style={{ flex: 1, flexDirection: 'row' }}>
-        <ConversationList
-          conversations={conversations}
-          currentUserId={currentUserId}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          loading={loading}
-        />
-        <ChatThread
-          messages={messages}
-          currentUserId={currentUserId}
-          otherUser={otherUser}
-          loading={messagesLoading}
-          selected={!!selectedId}
-          onSend={(content) => { if (selectedId) handleSendMessage(selectedId, currentUserId, content); }}
-        />
+      <View style={[{ flex: 1, flexDirection: 'row' }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
+        {showList && (
+          <ConversationList
+            conversations={conversations}
+            currentUserId={currentUserId}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            loading={loading}
+            fullWidth={isMobile}
+          />
+        )}
+        {showThread && (
+          <ChatThread
+            messages={messages}
+            currentUserId={currentUserId}
+            otherUser={otherUser}
+            loading={messagesLoading}
+            selected={!!selectedId}
+            onSend={(content) => { if (selectedId) handleSendMessage(selectedId, currentUserId, content); }}
+            onBack={isMobile ? () => setSelectedId(null) : undefined}
+            onLoadMore={handleLoadMore}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+          />
+        )}
       </View>
       <NavBar />
     </View>
