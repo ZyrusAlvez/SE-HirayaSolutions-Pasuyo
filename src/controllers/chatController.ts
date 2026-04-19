@@ -15,8 +15,11 @@ export const loadConversations = async (): Promise<Result<Conversation[]>> => {
 
     const conversations: Conversation[] = await Promise.all(
       (data ?? []).map(async (c) => {
-        const { data: msg } = await chatModel.getLastMessage(c.id);
-        return { ...c, last_message: msg?.content ?? '' } as Conversation;
+        const [{ data: msg }, { count }] = await Promise.all([
+          chatModel.getLastMessage(c.id),
+          chatModel.getUnreadCount(c.id, user.id),
+        ]);
+        return { ...c, last_message: msg?.content ?? '', unread_count: count ?? 0 } as Conversation;
       })
     );
 

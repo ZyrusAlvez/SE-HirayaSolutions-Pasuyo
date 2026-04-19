@@ -42,6 +42,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
           renderItem={({ item }) => {
             const other = getOther(item);
             const selected = item.id === selectedId;
+            const unread = (item.unread_count ?? 0) > 0;
             return (
               <Pressable
                 onPress={() => onSelect(item.id)}
@@ -50,25 +51,30 @@ export default function ConversationList({ conversations, currentUserId, selecte
                   alignItems: 'center',
                   padding: 12,
                   paddingHorizontal: 16,
-                  backgroundColor: selected ? '#EFF6FF' : 'transparent',
+                  backgroundColor: selected ? '#EFF6FF' : unread ? '#F0F9FF' : 'transparent',
                   borderLeftWidth: selected ? 3 : 0,
                   borderLeftColor: '#3B82F6',
                 }}
               >
-                <Image
-                  source={other.avatar ? { uri: other.avatar } : DEFAULT_AVATAR}
-                  style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
-                />
+                <View>
+                  <Image
+                    source={other.avatar ? { uri: other.avatar } : DEFAULT_AVATAR}
+                    style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
+                  />
+                  {unread && (
+                    <View style={{ position: 'absolute', top: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#3B82F6', borderWidth: 1.5, borderColor: '#F9FAFB' }} />
+                  )}
+                </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ fontWeight: '600', fontSize: 14, color: '#111827' }} numberOfLines={1}>
+                    <Text style={{ fontWeight: unread ? '700' : '600', fontSize: 14, color: '#111827' }} numberOfLines={1}>
                       {other.name ?? 'Unknown'}
                     </Text>
-                    <Text style={{ fontSize: 11, color: '#9CA3AF' }}>
+                    <Text style={{ fontSize: 11, color: unread ? '#3B82F6' : '#9CA3AF', fontWeight: unread ? '600' : '400' }}>
                       {timeAgo(item.last_message_at)}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }} numberOfLines={1}>
+                  <Text style={{ fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400', marginTop: 2 }} numberOfLines={1}>
                     {item.last_message || 'No messages yet'}
                   </Text>
                 </View>

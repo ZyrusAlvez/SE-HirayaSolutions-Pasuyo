@@ -13,6 +13,7 @@ export type Conversation = {
   user2_avatar: string | null;
   user2_verified: boolean;
   last_message?: string;
+  unread_count?: number;
 };
 
 export const getUser = () => supabase.auth.getUser();
@@ -32,6 +33,14 @@ export const getLastMessage = (conversationId: string) =>
     .order('created_at', { ascending: false })
     .limit(1)
     .single();
+
+export const getUnreadCount = (conversationId: string, userId: string) =>
+  supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('conversation_id', conversationId)
+    .eq('is_read', false)
+    .neq('sender_id', userId);
 
 export const getMessages = (conversationId: string) =>
   supabase
