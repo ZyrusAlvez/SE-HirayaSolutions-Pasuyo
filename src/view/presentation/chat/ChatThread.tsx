@@ -23,6 +23,38 @@ function formatTime(dateStr: string) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+const FIVE_MINUTES = 5 * 60 * 1000;
+
+function shouldShowTime(current: Message, previous: Message | undefined) {
+  if (!previous) return true;
+  return new Date(current.created_at).getTime() - new Date(previous.created_at).getTime() > FIVE_MINUTES;
+}
+
+function MessageBubble({ item, isMe, showTime }: { item: Message; isMe: boolean; showTime: boolean }) {
+  const [revealed, setRevealed] = useState(false);
+  const timeVisible = showTime || revealed;
+
+  return (
+    <Pressable
+      onPress={() => !showTime && setRevealed((v) => !v)}
+      style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: showTime ? 8 : 4 }}
+    >
+      <View style={{
+        maxWidth: '70%',
+        backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+      }}>
+        <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
+      </View>
+      {timeVisible && (
+        <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{formatTime(item.created_at)}</Text>
+      )}
+    </Pressable>
+  );
+}
+
 export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack }: Props) {
   const [input, setInput] = useState('');
 
@@ -65,22 +97,11 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           data={messages}
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 16 }}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const isMe = item.sender_id === currentUserId;
-            return (
-              <View style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
-                <View style={{
-                  maxWidth: '70%',
-                  backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
-                  borderRadius: 12,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}>
-                  <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
-                </View>
-                <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{formatTime(item.created_at)}</Text>
-              </View>
-            );
+            const prev = index > 0 ? messages[index - 1] : undefined;
+            const showTime = shouldShowTime(item, prev);
+            return <MessageBubble item={item} isMe={isMe} showTime={showTime} />;
           }}
         />
       )}
