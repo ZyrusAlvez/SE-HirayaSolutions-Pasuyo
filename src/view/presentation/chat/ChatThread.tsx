@@ -25,19 +25,29 @@ function formatTime(dateStr: string) {
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
-function shouldShowTime(current: Message, previous: Message | undefined) {
+function shouldShowTimeSeparator(current: Message, previous: Message | undefined) {
   if (!previous) return true;
   return new Date(current.created_at).getTime() - new Date(previous.created_at).getTime() > FIVE_MINUTES;
 }
 
-function MessageBubble({ item, isMe, showTime }: { item: Message; isMe: boolean; showTime: boolean }) {
+function formatSeparatorTime(dateStr: string) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 0) return time;
+  if (diffDays === 1) return `Yesterday ${time}`;
+  if (diffDays < 7) return `${d.toLocaleDateString([], { weekday: 'short' })} ${time}`;
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
+}
+
+function MessageBubble({ item, isMe }: { item: Message; isMe: boolean }) {
   const [revealed, setRevealed] = useState(false);
-  const timeVisible = showTime || revealed;
 
   return (
     <Pressable
-      onPress={() => !showTime && setRevealed((v) => !v)}
-      style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: showTime ? 8 : 4 }}
+      onPress={() => setRevealed((v) => !v)}
+      style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 4 }}
     >
       <View style={{
         maxWidth: '70%',
@@ -48,7 +58,7 @@ function MessageBubble({ item, isMe, showTime }: { item: Message; isMe: boolean;
       }}>
         <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
       </View>
-      {timeVisible && (
+      {revealed && (
         <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{formatTime(item.created_at)}</Text>
       )}
     </Pressable>
@@ -100,8 +110,17 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           renderItem={({ item, index }) => {
             const isMe = item.sender_id === currentUserId;
             const prev = index > 0 ? messages[index - 1] : undefined;
-            const showTime = shouldShowTime(item, prev);
-            return <MessageBubble item={item} isMe={isMe} showTime={showTime} />;
+            const showSeparator = shouldShowTimeSeparator(item, prev);
+            return (
+              <>
+                {showSeparator && (
+                  <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
+                    {formatSeparatorTime(item.created_at)}
+                  </Text>
+                )}
+                <MessageBubble item={item} isMe={isMe} />
+              </>
+            );
           }}
         />
       )}
