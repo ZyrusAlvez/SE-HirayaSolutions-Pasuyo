@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Platform, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
@@ -10,7 +10,7 @@ import NavBar from '@/view/components/NavBar';
 import ConversationList from '@/view/presentation/chat/ConversationList';
 import ChatThread from '@/view/presentation/chat/ChatThread';
 
-const MOBILE_BREAKPOINT = 768;
+const MOBILE_BREAKPOINT = 600;
 
 export default function ChatScreen() {
   const { avatarUrl, verificationStatus } = useProfile();
@@ -23,6 +23,8 @@ export default function ChatScreen() {
   const [currentUserId, setCurrentUserId] = useState('');
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -44,11 +46,28 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!selectedId) return;
     setMessagesLoading(true);
+    setMessages([]);
+    setHasMore(false);
     loadMessages(selectedId).then((result) => {
-      if (result.success) setMessages(result.data);
+      if (result.success) {
+        setMessages(result.data.messages);
+        setHasMore(result.data.hasMore);
+      }
       setMessagesLoading(false);
     });
   }, [selectedId]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!selectedId || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    loadMessages(selectedId, messages.length).then((result) => {
+      if (result.success) {
+        setMessages((prev) => [...result.data.messages, ...prev]);
+        setHasMore(result.data.hasMore);
+      }
+      setLoadingMore(false);
+    });
+  }, [selectedId, loadingMore, hasMore, messages.length]);
 
   useEffect(() => {
     const channel = subscribeToMessages((payload) => {
@@ -102,6 +121,9 @@ export default function ChatScreen() {
             selected={!!selectedId}
             onSend={(content) => { if (selectedId) handleSendMessage(selectedId, currentUserId, content); }}
             onBack={isMobile ? () => setSelectedId(null) : undefined}
+            onLoadMore={handleLoadMore}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
           />
         )}
       </View>

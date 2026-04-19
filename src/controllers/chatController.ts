@@ -47,11 +47,12 @@ export const loadConversations = async (userId: string): Promise<Result<Conversa
   }
 };
 
-export const loadMessages = async (conversationId: string): Promise<Result<Message[]>> => {
+export const loadMessages = async (conversationId: string, offset = 0): Promise<Result<{ messages: Message[]; hasMore: boolean }>> => {
   try {
-    const { data, error } = await chatModel.getMessages(conversationId);
+    const { data, error } = await chatModel.getMessages(conversationId, offset);
     if (error) return { success: false, error: 'Failed to load messages' };
-    return { success: true, data: (data ?? []) as Message[] };
+    const msgs = ((data ?? []) as Message[]).reverse();
+    return { success: true, data: { messages: msgs, hasMore: (data ?? []).length === 30 } };
   } catch {
     return { success: false, error: 'Something went wrong' };
   }

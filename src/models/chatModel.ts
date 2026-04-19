@@ -47,12 +47,15 @@ export const getUnreadCount = (conversationId: string, userId: string) =>
     .eq('is_read', false)
     .neq('sender_id', userId);
 
-export const getMessages = (conversationId: string) =>
+const PAGE_SIZE = 30;
+
+export const getMessages = (conversationId: string, offset = 0) =>
   supabase
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
 
 export const sendMessage = (conversationId: string, senderId: string, content: string) =>
   supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content });

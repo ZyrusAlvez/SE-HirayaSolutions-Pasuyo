@@ -16,6 +16,9 @@ type Props = {
   selected: boolean;
   onSend: (content: string) => void;
   onBack?: () => void;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  hasMore?: boolean;
 };
 
 function formatTime(dateStr: string) {
@@ -65,7 +68,7 @@ function MessageBubble({ item, isMe }: { item: Message; isMe: boolean }) {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore }: Props) {
   const [input, setInput] = useState('');
 
   if (!selected) {
@@ -104,21 +107,27 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
         </View>
       ) : (
         <FlatList
-          data={messages}
+          data={[...messages].reverse()}
+          inverted
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 16 }}
+          onEndReached={hasMore ? onLoadMore : undefined}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 12 }} color="#6B7280" /> : null}
           renderItem={({ item, index }) => {
+            const reversed = [...messages].reverse();
+            const actualIndex = messages.length - 1 - index;
             const isMe = item.sender_id === currentUserId;
-            const prev = index > 0 ? messages[index - 1] : undefined;
+            const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
             return (
               <>
+                <MessageBubble item={item} isMe={isMe} />
                 {showSeparator && (
                   <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
                     {formatSeparatorTime(item.created_at)}
                   </Text>
                 )}
-                <MessageBubble item={item} isMe={isMe} />
               </>
             );
           }}
