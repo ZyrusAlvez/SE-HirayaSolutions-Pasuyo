@@ -1,5 +1,6 @@
 import * as profileModel from '@/models/profileModel';
 import type { VerificationStatus, ProfileData, VerifyFormState } from '@/models/profileModel';
+import { getDisplayProfile } from '@/models/profileModel';
 import * as ImagePicker from 'expo-image-picker';
 
 export type { VerificationStatus, ProfileData, VerifyFormState };
@@ -10,35 +11,30 @@ export const getProfile = async (): Promise<Result<ProfileData | null>> => {
   const { data: { user } } = await profileModel.getUser();
   if (!user) return { success: true, data: null };
 
-  const name = user.user_metadata.name || user.user_metadata.full_name || '';
-  const rawUrl = user.user_metadata.custom_avatar_url || user.user_metadata.avatar_url;
-  const avatarUrl = rawUrl && rawUrl !== 'default' ? rawUrl : null;
-
+  const display = await getDisplayProfile(user.id);
   const { data: profile } = await profileModel.getProfile(user.id);
 
-  let displayName = name;
-  let verificationStatus: VerificationStatus = 'not_verified';
   let profileInfo: Partial<ProfileData> = {};
-
-  if (profile) {
-    if (profile.verified) {
-      verificationStatus = 'verified';
-      displayName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
-      profileInfo = {
-        gender: profile.gender,
-        date_of_birth: profile.date_of_birth,
-        address_province: profile.address_province,
-        address_city: profile.address_city,
-        address_barangay: profile.address_barangay,
-      };
-    } else if (profile.pending_verification) {
-      verificationStatus = 'pending';
-    }
+  if (profile?.verified) {
+    profileInfo = {
+      gender: profile.gender,
+      date_of_birth: profile.date_of_birth,
+      address_province: profile.address_province,
+      address_city: profile.address_city,
+      address_barangay: profile.address_barangay,
+    };
   }
 
   return {
     success: true,
-    data: { id: user.id, displayName, email: user.email || '', avatarUrl, verificationStatus, ...profileInfo },
+    data: {
+      id: user.id,
+      displayName: display.name,
+      email: user.email || '',
+      avatarUrl: display.avatarUrl,
+      verificationStatus: display.verificationStatus,
+      ...profileInfo,
+    },
   };
 };
 

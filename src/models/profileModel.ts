@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase';
+import { supabase, supabaseAdmin } from '@/utils/supabase';
 import { Platform } from 'react-native';
 
 const VERIFICATION_BUCKET = 'verifications';
@@ -99,10 +99,54 @@ export async function postVerificationFile(uri: string, path: string): Promise<s
 
 export const getUser = () => supabase.auth.getUser();
 
+export type DisplayProfile = {
+  name: string;
+  avatarUrl: string | null;
+  verified: boolean;
+  verificationStatus: VerificationStatus;
+};
+
+export const getDisplayProfile = async (userId: string): Promise<DisplayProfile> => {
+  const { data: profile } = await getProfile(userId);
+
+  const profileName = profile?.first_name || profile?.last_name
+    ? [profile.first_name, profile.last_name].filter(Boolean).join(' ')
+    : null;
+
+  const verificationStatus: VerificationStatus = profile?.verified
+    ? 'verified'
+    : profile?.pending_verification
+      ? 'pending'
+      : 'not_verified';
+
+  if (profileName) {
+    return {
+      name: profileName,
+      avatarUrl: profile?.avatar_url ?? null,
+      verified: profile?.verified ?? false,
+      verificationStatus,
+    };
+  }
+
+  if (supabaseAdmin) {
+    const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const meta = data?.user?.user_metadata;
+    const rawUrl = meta?.custom_avatar_url || meta?.avatar_url;
+    return {
+      name: meta?.name || meta?.full_name || 'Unknown',
+      avatarUrl: rawUrl && rawUrl !== 'default' ? rawUrl : null,
+      verified: false,
+      verificationStatus,
+    };
+  }
+
+  return { name: 'Unknown', avatarUrl: null, verified: false, verificationStatus: 'not_verified' };
+};
+
 export const getProfile = (userId: string) =>
   supabase
     .from('profiles')
-    .select('verified, pending_verification, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name')
+    .select('verified, pending_verification, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name, avatar_url')
     .eq('id', userId)
     .single();
 

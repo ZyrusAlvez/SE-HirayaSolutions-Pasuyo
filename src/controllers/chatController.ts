@@ -24,16 +24,16 @@ export const loadConversations = async (userId: string): Promise<Result<Conversa
         const [{ data: msg }, { count }, p1, p2] = await Promise.all([
           chatModel.getLastMessage(c.id),
           chatModel.getUnreadCount(c.id, userId),
-          chatModel.getProfileById(c.user1_id),
-          chatModel.getProfileById(c.user2_id),
+          chatModel.getDisplayProfile(c.user1_id),
+          chatModel.getDisplayProfile(c.user2_id),
         ]);
         return {
           ...c,
           user1_name: p1.name,
-          user1_avatar: p1.avatar_url,
+          user1_avatar: p1.avatarUrl,
           user1_verified: p1.verified,
           user2_name: p2.name,
-          user2_avatar: p2.avatar_url,
+          user2_avatar: p2.avatarUrl,
           user2_verified: p2.verified,
           last_message: msg?.content ?? '',
           unread_count: count ?? 0,
