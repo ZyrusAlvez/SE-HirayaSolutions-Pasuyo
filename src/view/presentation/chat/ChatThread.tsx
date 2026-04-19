@@ -1,7 +1,11 @@
-import { View, Text, FlatList, Image, ActivityIndicator } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
 import { Message } from '@/controllers/chatController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
+
+const getAvatarSource = (avatar: string | null | undefined) =>
+  avatar && avatar !== 'null' && avatar !== 'default' && avatar.trim() ? { uri: avatar } : DEFAULT_AVATAR;
 
 type Props = {
   messages: Message[];
@@ -9,6 +13,7 @@ type Props = {
   otherUser: { name: string; avatar: string | null } | null;
   loading: boolean;
   selected: boolean;
+  onSend: (content: string) => void;
 };
 
 function formatTime(dateStr: string) {
@@ -16,7 +21,9 @@ function formatTime(dateStr: string) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend }: Props) {
+  const [input, setInput] = useState('');
+
   if (!selected) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' }}>
@@ -25,11 +32,17 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
     );
   }
 
+  const send = () => {
+    if (!input.trim()) return;
+    onSend(input);
+    setInput('');
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
         <Image
-          source={otherUser?.avatar ? { uri: otherUser.avatar } : DEFAULT_AVATAR}
+          source={getAvatarSource(otherUser?.avatar)}
           style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
         />
         <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
@@ -64,6 +77,37 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           }}
         />
       )}
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          onSubmitEditing={send}
+          placeholder="Type a message..."
+          placeholderTextColor="#9CA3AF"
+          style={{
+            flex: 1,
+            backgroundColor: '#F3F4F6',
+            borderRadius: 20,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            fontSize: 14,
+            color: '#111827',
+            outlineStyle: 'none',
+          }}
+        />
+        <Pressable
+          onPress={send}
+          style={{
+            marginLeft: 8,
+            backgroundColor: input.trim() ? '#3B82F6' : '#D1D5DB',
+            borderRadius: 20,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 14 }}>Send</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

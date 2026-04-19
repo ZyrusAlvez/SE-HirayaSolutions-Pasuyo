@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
-import { loadConversations, loadMessages, Conversation, Message } from '@/controllers/chatController';
+import { loadConversations, loadMessages, handleSendMessage, startConversation, Conversation, Message } from '@/controllers/chatController';
 import { subscribeToMessages } from '@/models/chatModel';
 import { supabase } from '@/utils/supabase';
 import Header from '@/view/components/Header';
@@ -11,6 +12,7 @@ import ChatThread from '@/view/presentation/chat/ChatThread';
 
 export default function ChatScreen() {
   const { avatarUrl, verificationStatus } = useProfile();
+  const { userId: targetUserId } = useLocalSearchParams<{ userId?: string }>();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -24,7 +26,12 @@ export default function ChatScreen() {
       if (!user) return;
       setCurrentUserId(user.id);
 
-      const result = await loadConversations();
+      if (targetUserId) {
+        const convoResult = await startConversation(user.id, targetUserId);
+        if (convoResult.success) setSelectedId(convoResult.data);
+      }
+
+      const result = await loadConversations(user.id);
       if (result.success) setConversations(result.data);
       setLoading(false);
     })();
@@ -82,6 +89,7 @@ export default function ChatScreen() {
           otherUser={otherUser}
           loading={messagesLoading}
           selected={!!selectedId}
+          onSend={(content) => { if (selectedId) handleSendMessage(selectedId, currentUserId, content); }}
         />
       </View>
       <NavBar />

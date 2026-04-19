@@ -4,6 +4,9 @@ import { Conversation } from '@/controllers/chatController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
+const getAvatarSource = (avatar: string | null | undefined) =>
+  avatar && avatar !== 'null' && avatar !== 'default' && avatar.trim() ? { uri: avatar } : DEFAULT_AVATAR;
+
 type Props = {
   conversations: Conversation[];
   currentUserId: string;
@@ -60,7 +63,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
               >
                 <View>
                   <Image
-                    source={other.avatar ? { uri: other.avatar } : DEFAULT_AVATAR}
+                    source={getAvatarSource(other.avatar)}
                     style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
                   />
                   {unread && (

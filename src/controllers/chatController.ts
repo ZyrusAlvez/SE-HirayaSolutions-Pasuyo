@@ -14,25 +14,34 @@ export type Message = {
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
 
-export const loadConversations = async (): Promise<Result<Conversation[]>> => {
+export const loadConversations = async (userId: string): Promise<Result<Conversation[]>> => {
   try {
-    const { data: { user } } = await chatModel.getUser();
-    if (!user) return { success: false, error: 'Not authenticated' };
-
-    const { data, error } = await chatModel.getConversations(user.id);
+    const { data, error } = await chatModel.getConversations(userId);
     if (error) return { success: false, error: 'Failed to load conversations' };
 
     const conversations: Conversation[] = await Promise.all(
       (data ?? []).map(async (c) => {
-        const [{ data: msg }, { count }] = await Promise.all([
+        const [{ data: msg }, { count }, p1, p2] = await Promise.all([
           chatModel.getLastMessage(c.id),
-          chatModel.getUnreadCount(c.id, user.id),
+          chatModel.getUnreadCount(c.id, userId),
+          chatModel.getProfileById(c.user1_id),
+          chatModel.getProfileById(c.user2_id),
         ]);
-        return { ...c, last_message: msg?.content ?? '', unread_count: count ?? 0 } as Conversation;
+        return {
+          ...c,
+          user1_name: p1.name,
+          user1_avatar: p1.avatar_url,
+          user1_verified: p1.verified,
+          user2_name: p2.name,
+          user2_avatar: p2.avatar_url,
+          user2_verified: p2.verified,
+          last_message: msg?.content ?? '',
+          unread_count: count ?? 0,
+        } as Conversation;
       })
     );
 
-      return { success: true, data: conversations };
+    return { success: true, data: conversations };
   } catch {
     return { success: false, error: 'Something went wrong' };
   }
@@ -43,6 +52,36 @@ export const loadMessages = async (conversationId: string): Promise<Result<Messa
     const { data, error } = await chatModel.getMessages(conversationId);
     if (error) return { success: false, error: 'Failed to load messages' };
     return { success: true, data: (data ?? []) as Message[] };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const handleSendMessage = async (
+  conversationId: string,
+  userId: string,
+  content: string,
+): Promise<Result<null>> => {
+  const trimmed = content.trim();
+  if (!trimmed) return { success: false, error: 'Message cannot be empty' };
+
+  try {
+    const { error } = await chatModel.sendMessage(conversationId, userId, trimmed);
+    if (error) return { success: false, error: 'Failed to send message' };
+
+    await chatModel.updateLastMessageAt(conversationId);
+    return { success: true, data: null };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const startConversation = async (userId: string, otherUserId: string): Promise<Result<string>> => {
+  try {
+    const { data, error } = await chatModel.getOrCreateConversation(userId, otherUserId);
+    if (error || !data) return { success: false, error: 'Failed to start conversation' };
+
+    return { success: true, data: data.id };
   } catch {
     return { success: false, error: 'Something went wrong' };
   }
