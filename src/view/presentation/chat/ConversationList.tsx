@@ -14,6 +14,7 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   loading: boolean;
+  fullWidth?: boolean;
 };
 
 function timeAgo(dateStr: string) {
@@ -26,14 +27,14 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading }: Props) {
+export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading, fullWidth }: Props) {
   const getOther = (c: Conversation) =>
     c.user1_id === currentUserId
       ? { name: c.user2_name, avatar: c.user2_avatar, verified: c.user2_verified }
       : { name: c.user1_name, avatar: c.user1_avatar, verified: c.user1_verified };
 
   return (
-    <View style={{ width: 320, borderRightWidth: 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
+    <View style={{ width: fullWidth ? '100%' : 320, borderRightWidth: fullWidth ? 0 : 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
       <Text style={{ padding: 16, fontWeight: '700', fontSize: 18, color: '#111827' }}>Messages</Text>
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

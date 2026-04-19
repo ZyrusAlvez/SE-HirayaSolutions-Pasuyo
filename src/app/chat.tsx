@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
 import { loadConversations, loadMessages, handleSendMessage, startConversation, Conversation, Message } from '@/controllers/chatController';
@@ -10,9 +10,13 @@ import NavBar from '@/view/components/NavBar';
 import ConversationList from '@/view/presentation/chat/ConversationList';
 import ChatThread from '@/view/presentation/chat/ChatThread';
 
+const MOBILE_BREAKPOINT = 768;
+
 export default function ChatScreen() {
   const { avatarUrl, verificationStatus } = useProfile();
   const { userId: targetUserId } = useLocalSearchParams<{ userId?: string }>();
+  const { width } = useWindowDimensions();
+  const isMobile = width < MOBILE_BREAKPOINT;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -72,25 +76,34 @@ export default function ChatScreen() {
       : { name: selectedConvo.user1_name, avatar: selectedConvo.user1_avatar }
     : null;
 
+  const showThread = isMobile ? !!selectedId : true;
+  const showList = isMobile ? !selectedId : true;
+
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <Header avatarUrl={avatarUrl} verificationStatus={verificationStatus} />
       <View style={{ flex: 1, flexDirection: 'row' }}>
-        <ConversationList
-          conversations={conversations}
-          currentUserId={currentUserId}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          loading={loading}
-        />
-        <ChatThread
-          messages={messages}
-          currentUserId={currentUserId}
-          otherUser={otherUser}
-          loading={messagesLoading}
-          selected={!!selectedId}
-          onSend={(content) => { if (selectedId) handleSendMessage(selectedId, currentUserId, content); }}
-        />
+        {showList && (
+          <ConversationList
+            conversations={conversations}
+            currentUserId={currentUserId}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            loading={loading}
+            fullWidth={isMobile}
+          />
+        )}
+        {showThread && (
+          <ChatThread
+            messages={messages}
+            currentUserId={currentUserId}
+            otherUser={otherUser}
+            loading={messagesLoading}
+            selected={!!selectedId}
+            onSend={(content) => { if (selectedId) handleSendMessage(selectedId, currentUserId, content); }}
+            onBack={isMobile ? () => setSelectedId(null) : undefined}
+          />
+        )}
       </View>
       <NavBar />
     </View>

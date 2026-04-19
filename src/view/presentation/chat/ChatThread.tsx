@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Message } from '@/controllers/chatController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -14,6 +15,7 @@ type Props = {
   loading: boolean;
   selected: boolean;
   onSend: (content: string) => void;
+  onBack?: () => void;
 };
 
 function formatTime(dateStr: string) {
@@ -21,7 +23,7 @@ function formatTime(dateStr: string) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack }: Props) {
   const [input, setInput] = useState('');
 
   if (!selected) {
@@ -41,6 +43,11 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
+        {onBack && (
+          <Pressable onPress={onBack} style={{ marginRight: 8 }}>
+            <Ionicons name="arrow-back" size={24} color="#111827" />
+          </Pressable>
+        )}
         <Image
           source={getAvatarSource(otherUser?.avatar)}
           style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
