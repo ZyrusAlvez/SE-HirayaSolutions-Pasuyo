@@ -3,6 +3,15 @@ import type { Conversation } from '@/models/chatModel';
 
 export type { Conversation };
 
+export type Message = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+};
+
 type Result<T> = { success: true; data: T } | { success: false; error: string };
 
 export const loadConversations = async (): Promise<Result<Conversation[]>> => {
@@ -23,7 +32,17 @@ export const loadConversations = async (): Promise<Result<Conversation[]>> => {
       })
     );
 
-    return { success: true, data: conversations };
+      return { success: true, data: conversations };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const loadMessages = async (conversationId: string): Promise<Result<Message[]>> => {
+  try {
+    const { data, error } = await chatModel.getMessages(conversationId);
+    if (error) return { success: false, error: 'Failed to load messages' };
+    return { success: true, data: (data ?? []) as Message[] };
   } catch {
     return { success: false, error: 'Something went wrong' };
   }
