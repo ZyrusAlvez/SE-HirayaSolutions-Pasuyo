@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated, Platform } from 'react-native';
+import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Linking from 'expo-linking';
 import { Message, MessageStatus } from '@/controllers/chatController';
 import ImageViewer from '@/view/components/ImageViewer';
+import FileBubble from '@/view/presentation/chat/FileBubble';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -81,46 +81,6 @@ function getStatusLabel(status?: MessageStatus) {
   if (status === 'seen') return 'Seen';
   if (status === 'sent') return 'Sent';
   return null;
-}
-
-function FileBubble({ item, isMe, onImagePress }: { item: Message; isMe: boolean; onImagePress?: () => void }) {
-  const isImage = item.file_type?.startsWith('image/');
-
-  const handleDownload = () => {
-    if (!item.file_url) return;
-    if (Platform.OS === 'web') {
-      fetch(item.file_url).then(r => r.blob()).then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = item.file_name || 'file';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
-    } else {
-      Linking.openURL(item.file_url);
-    }
-  };
-
-  if (isImage) {
-    return (
-      <Pressable onPress={onImagePress}>
-        <Image source={{ uri: item.file_url! }} style={{ width: 200, height: 200, borderRadius: 12 }} resizeMode="cover" />
-      </Pressable>
-    );
-  }
-
-  return (
-    <Pressable
-      onPress={handleDownload}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: isMe ? '#2563EB' : '#E5E7EB', borderRadius: 10, padding: 10, maxWidth: 220 }}
-    >
-      <Ionicons name="document-outline" size={20} color={isMe ? '#FFFFFF' : '#374151'} />
-      <Text numberOfLines={1} style={{ flex: 1, fontSize: 13, color: isMe ? '#FFFFFF' : '#374151' }}>{item.file_name ?? 'File'}</Text>
-    </Pressable>
-  );
 }
 
 function MessageBubble({ item, isMe, otherAvatar, isLastOwn, onImagePress }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean; onImagePress?: () => void }) {
