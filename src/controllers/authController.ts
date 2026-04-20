@@ -1,12 +1,16 @@
 import * as authModel from '../models/authModel';
 
+export const passwordChecks = [
+  { test: (p: string) => p.length >= 8, label: 'At least 8 characters', error: 'Password must be at least 8 characters' },
+  { test: (p: string) => /[A-Z]/.test(p), label: 'Has uppercase letter (A-Z)', error: 'Password must contain an uppercase letter' },
+  { test: (p: string) => /[a-z]/.test(p), label: 'Has lowercase letter (a-z)', error: 'Password must contain a lowercase letter' },
+  { test: (p: string) => /[0-9]/.test(p), label: 'Has a number (0-9)', error: 'Password must contain a number' },
+  { test: (p: string) => /[^A-Za-z0-9]/.test(p), label: 'Has special character (!@#$)', error: 'Password must contain a special character' },
+];
+
 const validatePassword = (password: string): string | null => {
-  if (password.length < 8) return 'Password must be at least 8 characters';
-  if (!/[A-Z]/.test(password)) return 'Password must contain an uppercase letter';
-  if (!/[a-z]/.test(password)) return 'Password must contain a lowercase letter';
-  if (!/[0-9]/.test(password)) return 'Password must contain a number';
-  if (!/[^A-Za-z0-9]/.test(password)) return 'Password must contain a special character';
-  return null;
+  const failed = passwordChecks.find(c => !c.test(password));
+  return failed ? failed.error : null;
 };
 
 type AuthResult = {
@@ -103,11 +107,11 @@ export const updatePassword = async (password: string, confirmPassword: string):
   try {
     const { error } = await authModel.updatePassword(password);
     if (error) {
-      await authModel.signOut();
-      const msg = error.message.toLowerCase().includes('same') || (error as any).status === 422
+      const isSamePassword = error.message.toLowerCase().includes('same') || (error as any).status === 422;
+      if (!isSamePassword) await authModel.signOut();
+      return { success: false, error: isSamePassword
         ? 'New password must be different from your current password'
-        : 'Failed to update password';
-      return { success: false, error: msg };
+        : 'Failed to update password' };
     }
     return { success: true, error: '' };
   } catch {
