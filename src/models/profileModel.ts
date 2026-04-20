@@ -151,7 +151,7 @@ export const getDisplayProfile = async (userId: string): Promise<DisplayProfile>
 export const getProfile = (userId: string) =>
   supabase
     .from('profiles')
-    .select('verified, pending_verification, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name, avatar_url')
+    .select('verified, pending_verification, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name, avatar_url, last_seen')
     .eq('id', userId)
     .single();
 

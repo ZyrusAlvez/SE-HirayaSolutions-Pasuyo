@@ -4,6 +4,8 @@ import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
 import { loadConversations, loadMessages, handleSendMessage, markAsRead, startConversation, Conversation, Message } from '@/controllers/chatController';
 import { subscribeToMessages, subscribeToTyping, broadcastTyping } from '@/models/chatModel';
+import { getLastSeen } from '@/models/presenceModel';
+import { usePresence } from '@/context/PresenceContext';
 import { supabase } from '@/utils/supabase';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
@@ -14,6 +16,7 @@ const MOBILE_BREAKPOINT = 600;
 
 export default function ChatScreen() {
   const { avatarUrl, verificationStatus } = useProfile();
+  const { onlineUsers } = usePresence();
   const { userId: targetUserId } = useLocalSearchParams<{ userId?: string }>();
   const { width } = useWindowDimensions();
   const isMobile = width < MOBILE_BREAKPOINT;
@@ -27,6 +30,7 @@ export default function ChatScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
   const [typingConvos, setTypingConvos] = useState<Set<string>>(new Set());
+  const [otherLastSeen, setOtherLastSeen] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const typingConvoTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
   const lastTypingBroadcast = useRef(0);
@@ -215,11 +219,21 @@ export default function ChatScreen() {
   }, [selectedId, currentUserId]);
 
   const selectedConvo = conversations.find((c) => c.id === selectedId);
+  const otherUserId = selectedConvo
+    ? selectedConvo.user1_id === currentUserId ? selectedConvo.user2_id : selectedConvo.user1_id
+    : null;
   const otherUser = selectedConvo
     ? selectedConvo.user1_id === currentUserId
       ? { name: selectedConvo.user2_name, avatar: selectedConvo.user2_avatar }
       : { name: selectedConvo.user1_name, avatar: selectedConvo.user1_avatar }
     : null;
+  const otherIsOnline = otherUserId ? onlineUsers.has(otherUserId) : false;
+
+  // Fetch last_seen when selecting a conversation (only if offline)
+  useEffect(() => {
+    if (!otherUserId || otherIsOnline) { setOtherLastSeen(null); return; }
+    getLastSeen(otherUserId).then(setOtherLastSeen);
+  }, [otherUserId, otherIsOnline]);
 
   const showThread = isMobile ? !!selectedId : true;
   const showList = isMobile ? !selectedId : true;
@@ -253,6 +267,8 @@ export default function ChatScreen() {
             hasMore={hasMore}
             otherTyping={otherTyping}
             onTyping={handleTyping}
+            otherIsOnline={otherIsOnline}
+            otherLastSeen={otherLastSeen}
           />
         )}
       </View>

@@ -21,6 +21,8 @@ type Props = {
   hasMore?: boolean;
   otherTyping?: boolean;
   onTyping?: () => void;
+  otherIsOnline?: boolean;
+  otherLastSeen?: string | null;
 };
 
 function formatTime(dateStr: string) {
@@ -44,6 +46,18 @@ function formatSeparatorTime(dateStr: string) {
   if (diffDays === 1) return `Yesterday ${time}`;
   if (diffDays < 7) return `${d.toLocaleDateString([], { weekday: 'short' })} ${time}`;
   return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
+}
+
+function formatLastSeen(dateStr: string | null | undefined) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Active just now';
+  if (mins < 60) return `Active ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Active ${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `Active ${days}d ago`;
 }
 
 function StatusIndicator({ status, otherAvatar }: { status?: MessageStatus; otherAvatar?: string | null }) {
@@ -142,7 +156,7 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const [input, setInput] = useState('');
 
   if (!selected) {
@@ -169,11 +183,21 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
         )}
-        <Image
-          source={getAvatarSource(otherUser?.avatar)}
-          style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
-        />
-        <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
+        <View style={{ position: 'relative' }}>
+          <Image
+            source={getAvatarSource(otherUser?.avatar)}
+            style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
+          />
+          {otherIsOnline && (
+            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
+          )}
+        </View>
+        <View>
+          <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
+          <Text style={{ fontSize: 11, color: otherIsOnline ? '#22C55E' : '#9CA3AF', marginTop: 1 }}>
+            {otherIsOnline ? 'Active now' : formatLastSeen(otherLastSeen)}
+          </Text>
+        </View>
       </View>
       {loading ? (
         <ActivityIndicator style={{ flex: 1 }} color="#6B7280" />
