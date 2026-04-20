@@ -131,9 +131,19 @@ export default function ChatScreen() {
 
         if (msg.conversation_id === selId) {
           setMessages((prev) => [...prev, msg]);
+          // Clear typing indicator since they sent a message
+          setOtherTyping(false);
+          if (typingTimeoutRef.current) { clearTimeout(typingTimeoutRef.current); typingTimeoutRef.current = null; }
           // Auto mark as read + mark own messages as seen
           markAsRead(selId!, uid);
         }
+
+        // Clear typing for this conversation since a message was sent
+        setTypingConvos((prev) => {
+          const next = new Set(prev);
+          next.delete(msg.conversation_id);
+          return next;
+        });
 
         setConversations((prev) =>
           prev
