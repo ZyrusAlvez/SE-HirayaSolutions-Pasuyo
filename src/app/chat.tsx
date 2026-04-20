@@ -26,7 +26,9 @@ export default function ChatScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
+  const [typingConvos, setTypingConvos] = useState<Set<string>>(new Set());
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingConvoTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
   const lastTypingBroadcast = useRef(0);
 
   // Refs so realtime callbacks always have latest values
@@ -169,7 +171,7 @@ export default function ChatScreen() {
     return () => { supabase.removeChannel(channel); };
   }, [currentUserId]);
 
-  // Typing indicator subscription
+  // Typing indicator subscription for selected conversation (thread)
   useEffect(() => {
     if (!selectedId || !currentUserId) return;
     const channel = subscribeToTyping(selectedId, (userId) => {
@@ -183,6 +185,26 @@ export default function ChatScreen() {
       setOtherTyping(false);
     };
   }, [selectedId, currentUserId]);
+
+  // Typing indicator subscriptions for all conversations (list)
+  useEffect(() => {
+    if (!currentUserId || conversations.length === 0) return;
+    const channels = conversations.map((c) =>
+      subscribeToTyping(c.id, (userId) => {
+        if (userId === currentUserId) return;
+        setTypingConvos((prev) => new Set(prev).add(c.id));
+        if (typingConvoTimeouts.current[c.id]) clearTimeout(typingConvoTimeouts.current[c.id]);
+        typingConvoTimeouts.current[c.id] = setTimeout(() => {
+          setTypingConvos((prev) => {
+            const next = new Set(prev);
+            next.delete(c.id);
+            return next;
+          });
+        }, 3000);
+      })
+    );
+    return () => { channels.forEach((ch) => supabase.removeChannel(ch)); };
+  }, [currentUserId, conversations.length]);
 
   const handleTyping = useCallback(() => {
     if (!selectedId || !currentUserId) return;
@@ -214,6 +236,7 @@ export default function ChatScreen() {
             onSelect={setSelectedId}
             loading={loading}
             fullWidth={isMobile}
+            typingConvos={typingConvos}
           />
         )}
         {showThread && (
