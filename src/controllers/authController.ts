@@ -43,6 +43,9 @@ export const signup = async (
   if (pwError) return { success: false, error: pwError };
 
   try {
+    const { data: exists } = await authModel.checkEmailExists(email);
+    if (exists) return { success: false, error: 'This email is already registered. Please use a different email or log in.' };
+
     const { data, error } = await authModel.signUp(email, password, name);
     if (error || !data.user) return { success: false, error: 'Signup failed' };
     return { success: true, error: '' };
