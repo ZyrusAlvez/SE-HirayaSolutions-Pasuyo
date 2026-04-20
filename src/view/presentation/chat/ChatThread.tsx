@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated, Linking } from 'react-native';
+import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { Message, MessageStatus } from '@/controllers/chatController';
+import ImageViewer from '@/view/components/ImageViewer';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -82,17 +84,41 @@ function getStatusLabel(status?: MessageStatus) {
 }
 
 function FileBubble({ item, isMe }: { item: Message; isMe: boolean }) {
+  const [viewerOpen, setViewerOpen] = useState(false);
   const isImage = item.file_type?.startsWith('image/');
+
+  const handleDownload = () => {
+    if (!item.file_url) return;
+    if (Platform.OS === 'web') {
+      fetch(item.file_url).then(r => r.blob()).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = item.file_name || 'file';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    } else {
+      Linking.openURL(item.file_url);
+    }
+  };
+
   if (isImage) {
     return (
-      <Pressable onPress={() => item.file_url && Linking.openURL(item.file_url)}>
-        <Image source={{ uri: item.file_url! }} style={{ width: 200, height: 200, borderRadius: 12 }} resizeMode="cover" />
-      </Pressable>
+      <>
+        <Pressable onPress={() => setViewerOpen(true)}>
+          <Image source={{ uri: item.file_url! }} style={{ width: 200, height: 200, borderRadius: 12 }} resizeMode="cover" />
+        </Pressable>
+        <ImageViewer visible={viewerOpen} uri={item.file_url!} fileName={item.file_name ?? undefined} onClose={() => setViewerOpen(false)} />
+      </>
     );
   }
+
   return (
     <Pressable
-      onPress={() => item.file_url && Linking.openURL(item.file_url)}
+      onPress={handleDownload}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: isMe ? '#2563EB' : '#E5E7EB', borderRadius: 10, padding: 10, maxWidth: 220 }}
     >
       <Ionicons name="document-outline" size={20} color={isMe ? '#FFFFFF' : '#374151'} />
