@@ -71,23 +71,23 @@ export default function ConversationList({ conversations, currentUserId, selecte
                   <VerificationBadge status={other.verified ? 'verified' : 'not_verified'} variant="icon" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ fontWeight: unread ? '700' : '600', fontSize: 14, color: '#111827' }} numberOfLines={1}>
-                      {other.name ?? 'Unknown'}
+                  <Text style={{ fontWeight: unread ? '700' : '600', fontSize: 14, color: '#111827' }} numberOfLines={1}>
+                    {other.name ?? 'Unknown'}
+                  </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+                    <Text style={{ flex: 1, fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400' }} numberOfLines={1}>
+                      {typingConvos?.has(item.id) ? (
+                        <Text style={{ color: '#3B82F6', fontStyle: 'italic' }}>typing...</Text>
+                      ) : item.last_message ? (
+                        item.last_message_sender_id === currentUserId ? `You: ${item.last_message}` : item.last_message
+                      ) : (
+                        'No messages yet'
+                      )}
                     </Text>
-                    <Text style={{ fontSize: 11, color: unread ? '#3B82F6' : '#9CA3AF', fontWeight: unread ? '600' : '400' }}>
+                    <Text style={{ fontSize: 11, color: unread ? '#3B82F6' : '#9CA3AF', fontWeight: unread ? '600' : '400', marginLeft: 8 }}>
                       {timeAgo(item.last_message_at)}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400', marginTop: 2 }} numberOfLines={1}>
-                    {typingConvos?.has(item.id) ? (
-                      <Text style={{ color: '#3B82F6', fontStyle: 'italic' }}>typing...</Text>
-                    ) : item.last_message ? (
-                      item.last_message_sender_id === currentUserId ? `You: ${item.last_message}` : item.last_message
-                    ) : (
-                      'No messages yet'
-                    )}
-                  </Text>
                 </View>
               </Pressable>
             );
