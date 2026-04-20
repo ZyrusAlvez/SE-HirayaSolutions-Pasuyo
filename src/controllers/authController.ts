@@ -107,11 +107,11 @@ export const updatePassword = async (password: string, confirmPassword: string):
   try {
     const { error } = await authModel.updatePassword(password);
     if (error) {
-      await authModel.signOut();
-      const msg = error.message.toLowerCase().includes('same') || (error as any).status === 422
+      const isSamePassword = error.message.toLowerCase().includes('same') || (error as any).status === 422;
+      if (!isSamePassword) await authModel.signOut();
+      return { success: false, error: isSamePassword
         ? 'New password must be different from your current password'
-        : 'Failed to update password';
-      return { success: false, error: msg };
+        : 'Failed to update password' };
     }
     return { success: true, error: '' };
   } catch {
