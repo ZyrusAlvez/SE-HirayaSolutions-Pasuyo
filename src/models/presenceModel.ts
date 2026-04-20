@@ -1,10 +1,11 @@
 import { supabase, supabaseAdmin } from '@/utils/supabase';
 
 const PRESENCE_CHANNEL = 'user-online-status';
-const PING_INTERVAL = 30000; // 30s - just a fallback heartbeat, not primary detection
-const OFFLINE_THRESHOLD = 60000; // 60s fallback for crash/network loss
+const PING_INTERVAL = 30000;
+const OFFLINE_THRESHOLD = 60000;
 
 let pingTimer: ReturnType<typeof setInterval> | null = null;
+let staleTimer: ReturnType<typeof setInterval> | null = null;
 let channel: any = null;
 let currentUserId: string | null = null;
 let onChangeCallback: ((onlineIds: string[]) => void) | null = null;
@@ -37,15 +38,7 @@ export const joinPresence = (userId: string, onPresenceChange?: (onlineIds: stri
       }
     });
 
-  // Update last_seen in DB every 60s
-  updateLastSeen(userId);
-  const dbTimer = setInterval(() => updateLastSeen(userId), 60000);
-  (channel as any)._dbTimer = dbTimer;
-
-  // Fallback: check for stale users every 30s
-  const staleTimer = setInterval(() => recalcOnline(), PING_INTERVAL);
-  (channel as any)._staleTimer = staleTimer;
-
+  staleTimer = setInterval(() => recalcOnline(), PING_INTERVAL);
   return channel;
 };
 
@@ -56,6 +49,7 @@ const sendPing = (userId: string) => {
 export const sendGoodbye = () => {
   if (channel && currentUserId) {
     channel.send({ type: 'broadcast', event: 'goodbye', payload: { userId: currentUserId } });
+    updateLastSeenSync(currentUserId);
   }
 };
 
@@ -70,9 +64,8 @@ const recalcOnline = () => {
 export const leavePresence = () => {
   sendGoodbye();
   if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+  if (staleTimer) { clearInterval(staleTimer); staleTimer = null; }
   if (channel) {
-    if ((channel as any)._dbTimer) clearInterval((channel as any)._dbTimer);
-    if ((channel as any)._staleTimer) clearInterval((channel as any)._staleTimer);
     supabase.removeChannel(channel);
     channel = null;
   }
@@ -81,9 +74,23 @@ export const leavePresence = () => {
   Object.keys(lastPings).forEach((k) => delete lastPings[k]);
 };
 
-export const updateLastSeen = async (userId: string) => {
-  const { error } = await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', userId);
-  if (error) console.log('updateLastSeen error:', error);
+const updateLastSeenSync = (userId: string) => {
+  const url = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`;
+  const body = JSON.stringify({ last_seen: new Date().toISOString() });
+  const serviceKey = process.env.EXPO_PUBLIC_SERVICE_ROLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+  try {
+    fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
+        'Authorization': `Bearer ${serviceKey}`,
+        'Prefer': 'return=minimal',
+      },
+      body,
+      keepalive: true,
+    });
+  } catch {}
 };
 
 export const getLastSeen = async (userId: string): Promise<string | null> => {
