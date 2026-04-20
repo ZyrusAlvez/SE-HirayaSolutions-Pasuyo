@@ -3,6 +3,8 @@ import type { Conversation } from '@/models/chatModel';
 
 export type { Conversation };
 
+export type MessageStatus = 'sending' | 'sent' | 'seen';
+
 export type Message = {
   id: string;
   conversation_id: string;
@@ -10,6 +12,7 @@ export type Message = {
   content: string;
   is_read: boolean;
   created_at: string;
+  _status?: MessageStatus;
 };
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
@@ -47,11 +50,16 @@ export const loadConversations = async (userId: string): Promise<Result<Conversa
   }
 };
 
-export const loadMessages = async (conversationId: string, offset = 0): Promise<Result<{ messages: Message[]; hasMore: boolean }>> => {
+export const loadMessages = async (conversationId: string, offset = 0, currentUserId?: string): Promise<Result<{ messages: Message[]; hasMore: boolean }>> => {
   try {
     const { data, error } = await chatModel.getMessages(conversationId, offset);
     if (error) return { success: false, error: 'Failed to load messages' };
-    const msgs = ((data ?? []) as Message[]).reverse();
+    const msgs = ((data ?? []) as Message[]).reverse().map((m) => ({
+      ...m,
+      _status: m.sender_id === currentUserId
+        ? (m.is_read ? 'seen' as const : 'sent' as const)
+        : undefined,
+    }));
     return { success: true, data: { messages: msgs, hasMore: (data ?? []).length === 30 } };
   } catch {
     return { success: false, error: 'Something went wrong' };
@@ -62,15 +70,25 @@ export const handleSendMessage = async (
   conversationId: string,
   userId: string,
   content: string,
-): Promise<Result<null>> => {
+): Promise<Result<Message>> => {
   const trimmed = content.trim();
   if (!trimmed) return { success: false, error: 'Message cannot be empty' };
 
   try {
-    const { error } = await chatModel.sendMessage(conversationId, userId, trimmed);
-    if (error) return { success: false, error: 'Failed to send message' };
+    const { data, error } = await chatModel.sendMessage(conversationId, userId, trimmed);
+    if (error || !data) return { success: false, error: 'Failed to send message' };
 
     await chatModel.updateLastMessageAt(conversationId);
+    return { success: true, data: { ...data, _status: 'sent' } as Message };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const markAsRead = async (conversationId: string, userId: string): Promise<Result<null>> => {
+  try {
+    const { error } = await chatModel.markMessagesAsRead(conversationId, userId);
+    if (error) return { success: false, error: 'Failed to mark as read' };
     return { success: true, data: null };
   } catch {
     return { success: false, error: 'Something went wrong' };

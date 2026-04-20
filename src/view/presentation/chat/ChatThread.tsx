@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Message } from '@/controllers/chatController';
+import { Message, MessageStatus } from '@/controllers/chatController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -44,7 +44,27 @@ function formatSeparatorTime(dateStr: string) {
   return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
 }
 
-function MessageBubble({ item, isMe }: { item: Message; isMe: boolean }) {
+function StatusIndicator({ status, otherAvatar }: { status?: MessageStatus; otherAvatar?: string | null }) {
+  if (!status) return null;
+  if (status === 'sending') return <ActivityIndicator size={10} color="#9CA3AF" style={{ marginTop: 2 }} />;
+  if (status === 'seen') return (
+    <Image
+      source={getAvatarSource(otherAvatar)}
+      style={{ width: 14, height: 14, borderRadius: 7, marginTop: 2 }}
+    />
+  );
+  // sent
+  return <Ionicons name="checkmark-circle" size={14} color="#9CA3AF" style={{ marginTop: 2 }} />;
+}
+
+function getStatusLabel(status?: MessageStatus) {
+  if (status === 'sending') return 'Sending...';
+  if (status === 'seen') return 'Seen';
+  if (status === 'sent') return 'Sent';
+  return null;
+}
+
+function MessageBubble({ item, isMe, otherAvatar, isLastOwn }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean }) {
   const [revealed, setRevealed] = useState(false);
 
   return (
@@ -62,7 +82,17 @@ function MessageBubble({ item, isMe }: { item: Message; isMe: boolean }) {
         <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
       </View>
       {revealed && (
-        <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{formatTime(item.created_at)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{formatTime(item.created_at)}</Text>
+          {isMe && getStatusLabel(item._status) && (
+            <Text style={{ fontSize: 10, color: '#9CA3AF' }}> · {getStatusLabel(item._status)}</Text>
+          )}
+        </View>
+      )}
+      {isMe && isLastOwn && !revealed && (
+        <View style={{ alignItems: 'flex-end' }}>
+          <StatusIndicator status={item._status} otherAvatar={otherAvatar} />
+        </View>
       )}
     </Pressable>
   );
@@ -84,6 +114,8 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
     onSend(input);
     setInput('');
   };
+
+  const lastOwnMsgId = [...messages].reverse().find((m) => m.sender_id === currentUserId)?.id;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
@@ -115,14 +147,18 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           onEndReachedThreshold={0.3}
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 12 }} color="#6B7280" /> : null}
           renderItem={({ item, index }) => {
-            const reversed = [...messages].reverse();
             const actualIndex = messages.length - 1 - index;
             const isMe = item.sender_id === currentUserId;
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
             return (
               <>
-                <MessageBubble item={item} isMe={isMe} />
+                <MessageBubble
+                  item={item}
+                  isMe={isMe}
+                  otherAvatar={otherUser?.avatar}
+                  isLastOwn={isMe && item.id === lastOwnMsgId}
+                />
                 {showSeparator && (
                   <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
                     {formatSeparatorTime(item.created_at)}

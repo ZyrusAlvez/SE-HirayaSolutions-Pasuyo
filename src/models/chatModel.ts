@@ -58,18 +58,31 @@ export const getMessages = (conversationId: string, offset = 0) =>
     .range(offset, offset + PAGE_SIZE - 1);
 
 export const sendMessage = (conversationId: string, senderId: string, content: string) =>
-  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content });
+  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content }).select().single();
+
+export const markMessagesAsRead = (conversationId: string, userId: string) =>
+  supabase
+    .from('messages')
+    .update({ is_read: true })
+    .eq('conversation_id', conversationId)
+    .eq('is_read', false)
+    .neq('sender_id', userId);
 
 export const updateLastMessageAt = (conversationId: string) =>
   supabase.from('conversations').update({ last_message_at: new Date().toISOString() }).eq('id', conversationId);
 
 export const subscribeToMessages = (
   onNewMessage: (payload: any) => void,
-) =>
-  supabase
-    .channel('messages-realtime')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, onNewMessage)
-    .subscribe();
+  onMessageUpdate?: (payload: any) => void,
+) => {
+  const channel = supabase
+    .channel(`messages-${Date.now()}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, onNewMessage);
+  if (onMessageUpdate) {
+    channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, onMessageUpdate);
+  }
+  return channel.subscribe();
+};
 
 export const getOrCreateConversation = async (userAId: string, userBId: string) => {
   const [user1, user2] = [userAId, userBId].sort();
