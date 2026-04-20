@@ -188,8 +188,10 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             source={getAvatarSource(otherUser?.avatar)}
             style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
           />
-          {otherIsOnline && (
+          {otherIsOnline ? (
             <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
+          ) : (
+            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#9CA3AF', borderWidth: 2, borderColor: '#FFFFFF' }} />
           )}
         </View>
         <View>
