@@ -83,8 +83,7 @@ function getStatusLabel(status?: MessageStatus) {
   return null;
 }
 
-function FileBubble({ item, isMe }: { item: Message; isMe: boolean }) {
-  const [viewerOpen, setViewerOpen] = useState(false);
+function FileBubble({ item, isMe, onImagePress }: { item: Message; isMe: boolean; onImagePress?: () => void }) {
   const isImage = item.file_type?.startsWith('image/');
 
   const handleDownload = () => {
@@ -107,12 +106,9 @@ function FileBubble({ item, isMe }: { item: Message; isMe: boolean }) {
 
   if (isImage) {
     return (
-      <>
-        <Pressable onPress={() => setViewerOpen(true)}>
-          <Image source={{ uri: item.file_url! }} style={{ width: 200, height: 200, borderRadius: 12 }} resizeMode="cover" />
-        </Pressable>
-        <ImageViewer visible={viewerOpen} uri={item.file_url!} fileName={item.file_name ?? undefined} onClose={() => setViewerOpen(false)} />
-      </>
+      <Pressable onPress={onImagePress}>
+        <Image source={{ uri: item.file_url! }} style={{ width: 200, height: 200, borderRadius: 12 }} resizeMode="cover" />
+      </Pressable>
     );
   }
 
@@ -127,7 +123,7 @@ function FileBubble({ item, isMe }: { item: Message; isMe: boolean }) {
   );
 }
 
-function MessageBubble({ item, isMe, otherAvatar, isLastOwn }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean }) {
+function MessageBubble({ item, isMe, otherAvatar, isLastOwn, onImagePress }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean; onImagePress?: () => void }) {
   const [revealed, setRevealed] = useState(false);
   const hasFile = !!item.file_url;
 
@@ -137,7 +133,7 @@ function MessageBubble({ item, isMe, otherAvatar, isLastOwn }: { item: Message; 
       style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 4 }}
     >
       {hasFile ? (
-        <FileBubble item={item} isMe={isMe} />
+        <FileBubble item={item} isMe={isMe} onImagePress={onImagePress} />
       ) : (
         <View style={{
           maxWidth: '70%',
@@ -211,6 +207,10 @@ function TypingIndicator() {
 export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onSendFile, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+
+  const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
+  const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
 
   const pickAttachment = async () => {
     try {
@@ -294,6 +294,9 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
                   isMe={isMe}
                   otherAvatar={otherUser?.avatar}
                   isLastOwn={isMe && item.id === lastOwnMsgId}
+                  onImagePress={item.file_url && item.file_type?.startsWith('image/')
+                    ? () => setViewerIndex(imageMessages.findIndex((m) => m.id === item.id))
+                    : undefined}
                 />
                 {showSeparator && (
                   <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
@@ -305,6 +308,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           }}
         />
       )}
+      <ImageViewer images={imageItems} activeIndex={viewerIndex} onClose={() => setViewerIndex(null)} onIndexChange={setViewerIndex} />
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
         <Pressable onPress={pickAttachment} style={{ marginRight: 8, padding: 6 }} disabled={uploading}>
           <Ionicons name="attach-outline" size={22} color={uploading ? '#D1D5DB' : '#6B7280'} />
