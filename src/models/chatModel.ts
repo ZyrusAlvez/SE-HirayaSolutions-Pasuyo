@@ -17,36 +17,19 @@ export type Conversation = {
   user2_verified: boolean;
   last_message?: string;
   last_message_sender_id?: string;
-  unread_count?: number;
+  last_message_is_read?: boolean;
 };
 
 export const getUser = () => supabase.auth.getUser();
 
 export const getConversations = (userId: string) =>
   supabase
-    .from('conversations')
+    .from('conversations_with_profiles')
     .select('*')
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
     .order('last_message_at', { ascending: false });
 
 export { getDisplayProfile };
-
-export const getLastMessage = (conversationId: string) =>
-  supabase
-    .from('messages')
-    .select('content, sender_id')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-
-export const getUnreadCount = (conversationId: string, userId: string) =>
-  supabase
-    .from('messages')
-    .select('id', { count: 'exact', head: true })
-    .eq('conversation_id', conversationId)
-    .eq('is_read', false)
-    .neq('sender_id', userId);
 
 const PAGE_SIZE = 30;
 
@@ -61,16 +44,29 @@ export const getMessages = (conversationId: string, offset = 0) =>
 export const sendMessage = (conversationId: string, senderId: string, content: string) =>
   supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content }).select().single();
 
-export const markMessagesAsRead = (conversationId: string, userId: string) =>
-  supabase
-    .from('messages')
-    .update({ is_read: true })
-    .eq('conversation_id', conversationId)
-    .eq('is_read', false)
-    .neq('sender_id', userId);
+export const markMessagesAsRead = async (conversationId: string, userId: string) => {
+  const [msgResult, convoResult] = await Promise.all([
+    supabase
+      .from('messages')
+      .update({ is_read: true })
+      .eq('conversation_id', conversationId)
+      .eq('is_read', false)
+      .neq('sender_id', userId),
+    supabase
+      .from('conversations')
+      .update({ last_message_is_read: true })
+      .eq('id', conversationId),
+  ]);
+  return msgResult;
+};
 
-export const updateLastMessageAt = (conversationId: string) =>
-  supabase.from('conversations').update({ last_message_at: new Date().toISOString() }).eq('id', conversationId);
+export const updateLastMessageAt = (conversationId: string, content: string, senderId: string) =>
+  supabase.from('conversations').update({
+    last_message_at: new Date().toISOString(),
+    last_message: content,
+    last_message_sender_id: senderId,
+    last_message_is_read: false,
+  }).eq('id', conversationId);
 
 export const subscribeToMessages = (
   onNewMessage: (payload: any) => void,
