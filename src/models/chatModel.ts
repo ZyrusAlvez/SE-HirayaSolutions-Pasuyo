@@ -102,3 +102,21 @@ export const getOrCreateConversation = async (userAId: string, userBId: string) 
     .select('id')
     .single();
 };
+
+export const subscribeToTyping = (
+  conversationId: string,
+  onTyping: (userId: string) => void,
+) => {
+  const channel = supabase.channel(`typing-${conversationId}`);
+  channel
+    .on('broadcast', { event: 'typing' }, (payload) => {
+      onTyping(payload.payload.userId);
+    })
+    .subscribe();
+  return channel;
+};
+
+export const broadcastTyping = (conversationId: string, userId: string) => {
+  const channel = supabase.channel(`typing-${conversationId}`);
+  channel.send({ type: 'broadcast', event: 'typing', payload: { userId } });
+};

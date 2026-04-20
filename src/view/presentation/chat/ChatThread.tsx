@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Message, MessageStatus } from '@/controllers/chatController';
 
@@ -19,6 +19,8 @@ type Props = {
   onLoadMore?: () => void;
   loadingMore?: boolean;
   hasMore?: boolean;
+  otherTyping?: boolean;
+  onTyping?: () => void;
 };
 
 function formatTime(dateStr: string) {
@@ -98,7 +100,49 @@ function MessageBubble({ item, isMe, otherAvatar, isLastOwn }: { item: Message; 
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore }: Props) {
+function TypingIndicator() {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animate = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, { toValue: 1, duration: 300, useNativeDriver: false }),
+          Animated.timing(dot, { toValue: 0, duration: 300, useNativeDriver: false }),
+        ])
+      );
+    const a1 = animate(dot1, 0);
+    const a2 = animate(dot2, 150);
+    const a3 = animate(dot3, 300);
+    a1.start(); a2.start(); a3.start();
+    return () => { a1.stop(); a2.stop(); a3.stop(); };
+  }, []);
+
+  const dotStyle = (anim: Animated.Value) => ({
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#9CA3AF',
+    marginHorizontal: 2,
+    opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }),
+    transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] }) }],
+  });
+
+  return (
+    <View style={{ alignItems: 'flex-start', marginBottom: 4 }}>
+      <View style={{ backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center' }}>
+        <Animated.View style={dotStyle(dot1)} />
+        <Animated.View style={dotStyle(dot2)} />
+        <Animated.View style={dotStyle(dot3)} />
+      </View>
+    </View>
+  );
+}
+
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping }: Props) {
   const [input, setInput] = useState('');
 
   if (!selected) {
@@ -145,6 +189,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           contentContainerStyle={{ padding: 16 }}
           onEndReached={hasMore ? onLoadMore : undefined}
           onEndReachedThreshold={0.3}
+          ListHeaderComponent={otherTyping ? <TypingIndicator /> : null}
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 12 }} color="#6B7280" /> : null}
           renderItem={({ item, index }) => {
             const actualIndex = messages.length - 1 - index;
@@ -172,7 +217,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
         <TextInput
           value={input}
-          onChangeText={setInput}
+          onChangeText={(text) => { setInput(text); onTyping?.(); }}
           onSubmitEditing={send}
           placeholder="Type a message..."
           placeholderTextColor="#9CA3AF"

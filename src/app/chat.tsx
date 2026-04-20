@@ -3,7 +3,7 @@ import { View, Platform, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
 import { loadConversations, loadMessages, handleSendMessage, markAsRead, startConversation, Conversation, Message } from '@/controllers/chatController';
-import { subscribeToMessages } from '@/models/chatModel';
+import { subscribeToMessages, subscribeToTyping, broadcastTyping } from '@/models/chatModel';
 import { supabase } from '@/utils/supabase';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
@@ -25,6 +25,9 @@ export default function ChatScreen() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTypingBroadcast = useRef(0);
 
   // Refs so realtime callbacks always have latest values
   const selectedIdRef = useRef(selectedId);
@@ -166,6 +169,29 @@ export default function ChatScreen() {
     return () => { supabase.removeChannel(channel); };
   }, [currentUserId]);
 
+  // Typing indicator subscription
+  useEffect(() => {
+    if (!selectedId || !currentUserId) return;
+    const channel = subscribeToTyping(selectedId, (userId) => {
+      if (userId === currentUserId) return;
+      setOtherTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => setOtherTyping(false), 3000);
+    });
+    return () => {
+      supabase.removeChannel(channel);
+      setOtherTyping(false);
+    };
+  }, [selectedId, currentUserId]);
+
+  const handleTyping = useCallback(() => {
+    if (!selectedId || !currentUserId) return;
+    const now = Date.now();
+    if (now - lastTypingBroadcast.current < 2000) return; // Throttle to every 2s
+    lastTypingBroadcast.current = now;
+    broadcastTyping(selectedId, currentUserId);
+  }, [selectedId, currentUserId]);
+
   const selectedConvo = conversations.find((c) => c.id === selectedId);
   const otherUser = selectedConvo
     ? selectedConvo.user1_id === currentUserId
@@ -202,6 +228,8 @@ export default function ChatScreen() {
             onLoadMore={handleLoadMore}
             loadingMore={loadingMore}
             hasMore={hasMore}
+            otherTyping={otherTyping}
+            onTyping={handleTyping}
           />
         )}
       </View>
