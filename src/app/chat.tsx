@@ -119,12 +119,9 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!currentUserId) return;
 
-    console.log('Subscribing to realtime messages, userId:', currentUserId);
-
     const channel = subscribeToMessages(
       // INSERT
       (payload) => {
-        console.log('Realtime INSERT received:', payload.new);
         const msg = payload.new as Message;
         const selId = selectedIdRef.current;
         const uid = currentUserIdRef.current;
@@ -233,11 +230,7 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!otherUserId) { setOtherLastSeen(null); return; }
     if (otherIsOnline) { setOtherLastSeen(null); return; }
-    console.log('Fetching last_seen for:', otherUserId);
-    getLastSeen(otherUserId).then((val) => {
-      console.log('last_seen result:', val);
-      setOtherLastSeen(val);
-    });
+    getLastSeen(otherUserId).then(setOtherLastSeen);
   }, [otherUserId, otherIsOnline]);
 
   const showThread = isMobile ? !!selectedId : true;

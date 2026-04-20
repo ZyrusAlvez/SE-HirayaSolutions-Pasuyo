@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
 import { Conversation } from '@/controllers/chatController';
 import VerificationBadge from '@/view/components/VerificationBadge';

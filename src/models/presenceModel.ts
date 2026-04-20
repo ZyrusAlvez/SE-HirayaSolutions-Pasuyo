@@ -1,3 +1,7 @@
+// in this case, the "business logic" is minimal
+// it's mostly just connecting/disconnecting and reading state.
+// The PresenceContext is essentially acting as the controller.
+
 import { supabase, supabaseAdmin } from '@/utils/supabase';
 
 const PRESENCE_CHANNEL = 'user-online-status';
