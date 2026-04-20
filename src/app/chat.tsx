@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Platform, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/context/ProfileContext';
-import { loadConversations, loadMessages, handleSendMessage, markAsRead, startConversation, Conversation, Message } from '@/controllers/chatController';
+import { loadConversations, loadMessages, handleSendMessage, handleSendFile, markAsRead, startConversation, Conversation, Message } from '@/controllers/chatController';
 import { subscribeToMessages, subscribeToTyping, broadcastTyping } from '@/models/chatModel';
 import { getLastSeen } from '@/models/presenceModel';
 import { usePresence } from '@/context/PresenceContext';
@@ -224,6 +224,35 @@ export default function ChatScreen() {
     broadcastTyping(selectedId, currentUserId);
   }, [selectedId, currentUserId]);
 
+  const onSendFile = useCallback(async (uri: string, fileName: string, mimeType: string) => {
+    if (!selectedId || !currentUserId) return;
+
+    const tempId = `temp-${Date.now()}`;
+    const isImage = mimeType.startsWith('image/');
+    const optimistic: Message = {
+      id: tempId,
+      conversation_id: selectedId,
+      sender_id: currentUserId,
+      content: isImage ? '📷 Photo' : `📎 ${fileName}`,
+      is_read: false,
+      created_at: new Date().toISOString(),
+      file_url: uri,
+      file_name: fileName,
+      file_type: mimeType,
+      _status: 'sending',
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
+    const result = await handleSendFile(selectedId, currentUserId, uri, fileName, mimeType);
+    if (result.success) {
+      setMessages((prev) =>
+        prev.map((m) => m.id === tempId ? { ...result.data, _status: 'sent' } : m)
+      );
+    } else {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    }
+  }, [selectedId, currentUserId]);
+
   const selectedConvo = conversations.find((c) => c.id === selectedId);
   const otherUserId = selectedConvo
     ? selectedConvo.user1_id === currentUserId ? selectedConvo.user2_id : selectedConvo.user1_id
@@ -268,6 +297,7 @@ export default function ChatScreen() {
             loading={messagesLoading}
             selected={!!selectedId}
             onSend={onSend}
+            onSendFile={onSendFile}
             onBack={isMobile ? () => setSelectedId(null) : undefined}
             onLoadMore={handleLoadMore}
             loadingMore={loadingMore}

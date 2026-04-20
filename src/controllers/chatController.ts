@@ -12,6 +12,9 @@ export type Message = {
   content: string;
   is_read: boolean;
   created_at: string;
+  file_url?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
   _status?: MessageStatus;
 };
 
@@ -64,6 +67,33 @@ export const handleSendMessage = async (
     if (error || !data) return { success: false, error: 'Failed to send message' };
 
     await chatModel.updateLastMessageAt(conversationId, trimmed, userId);
+    return { success: true, data: { ...data, _status: 'sent' } as Message };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const handleSendFile = async (
+  conversationId: string,
+  userId: string,
+  uri: string,
+  fileName: string,
+  mimeType: string,
+): Promise<Result<Message>> => {
+  try {
+    const upload = await chatModel.uploadChatFile(conversationId, uri, fileName, mimeType);
+    if (upload.error || !upload.data) return { success: false, error: 'Failed to upload file' };
+
+    const displayName = fileName;
+    const content = mimeType.startsWith('image/') ? '📷 Photo' : `📎 ${displayName}`;
+    const { data, error } = await chatModel.sendMessage(conversationId, userId, content, {
+      file_url: upload.data.url,
+      file_name: upload.data.name,
+      file_type: upload.data.type,
+    });
+    if (error || !data) return { success: false, error: 'Failed to send file message' };
+
+    await chatModel.updateLastMessageAt(conversationId, content, userId);
     return { success: true, data: { ...data, _status: 'sent' } as Message };
   } catch {
     return { success: false, error: 'Something went wrong' };

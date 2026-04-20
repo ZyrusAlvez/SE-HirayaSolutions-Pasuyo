@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Message, MessageStatus } from '@/controllers/chatController';
 
@@ -15,6 +15,7 @@ type Props = {
   loading: boolean;
   selected: boolean;
   onSend: (content: string) => void;
+  onSendFile?: (uri: string, fileName: string, mimeType: string) => void;
   onBack?: () => void;
   onLoadMore?: () => void;
   loadingMore?: boolean;
@@ -80,23 +81,48 @@ function getStatusLabel(status?: MessageStatus) {
   return null;
 }
 
+function FileBubble({ item, isMe }: { item: Message; isMe: boolean }) {
+  const isImage = item.file_type?.startsWith('image/');
+  if (isImage) {
+    return (
+      <Pressable onPress={() => item.file_url && Linking.openURL(item.file_url)}>
+        <Image source={{ uri: item.file_url! }} style={{ width: 200, height: 200, borderRadius: 12 }} resizeMode="cover" />
+      </Pressable>
+    );
+  }
+  return (
+    <Pressable
+      onPress={() => item.file_url && Linking.openURL(item.file_url)}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: isMe ? '#2563EB' : '#E5E7EB', borderRadius: 10, padding: 10, maxWidth: 220 }}
+    >
+      <Ionicons name="document-outline" size={20} color={isMe ? '#FFFFFF' : '#374151'} />
+      <Text numberOfLines={1} style={{ flex: 1, fontSize: 13, color: isMe ? '#FFFFFF' : '#374151' }}>{item.file_name ?? 'File'}</Text>
+    </Pressable>
+  );
+}
+
 function MessageBubble({ item, isMe, otherAvatar, isLastOwn }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean }) {
   const [revealed, setRevealed] = useState(false);
+  const hasFile = !!item.file_url;
 
   return (
     <Pressable
       onPress={() => setRevealed((v) => !v)}
       style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 4 }}
     >
-      <View style={{
-        maxWidth: '70%',
-        backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-      }}>
-        <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
-      </View>
+      {hasFile ? (
+        <FileBubble item={item} isMe={isMe} />
+      ) : (
+        <View style={{
+          maxWidth: '70%',
+          backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
+          borderRadius: 12,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+        }}>
+          <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
+        </View>
+      )}
       {revealed && (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
           <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{formatTime(item.created_at)}</Text>
@@ -156,8 +182,21 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onSendFile, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const [input, setInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const pickAttachment = async () => {
+    try {
+      const DocumentPicker = await import('expo-document-picker');
+      const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      setUploading(true);
+      onSendFile?.(asset.uri, asset.name, asset.mimeType || 'application/octet-stream');
+      setUploading(false);
+    } catch {}
+  };
 
   if (!selected) {
     return (
@@ -241,6 +280,9 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
         />
       )}
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
+        <Pressable onPress={pickAttachment} style={{ marginRight: 8, padding: 6 }} disabled={uploading}>
+          <Ionicons name="attach-outline" size={22} color={uploading ? '#D1D5DB' : '#6B7280'} />
+        </Pressable>
         <TextInput
           value={input}
           onChangeText={(text) => { setInput(text); onTyping?.(); }}
