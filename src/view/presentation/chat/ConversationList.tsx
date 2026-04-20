@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
 import { Conversation } from '@/controllers/chatController';
 import VerificationBadge from '@/view/components/VerificationBadge';
@@ -15,6 +14,7 @@ type Props = {
   onSelect: (id: string) => void;
   loading: boolean;
   fullWidth?: boolean;
+  typingConvos?: Set<string>;
 };
 
 function timeAgo(dateStr: string) {
@@ -27,7 +27,7 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(hrs / 24)}d`;
 }
 
-export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading, fullWidth }: Props) {
+export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading, fullWidth, typingConvos }: Props) {
   const getOther = (c: Conversation) =>
     c.user1_id === currentUserId
       ? { name: c.user2_name, avatar: c.user2_avatar, verified: c.user2_verified }
@@ -80,7 +80,13 @@ export default function ConversationList({ conversations, currentUserId, selecte
                     </Text>
                   </View>
                   <Text style={{ fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400', marginTop: 2 }} numberOfLines={1}>
-                    {item.last_message || 'No messages yet'}
+                    {typingConvos?.has(item.id) ? (
+                      <Text style={{ color: '#3B82F6', fontStyle: 'italic' }}>typing...</Text>
+                    ) : item.last_message ? (
+                      item.last_message_sender_id === currentUserId ? `You: ${item.last_message}` : item.last_message
+                    ) : (
+                      'No messages yet'
+                    )}
                   </Text>
                 </View>
               </Pressable>

@@ -16,6 +16,7 @@ export type Conversation = {
   user2_avatar: string | null;
   user2_verified: boolean;
   last_message?: string;
+  last_message_sender_id?: string;
   unread_count?: number;
 };
 
@@ -33,7 +34,7 @@ export { getDisplayProfile };
 export const getLastMessage = (conversationId: string) =>
   supabase
     .from('messages')
-    .select('content')
+    .select('content, sender_id')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -58,18 +59,31 @@ export const getMessages = (conversationId: string, offset = 0) =>
     .range(offset, offset + PAGE_SIZE - 1);
 
 export const sendMessage = (conversationId: string, senderId: string, content: string) =>
-  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content });
+  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content }).select().single();
+
+export const markMessagesAsRead = (conversationId: string, userId: string) =>
+  supabase
+    .from('messages')
+    .update({ is_read: true })
+    .eq('conversation_id', conversationId)
+    .eq('is_read', false)
+    .neq('sender_id', userId);
 
 export const updateLastMessageAt = (conversationId: string) =>
   supabase.from('conversations').update({ last_message_at: new Date().toISOString() }).eq('id', conversationId);
 
 export const subscribeToMessages = (
   onNewMessage: (payload: any) => void,
-) =>
-  supabase
-    .channel('messages-realtime')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, onNewMessage)
-    .subscribe();
+  onMessageUpdate?: (payload: any) => void,
+) => {
+  const channel = supabase
+    .channel(`messages-${Date.now()}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, onNewMessage);
+  if (onMessageUpdate) {
+    channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, onMessageUpdate);
+  }
+  return channel.subscribe();
+};
 
 export const getOrCreateConversation = async (userAId: string, userBId: string) => {
   const [user1, user2] = [userAId, userBId].sort();
@@ -88,4 +102,22 @@ export const getOrCreateConversation = async (userAId: string, userBId: string) 
     .insert({ user1_id: user1, user2_id: user2 })
     .select('id')
     .single();
+};
+
+export const subscribeToTyping = (
+  conversationId: string,
+  onTyping: (userId: string) => void,
+) => {
+  const channel = supabase.channel(`typing-${conversationId}`);
+  channel
+    .on('broadcast', { event: 'typing' }, (payload) => {
+      onTyping(payload.payload.userId);
+    })
+    .subscribe();
+  return channel;
+};
+
+export const broadcastTyping = (conversationId: string, userId: string) => {
+  const channel = supabase.channel(`typing-${conversationId}`);
+  channel.send({ type: 'broadcast', event: 'typing', payload: { userId } });
 };

@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Message } from '@/controllers/chatController';
+import { Message, MessageStatus } from '@/controllers/chatController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -19,6 +19,10 @@ type Props = {
   onLoadMore?: () => void;
   loadingMore?: boolean;
   hasMore?: boolean;
+  otherTyping?: boolean;
+  onTyping?: () => void;
+  otherIsOnline?: boolean;
+  otherLastSeen?: string | null;
 };
 
 function formatTime(dateStr: string) {
@@ -44,7 +48,39 @@ function formatSeparatorTime(dateStr: string) {
   return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
 }
 
-function MessageBubble({ item, isMe }: { item: Message; isMe: boolean }) {
+function formatLastSeen(dateStr: string | null | undefined) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Active just now';
+  if (mins < 60) return `Active ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Active ${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `Active ${days}d ago`;
+}
+
+function StatusIndicator({ status, otherAvatar }: { status?: MessageStatus; otherAvatar?: string | null }) {
+  if (!status) return null;
+  if (status === 'sending') return <ActivityIndicator size={10} color="#9CA3AF" style={{ marginTop: 2 }} />;
+  if (status === 'seen') return (
+    <Image
+      source={getAvatarSource(otherAvatar)}
+      style={{ width: 14, height: 14, borderRadius: 7, marginTop: 2 }}
+    />
+  );
+  // sent
+  return <Ionicons name="checkmark-circle" size={14} color="#9CA3AF" style={{ marginTop: 2 }} />;
+}
+
+function getStatusLabel(status?: MessageStatus) {
+  if (status === 'sending') return 'Sending...';
+  if (status === 'seen') return 'Seen';
+  if (status === 'sent') return 'Sent';
+  return null;
+}
+
+function MessageBubble({ item, isMe, otherAvatar, isLastOwn }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean }) {
   const [revealed, setRevealed] = useState(false);
 
   return (
@@ -62,13 +98,65 @@ function MessageBubble({ item, isMe }: { item: Message; isMe: boolean }) {
         <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
       </View>
       {revealed && (
-        <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{formatTime(item.created_at)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{formatTime(item.created_at)}</Text>
+          {isMe && getStatusLabel(item._status) && (
+            <Text style={{ fontSize: 10, color: '#9CA3AF' }}> · {getStatusLabel(item._status)}</Text>
+          )}
+        </View>
+      )}
+      {isMe && isLastOwn && !revealed && (
+        <View style={{ alignItems: 'flex-end' }}>
+          <StatusIndicator status={item._status} otherAvatar={otherAvatar} />
+        </View>
       )}
     </Pressable>
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore }: Props) {
+function TypingIndicator() {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animate = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, { toValue: 1, duration: 300, useNativeDriver: false }),
+          Animated.timing(dot, { toValue: 0, duration: 300, useNativeDriver: false }),
+        ])
+      );
+    const a1 = animate(dot1, 0);
+    const a2 = animate(dot2, 150);
+    const a3 = animate(dot3, 300);
+    a1.start(); a2.start(); a3.start();
+    return () => { a1.stop(); a2.stop(); a3.stop(); };
+  }, []);
+
+  const dotStyle = (anim: Animated.Value) => ({
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#9CA3AF',
+    marginHorizontal: 2,
+    opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }),
+    transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] }) }],
+  });
+
+  return (
+    <View style={{ alignItems: 'flex-start', marginBottom: 4 }}>
+      <View style={{ backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center' }}>
+        <Animated.View style={dotStyle(dot1)} />
+        <Animated.View style={dotStyle(dot2)} />
+        <Animated.View style={dotStyle(dot3)} />
+      </View>
+    </View>
+  );
+}
+
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const [input, setInput] = useState('');
 
   if (!selected) {
@@ -85,6 +173,8 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
     setInput('');
   };
 
+  const lastOwnMsgId = [...messages].reverse().find((m) => m.sender_id === currentUserId)?.id;
+
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
@@ -93,11 +183,23 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
         )}
-        <Image
-          source={getAvatarSource(otherUser?.avatar)}
-          style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
-        />
-        <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
+        <View style={{ position: 'relative' }}>
+          <Image
+            source={getAvatarSource(otherUser?.avatar)}
+            style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
+          />
+          {otherIsOnline ? (
+            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
+          ) : (
+            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#9CA3AF', borderWidth: 2, borderColor: '#FFFFFF' }} />
+          )}
+        </View>
+        <View>
+          <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
+          <Text style={{ fontSize: 11, color: otherIsOnline ? '#22C55E' : '#9CA3AF', marginTop: 1 }}>
+            {otherIsOnline ? 'Active now' : formatLastSeen(otherLastSeen)}
+          </Text>
+        </View>
       </View>
       {loading ? (
         <ActivityIndicator style={{ flex: 1 }} color="#6B7280" />
@@ -113,16 +215,21 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           contentContainerStyle={{ padding: 16 }}
           onEndReached={hasMore ? onLoadMore : undefined}
           onEndReachedThreshold={0.3}
+          ListHeaderComponent={otherTyping ? <TypingIndicator /> : null}
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 12 }} color="#6B7280" /> : null}
           renderItem={({ item, index }) => {
-            const reversed = [...messages].reverse();
             const actualIndex = messages.length - 1 - index;
             const isMe = item.sender_id === currentUserId;
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
             return (
               <>
-                <MessageBubble item={item} isMe={isMe} />
+                <MessageBubble
+                  item={item}
+                  isMe={isMe}
+                  otherAvatar={otherUser?.avatar}
+                  isLastOwn={isMe && item.id === lastOwnMsgId}
+                />
                 {showSeparator && (
                   <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
                     {formatSeparatorTime(item.created_at)}
@@ -136,7 +243,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
         <TextInput
           value={input}
-          onChangeText={setInput}
+          onChangeText={(text) => { setInput(text); onTyping?.(); }}
           onSubmitEditing={send}
           placeholder="Type a message..."
           placeholderTextColor="#9CA3AF"
