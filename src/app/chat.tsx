@@ -7,6 +7,7 @@ import { subscribeToMessages, subscribeToTyping, broadcastTyping } from '@/model
 import { getLastSeen } from '@/models/presenceModel';
 import { usePresence } from '@/context/PresenceContext';
 import { supabase } from '@/utils/supabase';
+import { toast } from '@/utils/toast';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
 import ConversationList from '@/view/presentation/chat/ConversationList';
@@ -31,8 +32,8 @@ export default function ChatScreen() {
   const [otherTyping, setOtherTyping] = useState(false);
   const [typingConvos, setTypingConvos] = useState<Set<string>>(new Set());
   const [otherLastSeen, setOtherLastSeen] = useState<string | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const typingConvoTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingConvoTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const lastTypingBroadcast = useRef(0);
 
   // Refs so realtime callbacks always have latest values
@@ -224,7 +225,7 @@ export default function ChatScreen() {
     broadcastTyping(selectedId, currentUserId);
   }, [selectedId, currentUserId]);
 
-  const onSendFile = useCallback(async (uri: string, fileName: string, mimeType: string) => {
+  const onSendFile = useCallback(async (uri: string, fileName: string, mimeType: string, fileSize?: number) => {
     if (!selectedId || !currentUserId) return;
 
     const tempId = `temp-${Date.now()}`;
@@ -243,13 +244,14 @@ export default function ChatScreen() {
     };
     setMessages((prev) => [...prev, optimistic]);
 
-    const result = await handleSendFile(selectedId, currentUserId, uri, fileName, mimeType);
+    const result = await handleSendFile(selectedId, currentUserId, uri, fileName, mimeType, fileSize);
     if (result.success) {
       setMessages((prev) =>
         prev.map((m) => m.id === tempId ? { ...result.data, _status: 'sent' } : m)
       );
     } else {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      toast({ title: result.error, preset: 'error' });
     }
   }, [selectedId, currentUserId]);
 

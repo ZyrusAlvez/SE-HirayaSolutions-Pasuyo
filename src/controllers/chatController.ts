@@ -73,13 +73,18 @@ export const handleSendMessage = async (
   }
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 export const handleSendFile = async (
   conversationId: string,
   userId: string,
   uri: string,
   fileName: string,
   mimeType: string,
+  fileSize?: number,
 ): Promise<Result<Message>> => {
+  if (fileSize && fileSize > MAX_FILE_SIZE) return { success: false, error: 'File exceeds 5MB limit' };
+
   try {
     const upload = await chatModel.uploadChatFile(conversationId, uri, fileName, mimeType);
     if (upload.error || !upload.data) return { success: false, error: 'Failed to upload file' };

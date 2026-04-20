@@ -17,7 +17,7 @@ type Props = {
   loading: boolean;
   selected: boolean;
   onSend: (content: string) => void;
-  onSendFile?: (uri: string, fileName: string, mimeType: string) => void;
+  onSendFile?: (uri: string, fileName: string, mimeType: string, fileSize?: number) => void;
   onBack?: () => void;
   onLoadMore?: () => void;
   loadingMore?: boolean;
@@ -168,6 +168,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [attachHover, setAttachHover] = useState(false);
 
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
@@ -179,7 +180,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
       if (result.canceled || !result.assets?.[0]) return;
       const asset = result.assets[0];
       setUploading(true);
-      onSendFile?.(asset.uri, asset.name, asset.mimeType || 'application/octet-stream');
+      onSendFile?.(asset.uri, asset.name, asset.mimeType || 'application/octet-stream', asset.size);
       setUploading(false);
     } catch {}
   };
@@ -270,9 +271,23 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
       )}
       <ImageViewer images={imageItems} activeIndex={viewerIndex} onClose={() => setViewerIndex(null)} onIndexChange={setViewerIndex} />
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
-        <Pressable onPress={pickAttachment} style={{ marginRight: 8, padding: 6 }} disabled={uploading}>
-          <Ionicons name="attach-outline" size={22} color={uploading ? '#D1D5DB' : '#6B7280'} />
-        </Pressable>
+        <View style={{ position: 'relative' }}>
+          <Pressable
+            onPress={pickAttachment}
+            // @ts-ignore — web-only hover props
+            onMouseEnter={() => setAttachHover(true)}
+            onMouseLeave={() => setAttachHover(false)}
+            style={{ marginRight: 8, padding: 6 }}
+            disabled={uploading}
+          >
+            <Ionicons name="attach-outline" size={22} color={uploading ? '#D1D5DB' : '#6B7280'} />
+          </Pressable>
+          {attachHover && (
+            <View style={{ position: 'absolute', bottom: 40, left: -4, backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, whiteSpace: 'nowrap' } as any}>Max 5MB</Text>
+            </View>
+          )}
+        </View>
         <TextInput
           value={input}
           onChangeText={(text) => { setInput(text); onTyping?.(); }}
@@ -287,7 +302,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             paddingVertical: 10,
             fontSize: 14,
             color: '#111827',
-            outlineStyle: 'none',
+            outlineStyle: 'none' as any,
           }}
         />
         <Pressable
