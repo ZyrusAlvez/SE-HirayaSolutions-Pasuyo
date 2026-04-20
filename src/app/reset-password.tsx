@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from '../utils/toast';
 import { sendResetCode, verifyResetCode, updatePassword } from '@/controllers/authController';
 import PasswordInput from '@/view/components/PasswordInput';
+import PasswordStrength from '@/view/components/PasswordStrength';
 
 type Step = 'email' | 'code' | 'password';
 
@@ -121,13 +122,13 @@ export default function ResetPasswordScreen() {
                 onChangeText={setPassword}
                 autoCapitalize="none"
               />
+              {password.length > 0 && <PasswordStrength password={password} />}
               <PasswordInput
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 autoCapitalize="none"
               />
-              <Text className="text-xs text-gray-400">Min. 6 characters</Text>
             </View>
           )}
 
