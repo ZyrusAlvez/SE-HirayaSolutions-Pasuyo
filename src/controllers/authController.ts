@@ -39,10 +39,15 @@ export const signup = async (
   password: string,
 ): Promise<AuthResult> => {
   if (!name || !email || !password) return { success: false, error: 'Please fill in all fields' };
+  if (name.length < 3 || name.length > 30) return { success: false, error: 'Display name must be 3-30 characters' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Please enter a valid email address' };
   const pwError = validatePassword(password);
   if (pwError) return { success: false, error: pwError };
 
   try {
+    const { data: exists } = await authModel.checkEmailExists(email);
+    if (exists) return { success: false, error: 'This email is already registered. Please use a different email or log in.' };
+
     const { data, error } = await authModel.signUp(email, password, name);
     if (error || !data.user) return { success: false, error: 'Signup failed' };
     return { success: true, error: '' };

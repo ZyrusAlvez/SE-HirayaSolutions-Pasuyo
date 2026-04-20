@@ -44,9 +44,13 @@ export default function SignupForm({
           placeholder="Display Name"
           placeholderTextColor="#9CA3AF"
           value={name}
-          onChangeText={onNameChange}
+          onChangeText={(v) => onNameChange(v.slice(0, 30))}
+          maxLength={30}
           autoCapitalize="words"
         />
+        <Text className={`text-xs mt-1 text-right ${name.length >= 30 ? 'text-red-500' : 'text-gray-400'}`}>
+          {name.length}/30
+        </Text>
       </View>
 
       <View className="mb-4">
