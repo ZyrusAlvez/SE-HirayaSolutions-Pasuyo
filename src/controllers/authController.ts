@@ -39,6 +39,7 @@ export const signup = async (
   password: string,
 ): Promise<AuthResult> => {
   if (!name || !email || !password) return { success: false, error: 'Please fill in all fields' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, error: 'Please enter a valid email address' };
   const pwError = validatePassword(password);
   if (pwError) return { success: false, error: pwError };
 
