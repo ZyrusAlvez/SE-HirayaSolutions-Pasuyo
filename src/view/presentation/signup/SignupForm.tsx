@@ -1,41 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import PasswordInput from '@/view/components/PasswordInput';
-
-const checks = [
-  { test: (p: string) => p.length >= 8, label: 'At least 8 characters' },
-  { test: (p: string) => /[A-Z]/.test(p), label: 'Has uppercase letter (A-Z)' },
-  { test: (p: string) => /[a-z]/.test(p), label: 'Has lowercase letter (a-z)' },
-  { test: (p: string) => /[0-9]/.test(p), label: 'Has a number (0-9)' },
-  { test: (p: string) => /[^A-Za-z0-9]/.test(p), label: 'Has special character (!@#$)' },
-];
-
-const PasswordStrength = ({ password }: { password: string }) => {
-  const metCount = checks.filter(c => c.test(password)).length;
-  const color = metCount <= 2 ? 'bg-red-400' : metCount <= 4 ? 'bg-yellow-400' : 'bg-green-500';
-  const label = metCount <= 2 ? 'Weak' : metCount <= 4 ? 'Fair' : 'Strong';
-
-  return (
-    <View className="mt-2 mb-2 px-1">
-      <View className="flex-row gap-1 mb-2">
-        {checks.map((_, i) => (
-          <View key={i} className={`flex-1 h-1.5 rounded-full ${i < metCount ? color : 'bg-gray-200'}`} />
-        ))}
-      </View>
-      <View className="flex-row justify-between">
-        <Text className={`text-xs font-medium ${metCount <= 2 ? 'text-red-400' : metCount <= 4 ? 'text-yellow-500' : 'text-green-500'}`}>
-          {label}
-        </Text>
-      </View>
-      <View className="mt-1">
-        {checks.map((c, i) => (
-          <Text key={i} className={`text-xs mt-0.5 ${c.test(password) ? 'text-green-500' : 'text-gray-400'}`}>
-            {c.test(password) ? '✓' : '○'}  {c.label}
-          </Text>
-        ))}
-      </View>
-    </View>
-  );
-};
+import PasswordStrength from '@/view/components/PasswordStrength';
 
 type Props = {
   name: string;
