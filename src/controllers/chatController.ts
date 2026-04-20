@@ -39,6 +39,7 @@ export const loadConversations = async (userId: string): Promise<Result<Conversa
           user2_avatar: p2.avatarUrl,
           user2_verified: p2.verified,
           last_message: msg?.content ?? '',
+          last_message_sender_id: msg?.sender_id ?? undefined,
           unread_count: count ?? 0,
         } as Conversation;
       })

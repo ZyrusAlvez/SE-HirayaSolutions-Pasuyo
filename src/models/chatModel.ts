@@ -16,6 +16,7 @@ export type Conversation = {
   user2_avatar: string | null;
   user2_verified: boolean;
   last_message?: string;
+  last_message_sender_id?: string;
   unread_count?: number;
 };
 
@@ -33,7 +34,7 @@ export { getDisplayProfile };
 export const getLastMessage = (conversationId: string) =>
   supabase
     .from('messages')
-    .select('content')
+    .select('content, sender_id')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
     .limit(1)

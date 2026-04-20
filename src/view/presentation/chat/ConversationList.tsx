@@ -82,8 +82,10 @@ export default function ConversationList({ conversations, currentUserId, selecte
                   <Text style={{ fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400', marginTop: 2 }} numberOfLines={1}>
                     {typingConvos?.has(item.id) ? (
                       <Text style={{ color: '#3B82F6', fontStyle: 'italic' }}>typing...</Text>
+                    ) : item.last_message ? (
+                      item.last_message_sender_id === currentUserId ? `You: ${item.last_message}` : item.last_message
                     ) : (
-                      item.last_message || 'No messages yet'
+                      'No messages yet'
                     )}
                   </Text>
                 </View>
