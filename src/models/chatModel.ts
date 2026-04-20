@@ -1,5 +1,6 @@
 import { supabase } from '@/utils/supabase';
 import { getDisplayProfile } from '@/models/profileModel';
+import { Platform } from 'react-native';
 
 export type { DisplayProfile } from '@/models/profileModel';
 
@@ -41,8 +42,26 @@ export const getMessages = (conversationId: string, offset = 0) =>
     .order('created_at', { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
 
-export const sendMessage = (conversationId: string, senderId: string, content: string) =>
-  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content }).select().single();
+export const sendMessage = (conversationId: string, senderId: string, content: string, file?: { file_url: string; file_name: string; file_type: string }) =>
+  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: senderId, content, ...file }).select().single();
+
+export const uploadChatFile = async (conversationId: string, uri: string, fileName: string, mimeType: string) => {
+  const path = `${conversationId}/${Date.now()}_${fileName}`;
+
+  let body: any;
+  if (Platform.OS === 'web') {
+    const res = await fetch(uri);
+    body = await res.blob();
+  } else {
+    body = { uri, type: mimeType, name: fileName };
+  }
+
+  const { error } = await supabase.storage.from('chat-files').upload(path, body, { contentType: mimeType, upsert: false });
+  if (error) return { data: null, error };
+
+  const { data: urlData } = supabase.storage.from('chat-files').getPublicUrl(path);
+  return { data: { url: urlData.publicUrl, name: fileName, type: mimeType }, error: null };
+};
 
 export const markMessagesAsRead = async (conversationId: string, userId: string) => {
   const [msgResult, convoResult] = await Promise.all([

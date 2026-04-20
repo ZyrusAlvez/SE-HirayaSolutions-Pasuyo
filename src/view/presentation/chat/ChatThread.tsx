@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Message, MessageStatus } from '@/controllers/chatController';
+import ImageViewer from '@/view/components/ImageViewer';
+import FileBubble from '@/view/presentation/chat/FileBubble';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -15,6 +17,7 @@ type Props = {
   loading: boolean;
   selected: boolean;
   onSend: (content: string) => void;
+  onSendFile?: (uri: string, fileName: string, mimeType: string, fileSize?: number) => void;
   onBack?: () => void;
   onLoadMore?: () => void;
   loadingMore?: boolean;
@@ -80,23 +83,28 @@ function getStatusLabel(status?: MessageStatus) {
   return null;
 }
 
-function MessageBubble({ item, isMe, otherAvatar, isLastOwn }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean }) {
+function MessageBubble({ item, isMe, otherAvatar, isLastOwn, onImagePress }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean; onImagePress?: () => void }) {
   const [revealed, setRevealed] = useState(false);
+  const hasFile = !!item.file_url;
 
   return (
     <Pressable
       onPress={() => setRevealed((v) => !v)}
       style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 4 }}
     >
-      <View style={{
-        maxWidth: '70%',
-        backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-      }}>
-        <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
-      </View>
+      {hasFile ? (
+        <FileBubble item={item} isMe={isMe} onImagePress={onImagePress} />
+      ) : (
+        <View style={{
+          maxWidth: '70%',
+          backgroundColor: isMe ? '#3B82F6' : '#F3F4F6',
+          borderRadius: 12,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+        }}>
+          <Text style={{ color: isMe ? '#FFFFFF' : '#111827', fontSize: 14 }}>{item.content}</Text>
+        </View>
+      )}
       {revealed && (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
           <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{formatTime(item.created_at)}</Text>
@@ -156,8 +164,26 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onSendFile, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const [input, setInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [attachHover, setAttachHover] = useState(false);
+
+  const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
+  const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
+
+  const pickAttachment = async () => {
+    try {
+      const DocumentPicker = await import('expo-document-picker');
+      const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      setUploading(true);
+      onSendFile?.(asset.uri, asset.name, asset.mimeType || 'application/octet-stream', asset.size);
+      setUploading(false);
+    } catch {}
+  };
 
   if (!selected) {
     return (
@@ -229,6 +255,9 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
                   isMe={isMe}
                   otherAvatar={otherUser?.avatar}
                   isLastOwn={isMe && item.id === lastOwnMsgId}
+                  onImagePress={item.file_url && item.file_type?.startsWith('image/')
+                    ? () => setViewerIndex(imageMessages.findIndex((m) => m.id === item.id))
+                    : undefined}
                 />
                 {showSeparator && (
                   <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
@@ -240,7 +269,25 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           }}
         />
       )}
+      <ImageViewer images={imageItems} activeIndex={viewerIndex} onClose={() => setViewerIndex(null)} onIndexChange={setViewerIndex} />
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
+        <View style={{ position: 'relative' }}>
+          <Pressable
+            onPress={pickAttachment}
+            // @ts-ignore — web-only hover props
+            onMouseEnter={() => setAttachHover(true)}
+            onMouseLeave={() => setAttachHover(false)}
+            style={{ marginRight: 8, padding: 6 }}
+            disabled={uploading}
+          >
+            <Ionicons name="attach-outline" size={22} color={uploading ? '#D1D5DB' : '#6B7280'} />
+          </Pressable>
+          {attachHover && (
+            <View style={{ position: 'absolute', bottom: 40, left: -4, backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, whiteSpace: 'nowrap' } as any}>Max 5MB</Text>
+            </View>
+          )}
+        </View>
         <TextInput
           value={input}
           onChangeText={(text) => { setInput(text); onTyping?.(); }}
@@ -255,7 +302,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             paddingVertical: 10,
             fontSize: 14,
             color: '#111827',
-            outlineStyle: 'none',
+            outlineStyle: 'none' as any,
           }}
         />
         <Pressable

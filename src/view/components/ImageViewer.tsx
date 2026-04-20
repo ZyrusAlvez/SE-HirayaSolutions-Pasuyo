@@ -1,20 +1,26 @@
 import { useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Modal, FlatList, Platform, PanResponder, useWindowDimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Modal, FlatList, Platform, PanResponder, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 
-const ACCENT = '#FEA405';
+type ImageItem = { uri: string; fileName?: string };
 
-interface Props {
-  images: string[];
+type Props = {
+  images: (string | ImageItem)[];
   activeIndex: number | null;
   onClose: () => void;
   onIndexChange: (index: number) => void;
-}
+};
 
-export default function ErrandImageLightbox({ images, activeIndex, onClose, onIndexChange }: Props) {
+const normalize = (img: string | ImageItem): ImageItem =>
+  typeof img === 'string' ? { uri: img } : img;
+
+export default function ImageViewer({ images: rawImages, activeIndex, onClose, onIndexChange }: Props) {
+  const images = rawImages.map(normalize);
   const { width } = useWindowDimensions();
   const IMG_BASE = width * 0.72;
+  const [downloading, setDownloading] = useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -27,10 +33,47 @@ export default function ErrandImageLightbox({ images, activeIndex, onClose, onIn
     })
   ).current;
 
+  const handleDownload = async () => {
+    if (activeIndex === null) return;
+    const img = images[activeIndex];
+    setDownloading(true);
+    try {
+      if (Platform.OS === 'web') {
+        const res = await fetch(img.uri);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = img.fileName || 'image';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        const Linking = await import('expo-linking');
+        await Linking.openURL(img.uri);
+      }
+    } catch {} finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <Modal visible={activeIndex !== null} transparent animationType="fade" onRequestClose={onClose}>
       <BlurView intensity={60} tint="dark" style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} activeOpacity={1} onPress={onClose} />
+
+        {/* Top bar: download + close */}
+        <View style={{ position: 'absolute', top: 50, right: 20, flexDirection: 'row', gap: 12, zIndex: 10 }}>
+          <TouchableOpacity onPress={handleDownload} disabled={downloading} style={{ backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 22, padding: 10 }}>
+            {downloading
+              ? <ActivityIndicator size={20} color="#FFFFFF" />
+              : <Ionicons name="download-outline" size={20} color="#FFFFFF" />}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onClose} style={{ backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 22, padding: 10 }}>
+            <Ionicons name="close" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
 
         {/* Image + arrows */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -46,7 +89,7 @@ export default function ErrandImageLightbox({ images, activeIndex, onClose, onIn
             {activeIndex !== null && (
               <View style={{ width: IMG_BASE, height: IMG_BASE * 0.75, overflow: 'hidden', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
                 <Image
-                  source={{ uri: images[activeIndex] }}
+                  source={{ uri: images[activeIndex].uri }}
                   style={{ width: IMG_BASE, height: IMG_BASE * 0.75 }}
                   resizeMode="contain"
                 />
@@ -70,6 +113,11 @@ export default function ErrandImageLightbox({ images, activeIndex, onClose, onIn
           </Text>
         )}
 
+        {/* Filename */}
+        {activeIndex !== null && images[activeIndex].fileName && (
+          <Text style={{ color: '#9CA3AF', fontSize: 12, marginTop: 6 }}>{images[activeIndex].fileName}</Text>
+        )}
+
         {/* Thumbnail strip */}
         {images.length > 1 && (
           <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}
@@ -84,11 +132,11 @@ export default function ErrandImageLightbox({ images, activeIndex, onClose, onIn
               renderItem={({ item, index }) => (
                 <TouchableOpacity onPress={() => onIndexChange(index)} activeOpacity={0.8}>
                   <Image
-                    source={{ uri: item }}
+                    source={{ uri: item.uri }}
                     style={{
                       width: 52, height: 52, borderRadius: 10,
                       borderWidth: activeIndex === index ? 2 : 1,
-                      borderColor: activeIndex === index ? ACCENT : 'rgba(255,255,255,0.25)',
+                      borderColor: activeIndex === index ? '#3B82F6' : 'rgba(255,255,255,0.25)',
                       opacity: activeIndex === index ? 1 : 0.5,
                     }}
                     resizeMode="cover"
