@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/utils/supabase';
-import { joinPresence, leavePresence } from '@/models/presenceModel';
+import { joinPresence, leavePresence, sendGoodbye } from '@/models/presenceModel';
 
 interface PresenceContextType {
   onlineUsers: Set<string>;
@@ -10,22 +10,41 @@ const PresenceContext = createContext<PresenceContextType>({ onlineUsers: new Se
 
 export function PresenceProvider({ children }: { children: React.ReactNode }) {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const joinedRef = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user && !joinedRef.current) {
+        joinedRef.current = true;
+        joinPresence(session.user.id, (ids) => {
+          setOnlineUsers(new Set(ids));
+        });
+      } else if (event === 'SIGNED_OUT') {
+        joinedRef.current = false;
+        leavePresence();
+        setOnlineUsers(new Set());
+      }
+    });
 
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user || !mounted) return;
+    // Initial check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user && !joinedRef.current) {
+        joinedRef.current = true;
+        joinPresence(session.user.id, (ids) => {
+          setOnlineUsers(new Set(ids));
+        });
+      }
+    });
 
-      joinPresence(session.user.id, (ids) => {
-        if (mounted) setOnlineUsers(new Set(ids));
-      });
-    })();
+    // Handle tab close — send goodbye instantly
+    const handleUnload = () => {
+      sendGoodbye();
+    };
+    window.addEventListener?.('beforeunload', handleUnload);
 
     return () => {
-      mounted = false;
-      leavePresence();
+      subscription.unsubscribe();
+      window.removeEventListener?.('beforeunload', handleUnload);
     };
   }, []);
 

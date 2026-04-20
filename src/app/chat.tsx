@@ -231,8 +231,13 @@ export default function ChatScreen() {
 
   // Fetch last_seen when selecting a conversation (only if offline)
   useEffect(() => {
-    if (!otherUserId || otherIsOnline) { setOtherLastSeen(null); return; }
-    getLastSeen(otherUserId).then(setOtherLastSeen);
+    if (!otherUserId) { setOtherLastSeen(null); return; }
+    if (otherIsOnline) { setOtherLastSeen(null); return; }
+    console.log('Fetching last_seen for:', otherUserId);
+    getLastSeen(otherUserId).then((val) => {
+      console.log('last_seen result:', val);
+      setOtherLastSeen(val);
+    });
   }, [otherUserId, otherIsOnline]);
 
   const showThread = isMobile ? !!selectedId : true;
