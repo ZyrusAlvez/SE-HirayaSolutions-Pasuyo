@@ -7,13 +7,17 @@ import { useState } from 'react';
 type ImageItem = { uri: string; fileName?: string };
 
 type Props = {
-  images: ImageItem[];
+  images: (string | ImageItem)[];
   activeIndex: number | null;
   onClose: () => void;
   onIndexChange: (index: number) => void;
 };
 
-export default function ImageViewer({ images, activeIndex, onClose, onIndexChange }: Props) {
+const normalize = (img: string | ImageItem): ImageItem =>
+  typeof img === 'string' ? { uri: img } : img;
+
+export default function ImageViewer({ images: rawImages, activeIndex, onClose, onIndexChange }: Props) {
+  const images = rawImages.map(normalize);
   const { width } = useWindowDimensions();
   const IMG_BASE = width * 0.72;
   const [downloading, setDownloading] = useState(false);

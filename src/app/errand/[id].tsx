@@ -14,7 +14,7 @@ import PosterCard from '@/view/presentation/errand/PosterCard';
 import OwnerActions from '@/view/presentation/errand/OwnerActions';
 import EditErrandSheet from '@/view/presentation/errand/EditErrandSheet';
 import SkeletonLoading from '@/view/presentation/errand/SkeletonLoading';
-import ImageLightbox from '@/view/presentation/errand/ImageLightbox';
+import ImageViewer from '@/view/components/ImageViewer';
 
 const ACCENT = '#FEA405';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
@@ -164,7 +164,7 @@ export default function ErrandDetailScreen() {
 
       {!isGuest && <NavBar />}
 
-      <ImageLightbox
+      <ImageViewer
         images={images}
         activeIndex={previewIndex}
         onClose={() => setPreviewIndex(null)}
