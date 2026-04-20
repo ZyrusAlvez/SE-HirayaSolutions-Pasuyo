@@ -111,6 +111,15 @@ export default function ChatScreen() {
       setMessages((prev) =>
         prev.map((m) => m.id === tempId ? { ...result.data, _status: 'sent' } : m)
       );
+      setConversations((prev) =>
+        prev
+          .map((c) =>
+            c.id === selectedId
+              ? { ...c, last_message: content.trim(), last_message_at: result.data.created_at, last_message_sender_id: currentUserId, last_message_is_read: false }
+              : c
+          )
+          .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
+      );
     } else {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
     }

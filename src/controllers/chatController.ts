@@ -66,7 +66,6 @@ export const handleSendMessage = async (
     const { data, error } = await chatModel.sendMessage(conversationId, userId, trimmed);
     if (error || !data) return { success: false, error: 'Failed to send message' };
 
-    await chatModel.updateLastMessageAt(conversationId, trimmed, userId);
     return { success: true, data: { ...data, _status: 'sent' } as Message };
   } catch {
     return { success: false, error: 'Something went wrong' };
@@ -98,7 +97,6 @@ export const handleSendFile = async (
     });
     if (error || !data) return { success: false, error: 'Failed to send file message' };
 
-    await chatModel.updateLastMessageAt(conversationId, content, userId);
     return { success: true, data: { ...data, _status: 'sent' } as Message };
   } catch {
     return { success: false, error: 'Something went wrong' };

@@ -79,14 +79,6 @@ export const markMessagesAsRead = async (conversationId: string, userId: string)
   return msgResult;
 };
 
-export const updateLastMessageAt = (conversationId: string, content: string, senderId: string) =>
-  supabase.from('conversations').update({
-    last_message_at: new Date().toISOString(),
-    last_message: content,
-    last_message_sender_id: senderId,
-    last_message_is_read: false,
-  }).eq('id', conversationId);
-
 export const subscribeToMessages = (
   onNewMessage: (payload: any) => void,
   onMessageUpdate?: (payload: any) => void,
