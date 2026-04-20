@@ -49,7 +49,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
           renderItem={({ item }) => {
             const other = getOther(item);
             const selected = item.id === selectedId;
-            const unread = (item.unread_count ?? 0) > 0;
+            const unread = item.last_message_sender_id !== currentUserId && !item.last_message_is_read;
             return (
               <Pressable
                 onPress={() => onSelect(item.id)}

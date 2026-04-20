@@ -22,29 +22,12 @@ export const loadConversations = async (userId: string): Promise<Result<Conversa
     const { data, error } = await chatModel.getConversations(userId);
     if (error) return { success: false, error: 'Failed to load conversations' };
 
-    const conversations: Conversation[] = await Promise.all(
-      (data ?? []).map(async (c) => {
-        const [{ data: msg }, { count }, p1, p2] = await Promise.all([
-          chatModel.getLastMessage(c.id),
-          chatModel.getUnreadCount(c.id, userId),
-          chatModel.getDisplayProfile(c.user1_id),
-          chatModel.getDisplayProfile(c.user2_id),
-        ]);
-        return {
-          ...c,
-          user1_name: p1.name,
-          user1_avatar: p1.avatarUrl,
-          user1_verified: p1.verified,
-          user2_name: p2.name,
-          user2_avatar: p2.avatarUrl,
-          user2_verified: p2.verified,
-          last_message: msg?.content ?? '',
-          last_message_sender_id: msg?.sender_id ?? undefined,
-          last_message_at: msg?.created_at ?? c.last_message_at,
-          unread_count: count ?? 0,
-        } as Conversation;
-      })
-    );
+    const conversations: Conversation[] = (data ?? []).map((c) => ({
+      ...c,
+      last_message: c.last_message ?? '',
+      last_message_sender_id: c.last_message_sender_id ?? undefined,
+      last_message_is_read: c.last_message_is_read ?? true,
+    }));
 
     return { success: true, data: conversations };
   } catch {
@@ -80,7 +63,7 @@ export const handleSendMessage = async (
     const { data, error } = await chatModel.sendMessage(conversationId, userId, trimmed);
     if (error || !data) return { success: false, error: 'Failed to send message' };
 
-    await chatModel.updateLastMessageAt(conversationId);
+    await chatModel.updateLastMessageAt(conversationId, trimmed, userId);
     return { success: true, data: { ...data, _status: 'sent' } as Message };
   } catch {
     return { success: false, error: 'Something went wrong' };

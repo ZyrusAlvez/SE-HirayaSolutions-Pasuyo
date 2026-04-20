@@ -74,7 +74,7 @@ export default function ChatScreen() {
     });
     markAsRead(selectedId, currentUserId);
     setConversations((prev) =>
-      prev.map((c) => c.id === selectedId ? { ...c, unread_count: 0 } : c)
+      prev.map((c) => c.id === selectedId ? { ...c, last_message_is_read: true } : c)
     );
   }, [selectedId]);
 
@@ -153,9 +153,8 @@ export default function ChatScreen() {
                     ...c,
                     last_message: msg.content,
                     last_message_at: msg.created_at,
-                    unread_count: msg.sender_id !== uid && msg.conversation_id !== selId
-                      ? (c.unread_count ?? 0) + 1
-                      : c.unread_count,
+                    last_message_sender_id: msg.sender_id,
+                    last_message_is_read: msg.conversation_id === selId,
                   }
                 : c
             )
