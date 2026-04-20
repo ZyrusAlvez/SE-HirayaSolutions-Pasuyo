@@ -34,7 +34,7 @@ export { getDisplayProfile };
 export const getLastMessage = (conversationId: string) =>
   supabase
     .from('messages')
-    .select('content, sender_id')
+    .select('content, sender_id, created_at')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
     .limit(1)
