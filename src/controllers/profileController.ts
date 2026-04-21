@@ -1,6 +1,5 @@
 import * as profileModel from '@/models/profileModel';
 import type { VerificationStatus, ProfileData, VerifyFormState } from '@/models/profileModel';
-import { getDisplayProfile } from '@/models/profileModel';
 import * as ImagePicker from 'expo-image-picker';
 
 export type { VerificationStatus, ProfileData, VerifyFormState };
@@ -11,29 +10,38 @@ export const getProfile = async (): Promise<Result<ProfileData | null>> => {
   const { data: { user } } = await profileModel.getUser();
   if (!user) return { success: true, data: null };
 
-  const display = await getDisplayProfile(user.id);
   const { data: profile } = await profileModel.getProfile(user.id);
 
-  let profileInfo: Partial<ProfileData> = {};
-  if (profile?.verified) {
-    profileInfo = {
-      gender: profile.gender,
-      date_of_birth: profile.date_of_birth,
-      address_province: profile.address_province,
-      address_city: profile.address_city,
-      address_barangay: profile.address_barangay,
-    };
-  }
+  const name = profile?.first_name || profile?.last_name
+    ? [profile.first_name, profile.last_name].filter(Boolean).join(' ')
+    : user.user_metadata?.name || user.user_metadata?.full_name || 'Unknown';
+
+  const avatarUrl = profile?.avatar_url
+    ?? (user.user_metadata?.custom_avatar_url && user.user_metadata.custom_avatar_url !== 'default'
+      ? user.user_metadata.custom_avatar_url
+      : user.user_metadata?.avatar_url && user.user_metadata.avatar_url !== 'default'
+        ? user.user_metadata.avatar_url
+        : null);
+
+  const verificationStatus: VerificationStatus = profile?.verified
+    ? 'verified'
+    : profile?.pending_verification ? 'pending' : 'not_verified';
 
   return {
     success: true,
     data: {
       id: user.id,
-      displayName: display.name,
+      displayName: name,
       email: user.email || '',
-      avatarUrl: display.avatarUrl,
-      verificationStatus: display.verificationStatus,
-      ...profileInfo,
+      avatarUrl,
+      verificationStatus,
+      ...(profile?.verified ? {
+        gender: profile.gender,
+        date_of_birth: profile.date_of_birth,
+        address_province: profile.address_province,
+        address_city: profile.address_city,
+        address_barangay: profile.address_barangay,
+      } : {}),
     },
   };
 };

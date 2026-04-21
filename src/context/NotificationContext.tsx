@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { getUnreadCount, getNotificationsSubscription, removeNotificationsSubscription } from '@/controllers/notificationController';
+import { onAuthStateChange } from '@/controllers/authController';
 
 interface NotificationContextType {
   unreadCount: number;
@@ -13,13 +14,37 @@ const NotificationContext = createContext<NotificationContextType>({
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
-  const channelRef = useRef(`notification-context-${Date.now()}`);
+  const channelRef = useRef<any>(null);
+
+  const setup = async () => {
+    setUnreadCount(await getUnreadCount());
+    if (channelRef.current) removeNotificationsSubscription(channelRef.current);
+    channelRef.current = getNotificationsSubscription(
+      `notification-context-${Date.now()}`,
+      async () => setUnreadCount(await getUnreadCount()),
+    );
+  };
+
+  const teardown = () => {
+    if (channelRef.current) {
+      removeNotificationsSubscription(channelRef.current);
+      channelRef.current = null;
+    }
+    setUnreadCount(0);
+  };
 
   useEffect(() => {
-    const fetchUnread = async () => setUnreadCount(await getUnreadCount());
-    fetchUnread();
-    const channel = getNotificationsSubscription(channelRef.current, fetchUnread);
-    return () => { removeNotificationsSubscription(channel); };
+    setup();
+
+    const { data: { subscription } } = onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') setup();
+      if (event === 'SIGNED_OUT') teardown();
+    });
+
+    return () => {
+      teardown();
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (

@@ -155,6 +155,13 @@ export const getProfile = (userId: string) =>
     .eq('id', userId)
     .single();
 
+export const getHeaderProfile = (userId: string) =>
+  supabase
+    .from('profiles')
+    .select('avatar_url, verified, pending_verification')
+    .eq('id', userId)
+    .single();
+
 export const postUserMeta = (data: Record<string, string>) =>
   supabase.auth.updateUser({ data });
 

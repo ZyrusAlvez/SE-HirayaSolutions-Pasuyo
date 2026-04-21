@@ -2,7 +2,7 @@ import { View, TouchableOpacity, Image, Platform, StyleSheet, Text } from 'react
 import { Ionicons } from '@expo/vector-icons';
 import VerificationBadge from './VerificationBadge';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNotification } from '../../context/NotificationContext';
 import NotificationsPanel from './NotificationsPanel';
 
@@ -20,6 +20,11 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
   const isWeb = Platform.OS === 'web';
   const { unreadCount, setUnreadCount } = useNotification();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [imgSrc, setImgSrc] = useState(avatarUrl ?? DEFAULT_AVATAR);
+
+  useEffect(() => {
+    setImgSrc(avatarUrl ?? DEFAULT_AVATAR);
+  }, [avatarUrl]);
 
   return (
     <View className={`bg-white border-b border-gray-100 ${!isWeb ? 'pt-12' : 'pt-2'}`}>
@@ -51,7 +56,8 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
           <TouchableOpacity onPress={() => router.push('/profile')} activeOpacity={0.7}>
             <View style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#FACC15', alignItems: 'center', justifyContent: 'center' }}>
               <Image
-                source={avatarUrl ?? DEFAULT_AVATAR}
+                source={imgSrc}
+                onError={() => setImgSrc(DEFAULT_AVATAR)}
                 style={{ width: 34, height: 34, borderRadius: 17 }}
                 resizeMode="cover"
               />
