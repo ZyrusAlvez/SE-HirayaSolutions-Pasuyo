@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getProfile } from '@/controllers/profileController';
+import { getUser, getHeaderProfile } from '@/models/profileModel';
 import { onAuthStateChange } from '@/controllers/authController';
 
 const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
@@ -21,13 +21,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('not_verified');
 
   useEffect(() => {
-    const fetchProfile = () => {
-      getProfile().then((result) => {
-        if (result.success && result.data) {
-          if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
-          setVerificationStatus(result.data.verificationStatus);
-        }
-      });
+    const fetchProfile = async () => {
+      const { data: { user } } = await getUser();
+      if (!user) return;
+      const { data } = await getHeaderProfile(user.id);
+      if (data?.avatar_url) setAvatarUrl({ uri: data.avatar_url });
+      setVerificationStatus(
+        data?.verified ? 'verified' : data?.pending_verification ? 'pending' : 'not_verified'
+      );
     };
 
     fetchProfile();
