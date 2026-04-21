@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { View, Animated, Platform } from 'react-native';
+import { View, Text, Animated, Platform, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 function Bone({ width, height, borderRadius = 8, style }: { width: number | string; height: number; borderRadius?: number; style?: object }) {
   const opacity = useRef(new Animated.Value(0.4)).current;
@@ -26,8 +27,11 @@ export default function SkeletonLoading({ contentWidth, isLarge }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       {/* Header */}
-      <View style={{ backgroundColor: '#FEA405', paddingTop: Platform.OS === 'web' ? 24 : 48, paddingBottom: 80, paddingHorizontal: 24 }}>
-        <Bone width={180} height={24} borderRadius={6} />
+      <View className={`bg-[#FEA405] ${Platform.OS === 'web' ? 'pt-6' : 'pt-12'} pb-20 px-6 flex-row items-center w-full`}>
+        <View style={{ width: contentWidth, flexDirection: 'row', alignItems: 'center', alignSelf: contentWidth ? 'center' : undefined }}>
+          <Ionicons name="arrow-back" size={24} color="white" style={{ marginRight: 12 }} />
+          <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>Profile Settings</Text>
+        </View>
       </View>
 
       {/* Avatar + name */}
@@ -54,6 +58,20 @@ export default function SkeletonLoading({ contentWidth, isLarge }: Props) {
         ))}
         <Bone width="100%" height={52} borderRadius={16} style={{ marginTop: 16 }} />
         <Bone width="100%" height={52} borderRadius={16} style={{ marginTop: 12 }} />
+      </View>
+
+      {/* Logout button */}
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingBottom: Platform.OS === 'web' ? 16 : 32, paddingTop: 12, backgroundColor: '#F9FAFB', alignItems: isLarge ? 'center' : undefined }}>
+        <View style={{ width: contentWidth ?? '100%' }}>
+          <TouchableOpacity
+            className="bg-white border border-red-300 py-4 rounded-2xl flex-row items-center justify-center"
+            disabled
+            activeOpacity={0.8}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+            <Text className="text-red-500 text-base font-semibold ml-2">Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
