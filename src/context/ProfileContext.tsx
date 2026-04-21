@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getProfile } from '@/controllers/profileController';
+import { onAuthStateChange } from '@/controllers/authController';
 
 const DEFAULT_AVATAR = require('../assets/images/default_profile.jpg');
 
@@ -20,12 +21,26 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('not_verified');
 
   useEffect(() => {
-    getProfile().then((result) => {
-      if (result.success && result.data) {
-        if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
-        setVerificationStatus(result.data.verificationStatus);
+    const fetchProfile = () => {
+      getProfile().then((result) => {
+        if (result.success && result.data) {
+          if (result.data.avatarUrl) setAvatarUrl({ uri: result.data.avatarUrl });
+          setVerificationStatus(result.data.verificationStatus);
+        }
+      });
+    };
+
+    fetchProfile();
+
+    const { data: { subscription } } = onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') fetchProfile();
+      if (event === 'SIGNED_OUT') {
+        setAvatarUrl(DEFAULT_AVATAR);
+        setVerificationStatus('not_verified');
       }
     });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
