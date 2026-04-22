@@ -1,5 +1,6 @@
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import type { DashboardErrand } from '@/controllers/errandController';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -12,16 +13,20 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ErrandCard({ errand }: { errand: DashboardErrand }) {
+  const router = useRouter();
   const color = STATUS_COLORS[errand.status] ?? '#6B7280';
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
     ? { uri: errand.poster_avatar }
     : DEFAULT_AVATAR;
 
   return (
-    <View style={{
-      backgroundColor: 'white', borderRadius: 14, padding: 14,
-      shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
-    }}>
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => router.push(`/errand/${errand.id}`)}
+      style={{
+        backgroundColor: 'white', borderRadius: 14, padding: 14,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+      }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
           <Image source={avatar} style={{ width: 28, height: 28, borderRadius: 14 }} />
@@ -48,6 +53,6 @@ export default function ErrandCard({ errand }: { errand: DashboardErrand }) {
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
