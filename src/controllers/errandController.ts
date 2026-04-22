@@ -3,6 +3,7 @@ import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/m
 import * as ImagePicker from 'expo-image-picker';
 import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
+import { sendErrandAcceptedEmail } from '@/models/emailModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -213,6 +214,8 @@ export const acceptErrand = async (
       `Your errand "${errandInfo.title}" has been accepted.`,
       `/chat?userId=${user.id}`,
     );
+
+    sendErrandAcceptedEmail(posterId, errandInfo, user.id);
 
     return { success: true, error: '' };
   } catch {
