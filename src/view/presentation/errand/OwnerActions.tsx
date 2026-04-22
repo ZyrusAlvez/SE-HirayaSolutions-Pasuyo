@@ -76,7 +76,13 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
     </Modal>
     <View style={{ flexDirection: 'row', gap: 8 }}>
       <TouchableOpacity
-        onPress={onEditToggle}
+        onPress={() => {
+          if (!isEditing && status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' });
+            return;
+          }
+          onEditToggle();
+        }}
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
           gap: 6, paddingVertical: 12, borderRadius: 14,
