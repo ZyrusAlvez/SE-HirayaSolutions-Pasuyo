@@ -89,17 +89,15 @@ export type ErrandUpdates = {
 export const editErrand = async (
   errandId: string,
   params: ErrandEditParams,
+  status: string,
 ): Promise<{ success: boolean; error: string; data?: ErrandUpdates }> => {
   const { title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation } = params;
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be edited.' };
   if (!title.trim()) return { success: false, error: 'Title cannot be empty.' };
   if (!description.trim()) return { success: false, error: 'Description cannot be empty.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
 
   try {
-    const { data: current, error: statusError } = await errandModel.getErrandStatus(errandId);
-    if (statusError || !current) return { success: false, error: 'Errand not found.' };
-    if (current.status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be edited.' };
-
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 

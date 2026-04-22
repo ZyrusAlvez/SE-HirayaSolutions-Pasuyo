@@ -19,6 +19,7 @@ interface ErrandEditData {
   title: string;
   description: string;
   is_remote: boolean;
+  status: string;
   budget?: number;
   deadline?: string;
   location_name?: string;
@@ -55,7 +56,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
     setSaving(true);
     const result = await editErrand(errand.id, {
       title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation,
-    });
+    }, errand.status);
     setSaving(false);
     if (!result.success) {
       toast({ title: result.error, preset: 'error' });
