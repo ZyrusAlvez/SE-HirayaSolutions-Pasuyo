@@ -128,7 +128,8 @@ export const editErrand = async (
   }
 };
 
-export const deleteErrand = async (id: string): Promise<{ success: boolean; error: string }> => {
+export const deleteErrand = async (id: string, status: string): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be deleted.' };
   try {
     const { error } = await errandModel.deleteErrand(id);
     if (error) return { success: false, error: 'Failed to delete errand' };

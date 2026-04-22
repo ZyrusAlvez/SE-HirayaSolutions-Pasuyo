@@ -9,18 +9,19 @@ const ACCENT = '#FEA405';
 
 interface Props {
   errandId: string;
+  status: string;
   isEditing: boolean;
   onEditToggle: () => void;
 }
 
-export default function OwnerActions({ errandId, isEditing, onEditToggle }: Props) {
+export default function OwnerActions({ errandId, status, isEditing, onEditToggle }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
-    const result = await deleteErrand(errandId);
+    const result = await deleteErrand(errandId, status);
     if (!result.success) {
       toast({ title: result.error, preset: 'error' });
       setDeleting(false);

@@ -94,6 +94,7 @@ export default function ErrandDetailScreen() {
           {isOwner && (
             <OwnerActions
               errandId={errand.id}
+              status={errand.status}
               isEditing={isEditing}
               onEditToggle={() => setIsEditing(e => !e)}
             />
