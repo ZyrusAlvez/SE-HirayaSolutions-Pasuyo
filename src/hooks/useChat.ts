@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
+import { usePathname } from 'expo-router';
 import { loadConversations, loadMessages, handleSendMessage, handleSendFile, markAsRead, startConversation, Conversation, Message } from '@/controllers/chatController';
 import { subscribeToMessages, subscribeToTyping, broadcastTyping } from '@/models/chatModel';
 import { getLastSeen } from '@/models/presenceModel';
@@ -8,6 +10,8 @@ import { toast } from '@/utils/toast';
 
 export function useChat(targetUserId?: string) {
   const { onlineUsers } = usePresence();
+  const pathname = usePathname();
+  const isChatActive = pathname === '/chat';
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -25,8 +29,10 @@ export function useChat(targetUserId?: string) {
 
   const selectedIdRef = useRef(selectedId);
   const currentUserIdRef = useRef(currentUserId);
+  const isChatActiveRef = useRef(isChatActive);
   selectedIdRef.current = selectedId;
   currentUserIdRef.current = currentUserId;
+  isChatActiveRef.current = isChatActive;
 
   // Init: auth, target user, load conversations
   useEffect(() => {
@@ -60,7 +66,7 @@ export function useChat(targetUserId?: string) {
       }
       setMessagesLoading(false);
     });
-    markAsRead(selectedId, currentUserId);
+    if (isChatActive) markAsRead(selectedId, currentUserId);
     setConversations((prev) =>
       prev.map((c) => c.id === selectedId ? { ...c, last_message_is_read: true } : c)
     );
@@ -167,7 +173,7 @@ export function useChat(targetUserId?: string) {
           setMessages((prev) => [...prev, msg]);
           setOtherTyping(false);
           if (typingTimeoutRef.current) { clearTimeout(typingTimeoutRef.current); typingTimeoutRef.current = null; }
-          markAsRead(selId!, uid);
+          if (isChatActiveRef.current) markAsRead(selId!, uid);
         }
 
         setTypingConvos((prev) => {

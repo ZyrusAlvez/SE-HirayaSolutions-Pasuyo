@@ -82,6 +82,16 @@ export const markMessagesAsRead = async (conversationId: string, userId: string)
 export const sendSystemMessage = (conversationId: string, content: string) =>
   supabase.from('messages').insert({ conversation_id: conversationId, sender_id: null, content, is_read: true }).select().single();
 
+export const getUnreadCount = async (userId: string): Promise<number> => {
+  const { count } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_read', false)
+    .neq('sender_id', userId)
+    .not('sender_id', 'is', null);
+  return count ?? 0;
+};
+
 export const subscribeToMessages = (
   onNewMessage: (payload: any) => void,
   onMessageUpdate?: (payload: any) => void,
