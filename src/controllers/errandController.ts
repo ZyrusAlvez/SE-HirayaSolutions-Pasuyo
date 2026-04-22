@@ -142,10 +142,12 @@ export const deleteErrand = async (id: string, status: string): Promise<{ succes
 export type DashboardErrand = {
   id: string;
   title: string;
+  description: string;
   status: string;
   budget?: number;
-  deadline?: string;
   is_remote: boolean;
+  poster_name?: string;
+  poster_avatar?: string;
   created_at: string;
 };
 

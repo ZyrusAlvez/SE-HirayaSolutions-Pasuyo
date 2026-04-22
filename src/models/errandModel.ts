@@ -95,13 +95,13 @@ export const acceptErrand = (id: string, userId: string) =>
 export const getPostedErrands = (userId: string) =>
   supabase
     .from('errands_with_profiles')
-    .select('id, title, status, budget, deadline, is_remote, created_at')
+    .select('id, title, description, status, budget, is_remote, poster_name, poster_avatar, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
 export const getAcceptedErrands = (userId: string) =>
   supabase
-    .from('errands')
-    .select('id, title, status, budget, deadline, is_remote, created_at')
+    .from('errands_with_profiles')
+    .select('id, title, description, status, budget, is_remote, poster_name, poster_avatar, created_at')
     .eq('accepted_by', userId)
     .order('created_at', { ascending: false });
