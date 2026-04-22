@@ -33,9 +33,9 @@ export default function NavBar() {
         <Text className={`text-xs mt-1 ${isActive('/post-errand') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Post Errand</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/tasks')}>
-        <Ionicons name="list-outline" size={24} color={isActive('/tasks') ? '#FEA405' : '#9CA3AF'} />
-        <Text className={`text-xs mt-1 ${isActive('/tasks') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>My Tasks</Text>
+      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/dashboard')}>
+        <Ionicons name="list-outline" size={24} color={isActive('/dashboard') ? '#FEA405' : '#9CA3AF'} />
+        <Text className={`text-xs mt-1 ${isActive('/dashboard') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Dashboard</Text>
       </TouchableOpacity>
       </View>
     </View>
