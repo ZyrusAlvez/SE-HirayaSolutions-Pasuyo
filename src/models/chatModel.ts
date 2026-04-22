@@ -79,6 +79,9 @@ export const markMessagesAsRead = async (conversationId: string, userId: string)
   return msgResult;
 };
 
+export const sendSystemMessage = (conversationId: string, content: string) =>
+  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: null, content, is_read: true }).select().single();
+
 export const subscribeToMessages = (
   onNewMessage: (payload: any) => void,
   onMessageUpdate?: (payload: any) => void,

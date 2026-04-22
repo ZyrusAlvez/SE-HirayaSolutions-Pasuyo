@@ -83,6 +83,16 @@ function getStatusLabel(status?: MessageStatus) {
   return null;
 }
 
+function SystemMessage({ content }: { content: string }) {
+  return (
+    <View style={{ marginVertical: 16 }}>
+      <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+      <Text style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', paddingVertical: 8, lineHeight: 16 }}>{content}</Text>
+      <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+    </View>
+  );
+}
+
 function MessageBubble({ item, isMe, otherAvatar, isLastOwn, onImagePress }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean; onImagePress?: () => void }) {
   const [revealed, setRevealed] = useState(false);
   const hasFile = !!item.file_url;
@@ -245,9 +255,23 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 12 }} color="#6B7280" /> : null}
           renderItem={({ item, index }) => {
             const actualIndex = messages.length - 1 - index;
-            const isMe = item.sender_id === currentUserId;
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
+
+            if (!item.sender_id) {
+              return (
+                <>
+                  <SystemMessage content={item.content} />
+                  {showSeparator && (
+                    <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
+                      {formatSeparatorTime(item.created_at)}
+                    </Text>
+                  )}
+                </>
+              );
+            }
+
+            const isMe = item.sender_id === currentUserId;
             return (
               <>
                 <MessageBubble
