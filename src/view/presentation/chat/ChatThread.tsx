@@ -3,6 +3,7 @@ import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, A
 import { Ionicons } from '@expo/vector-icons';
 import { Message, MessageStatus } from '@/controllers/chatController';
 import ImageViewer from '@/view/components/ImageViewer';
+import SystemMessage from '@/view/presentation/chat/SystemMessage';
 import FileBubble from '@/view/presentation/chat/FileBubble';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -81,40 +82,6 @@ function getStatusLabel(status?: MessageStatus) {
   if (status === 'seen') return 'Seen';
   if (status === 'sent') return 'Sent';
   return null;
-}
-
-function SystemMessage({ content }: { content: string }) {
-  let errandInfo: { type?: string; title?: string; description?: string; budget?: number } | null = null;
-  try { errandInfo = JSON.parse(content); } catch {}
-
-  if (errandInfo?.type === 'errand_accepted') {
-    return (
-      <View style={{ alignItems: 'center', marginVertical: 16 }}>
-        <View style={{ width: '100%', maxWidth: 320 }}>
-          <View style={{ backgroundColor: '#FFFBEB', borderRadius: 12, borderWidth: 1, borderColor: '#FDE68A', padding: 12, marginBottom: 8 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#111827', flex: 1, marginRight: 8 }} numberOfLines={1}>{errandInfo.title}</Text>
-              {errandInfo.budget != null && (
-                <Text style={{ fontSize: 12, fontWeight: '700', color: '#D97706' }}>₱{errandInfo.budget.toLocaleString()}</Text>
-              )}
-            </View>
-            <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 17, marginTop: 4 }} numberOfLines={2}>{errandInfo.description}</Text>
-          </View>
-        </View>
-        <View style={{ height: 1, backgroundColor: '#E5E7EB', width: '100%' }} />
-        <Text style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', paddingVertical: 8, lineHeight: 16, fontStyle: 'italic' }}>This errand has been accepted</Text>
-        <View style={{ height: 1, backgroundColor: '#E5E7EB', width: '100%' }} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={{ marginVertical: 16 }}>
-      <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
-      <Text style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', paddingVertical: 8, lineHeight: 16, fontStyle: 'italic' }}>{content}</Text>
-      <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
-    </View>
-  );
 }
 
 function MessageBubble({ item, isMe, otherAvatar, isLastOwn, onImagePress }: { item: Message; isMe: boolean; otherAvatar?: string | null; isLastOwn: boolean; onImagePress?: () => void }) {
