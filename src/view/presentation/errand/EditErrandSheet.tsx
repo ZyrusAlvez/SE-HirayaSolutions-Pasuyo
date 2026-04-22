@@ -58,7 +58,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
     });
     setSaving(false);
     if (!result.success) {
-      Alert.alert('Required', result.error);
+      toast({ title: result.error, preset: 'error' });
       return;
     }
     toast({ title: 'Errand updated!', preset: 'done' });
