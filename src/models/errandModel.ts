@@ -9,6 +9,7 @@ export type Errand = {
   description: string;
   is_remote: boolean;
   status: ErrandStatus;
+  accepted_by: string | null;
   location_lat: number | null;
   location_lng: number | null;
   location_name?: string;
@@ -86,3 +87,6 @@ export const deleteErrand = (id: string) =>
 
 export const updateErrand = (id: string, updates: Record<string, any>) =>
   supabase.from('errands').update(updates).eq('id', id);
+
+export const acceptErrand = (id: string, userId: string) =>
+  supabase.from('errands').update({ accepted_by: userId, status: 'In Progress' }).eq('id', id);

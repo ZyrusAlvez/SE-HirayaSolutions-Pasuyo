@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getErrand } from '@/controllers/errandController';
+import { getErrand, acceptErrand } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
 import { getProfile } from '@/controllers/profileController';
 import Header from '@/view/components/Header';
@@ -15,6 +15,7 @@ import OwnerActions from '@/view/presentation/errand/OwnerActions';
 import EditErrandSheet from '@/view/presentation/errand/EditErrandSheet';
 import SkeletonLoading from '@/view/presentation/errand/SkeletonLoading';
 import ImageViewer from '@/view/components/ImageViewer';
+import { toast } from '@/utils/toast';
 
 const ACCENT = '#FEA405';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
@@ -133,7 +134,7 @@ export default function ErrandDetailScreen() {
             postedOn={new Date(errand.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
           />
 
-          {errand.status === 'Available' && !isOwner && (
+          {!isOwner && (
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
               <TouchableOpacity
                 activeOpacity={0.85}
@@ -149,9 +150,12 @@ export default function ErrandDetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={() => {
-                  if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`);
-                  else router.push(`/chat?userId=${errand.user_id}`);
+                onPress={async () => {
+                  if (isGuest) { router.push(`/signup?redirect=/errand/${errand.id}`); return; }
+                  const result = await acceptErrand(errand.id, errand.status);
+                  if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
+                  toast({ title: 'Errand accepted!', preset: 'done' });
+                  setErrand(prev => prev ? { ...prev, status: 'In Progress', accepted_by: currentUserId } : prev);
                 }}
                 style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
               >

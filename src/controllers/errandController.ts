@@ -139,6 +139,27 @@ export const deleteErrand = async (id: string, status: string): Promise<{ succes
   }
 };
 
+export const acceptErrand = async (
+  errandId: string,
+  status: string,
+): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
+  if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has already been completed.' };
+
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await errandModel.acceptErrand(errandId, user.id);
+    if (error) return { success: false, error: 'Failed to accept errand' };
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
 export const postErrand = async (
   params: PostErrandParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
