@@ -88,8 +88,7 @@ export const handleSendFile = async (
     const upload = await chatModel.uploadChatFile(conversationId, uri, fileName, mimeType);
     if (upload.error || !upload.data) return { success: false, error: 'Failed to upload file' };
 
-    const displayName = fileName;
-    const content = mimeType.startsWith('image/') ? '📷 Photo' : `📎 ${displayName}`;
+    const content = mimeType.startsWith('image/') ? 'Sent a photo' : 'Sent a file';
     const { data, error } = await chatModel.sendMessage(conversationId, userId, content, {
       file_url: upload.data.url,
       file_name: upload.data.name,

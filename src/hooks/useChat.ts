@@ -121,7 +121,7 @@ export function useChat(targetUserId?: string) {
       id: tempId,
       conversation_id: selectedId,
       sender_id: currentUserId,
-      content: isImage ? '📷 Photo' : `📎 ${fileName}`,
+      content: isImage ? 'Sent a photo' : 'Sent a file',
       is_read: false,
       created_at: new Date().toISOString(),
       file_url: uri,
@@ -135,6 +135,15 @@ export function useChat(targetUserId?: string) {
     if (result.success) {
       setMessages((prev) =>
         prev.map((m) => m.id === tempId ? { ...result.data, _status: 'sent' } : m)
+      );
+      setConversations((prev) =>
+        prev
+          .map((c) =>
+            c.id === selectedId
+              ? { ...c, last_message: result.data.content, last_message_at: result.data.created_at, last_message_sender_id: currentUserId, last_message_is_read: false }
+              : c
+          )
+          .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
       );
     } else {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));

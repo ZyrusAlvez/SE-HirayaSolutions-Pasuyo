@@ -195,6 +195,7 @@ export const acceptErrand = async (
     if (convo) {
       const systemContent = JSON.stringify({
         type: 'errand_accepted',
+        acceptedBy: user.id,
         title: errandInfo.title,
         description: errandInfo.description,
         budget: errandInfo.budget,
