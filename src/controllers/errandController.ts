@@ -139,6 +139,38 @@ export const deleteErrand = async (id: string, status: string): Promise<{ succes
   }
 };
 
+export type DashboardErrand = {
+  id: string;
+  title: string;
+  status: string;
+  budget?: number;
+  deadline?: string;
+  is_remote: boolean;
+  created_at: string;
+};
+
+export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardErrand[]; accepted: DashboardErrand[] }>> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [posted, accepted] = await Promise.all([
+      errandModel.getPostedErrands(user.id),
+      errandModel.getAcceptedErrands(user.id),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        posted: (posted.data ?? []) as DashboardErrand[],
+        accepted: (accepted.data ?? []) as DashboardErrand[],
+      },
+    };
+  } catch {
+    return { success: false, error: 'Failed to load dashboard' };
+  }
+};
+
 export const acceptErrand = async (
   errandId: string,
   status: string,

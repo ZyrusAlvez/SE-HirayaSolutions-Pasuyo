@@ -91,3 +91,17 @@ export const updateErrand = (id: string, updates: Record<string, any>) =>
 
 export const acceptErrand = (id: string, userId: string) =>
   supabase.from('errands').update({ accepted_by: userId, status: 'In Progress' }).eq('id', id);
+
+export const getPostedErrands = (userId: string) =>
+  supabase
+    .from('errands_with_profiles')
+    .select('id, title, status, budget, deadline, is_remote, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+export const getAcceptedErrands = (userId: string) =>
+  supabase
+    .from('errands')
+    .select('id, title, status, budget, deadline, is_remote, created_at')
+    .eq('accepted_by', userId)
+    .order('created_at', { ascending: false });
