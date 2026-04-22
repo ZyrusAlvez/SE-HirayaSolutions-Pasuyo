@@ -9,19 +9,21 @@ const ACCENT = '#FEA405';
 
 interface Props {
   errandId: string;
+  status: string;
   isEditing: boolean;
   onEditToggle: () => void;
 }
 
-export default function OwnerActions({ errandId, isEditing, onEditToggle }: Props) {
+export default function OwnerActions({ errandId, status, isEditing, onEditToggle }: Props) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
-    const result = await deleteErrand(errandId);
+    const result = await deleteErrand(errandId, status);
     if (!result.success) {
+      setConfirmVisible(false);
       toast({ title: result.error, preset: 'error' });
       setDeleting(false);
     } else {
@@ -74,7 +76,13 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
     </Modal>
     <View style={{ flexDirection: 'row', gap: 8 }}>
       <TouchableOpacity
-        onPress={onEditToggle}
+        onPress={() => {
+          if (!isEditing && status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' });
+            return;
+          }
+          onEditToggle();
+        }}
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
           gap: 6, paddingVertical: 12, borderRadius: 14,
@@ -90,7 +98,13 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => setConfirmVisible(true)}
+        onPress={() => {
+          if (status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be deleted.', preset: 'error' });
+            return;
+          }
+          setConfirmVisible(true);
+        }}
         disabled={deleting}
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',

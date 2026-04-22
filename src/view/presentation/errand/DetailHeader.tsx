@@ -12,7 +12,7 @@ interface Props {
 export default function ErrandDetailHeader({ isRemote, errandId }: Props) {
   const router = useRouter();
   const typeLabel = isRemote ? 'Remote Errand' : 'Onsite Errand';
-  const typeColor = isRemote ? '#3B82F6' : '#10B981';
+  const typeIcon = isRemote ? 'cloud-outline' : 'location-outline';
 
   const handleShare = async () => {
     const url = Platform.OS === 'web'
@@ -36,8 +36,9 @@ export default function ErrandDetailHeader({ isRemote, errandId }: Props) {
         <TouchableOpacity onPress={handleShare} activeOpacity={0.7}>
           <Ionicons name="share-social-outline" size={20} color="#6B7280" />
         </TouchableOpacity>
-        <View style={{ backgroundColor: typeColor + '1A', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: typeColor }}>{typeLabel}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+          <Ionicons name={typeIcon} size={12} color="#6B7280" />
+          <Text style={{ fontSize: 11, fontWeight: '700', color: '#6B7280' }}>{typeLabel}</Text>
         </View>
       </View>
     </View>

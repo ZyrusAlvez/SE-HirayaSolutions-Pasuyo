@@ -89,8 +89,10 @@ export type ErrandUpdates = {
 export const editErrand = async (
   errandId: string,
   params: ErrandEditParams,
+  status: string,
 ): Promise<{ success: boolean; error: string; data?: ErrandUpdates }> => {
   const { title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation } = params;
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be edited.' };
   if (!title.trim()) return { success: false, error: 'Title cannot be empty.' };
   if (!description.trim()) return { success: false, error: 'Description cannot be empty.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
@@ -126,13 +128,35 @@ export const editErrand = async (
   }
 };
 
-export const deleteErrand = async (id: string): Promise<{ success: boolean; error: string }> => {
+export const deleteErrand = async (id: string, status: string): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be deleted.' };
   try {
     const { error } = await errandModel.deleteErrand(id);
     if (error) return { success: false, error: 'Failed to delete errand' };
     return { success: true, error: '' };
   } catch {
     return { success: false, error: 'Failed to delete errand' };
+  }
+};
+
+export const acceptErrand = async (
+  errandId: string,
+  status: string,
+): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
+  if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has already been completed.' };
+
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await errandModel.acceptErrand(errandId, user.id);
+    if (error) return { success: false, error: 'Failed to accept errand' };
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
   }
 };
 

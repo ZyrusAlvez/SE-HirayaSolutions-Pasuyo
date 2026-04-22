@@ -9,6 +9,7 @@ export type Errand = {
   description: string;
   is_remote: boolean;
   status: ErrandStatus;
+  accepted_by: string | null;
   location_lat: number | null;
   location_lng: number | null;
   location_name?: string;
@@ -79,10 +80,14 @@ export const getAvailableErrands = () =>
   supabase
     .from('errands_with_profiles')
     .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images, poster_name, poster_avatar, poster_is_verified')
-    .eq('status', 'Available');
+    .eq('status', 'Available')
+    .or('deadline.is.null,deadline.gt.' + new Date().toISOString());
 
 export const deleteErrand = (id: string) =>
   supabase.from('errands').delete().eq('id', id);
 
 export const updateErrand = (id: string, updates: Record<string, any>) =>
   supabase.from('errands').update(updates).eq('id', id);
+
+export const acceptErrand = (id: string, userId: string) =>
+  supabase.from('errands').update({ accepted_by: userId, status: 'In Progress' }).eq('id', id);

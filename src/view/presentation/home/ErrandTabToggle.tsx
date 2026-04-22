@@ -26,7 +26,7 @@ export default function ErrandTabToggle({ tab, onTabChange }: Props) {
         onPress={() => onTabChange('remote')}
         activeOpacity={0.8}
       >
-        <Ionicons name="globe-outline" size={15} color={tab === 'remote' ? '#111827' : '#9CA3AF'} />
+        <Ionicons name="cloud-outline" size={15} color={tab === 'remote' ? '#111827' : '#9CA3AF'} />
         <Text className={`text-sm font-semibold ${tab === 'remote' ? 'text-gray-900' : 'text-gray-400'}`}>
           Remote Errands
         </Text>

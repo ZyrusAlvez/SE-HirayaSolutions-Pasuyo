@@ -37,8 +37,8 @@ export default function ErrandDetailCard({
   const statusBadgeColor: Record<string, string> = {
     Available: '#10B981',
     Expired: '#EF4444',
-    'In Progress': '#8B5CF6',
-    Completed: '#3B82F6',
+    'In Progress': '#F59E0B',
+    Completed: '#10B981',
   };
   const badgeColor = statusBadgeColor[status] ?? '#6B7280';
 
