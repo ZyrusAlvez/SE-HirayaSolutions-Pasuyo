@@ -23,6 +23,7 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
     setDeleting(true);
     const result = await deleteErrand(errandId, status);
     if (!result.success) {
+      setConfirmVisible(false);
       toast({ title: result.error, preset: 'error' });
       setDeleting(false);
     } else {
@@ -91,7 +92,13 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => setConfirmVisible(true)}
+        onPress={() => {
+          if (status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be deleted.', preset: 'error' });
+            return;
+          }
+          setConfirmVisible(true);
+        }}
         disabled={deleting}
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
