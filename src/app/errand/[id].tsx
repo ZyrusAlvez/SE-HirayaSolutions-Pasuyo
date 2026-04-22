@@ -152,7 +152,11 @@ export default function ErrandDetailScreen() {
                 activeOpacity={0.85}
                 onPress={async () => {
                   if (isGuest) { router.push(`/signup?redirect=/errand/${errand.id}`); return; }
-                  const result = await acceptErrand(errand.id, errand.status, errand.user_id);
+                  const result = await acceptErrand(errand.id, errand.status, errand.user_id, {
+                    title: errand.title,
+                    description: errand.description,
+                    budget: errand.budget,
+                  });
                   if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
                   toast({ title: 'Errand accepted!', preset: 'done' });
                   setErrand(prev => prev ? { ...prev, status: 'In Progress', accepted_by: currentUserId } : prev);

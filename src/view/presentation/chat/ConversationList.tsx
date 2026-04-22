@@ -27,6 +27,15 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(hrs / 24)}d`;
 }
 
+function formatPreview(message: string | undefined, senderId: string | undefined, currentUserId: string) {
+  if (!message) return 'No messages yet';
+  if (!senderId) {
+    try { JSON.parse(message); return 'Errand accepted'; } catch {}
+    return message;
+  }
+  return senderId === currentUserId ? `You: ${message}` : message;
+}
+
 export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading, fullWidth, typingConvos }: Props) {
   const getOther = (c: Conversation) =>
     c.user1_id === currentUserId
@@ -75,14 +84,10 @@ export default function ConversationList({ conversations, currentUserId, selecte
                     {other.name ?? 'Unknown'}
                   </Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
-                    <Text style={{ flex: 1, fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400' }} numberOfLines={1}>
+                    <Text style={{ flex: 1, fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400', fontStyle: !item.last_message_sender_id && item.last_message ? 'italic' : 'normal' }} numberOfLines={1}>
                       {typingConvos?.has(item.id) ? (
                         <Text style={{ color: '#3B82F6', fontStyle: 'italic' }}>typing...</Text>
-                      ) : item.last_message ? (
-                        item.last_message_sender_id === currentUserId ? `You: ${item.last_message}` : item.last_message
-                      ) : (
-                        'No messages yet'
-                      )}
+                      ) : formatPreview(item.last_message, item.last_message_sender_id, currentUserId)}
                     </Text>
                     <Text style={{ fontSize: 11, color: unread ? '#3B82F6' : '#9CA3AF', fontWeight: unread ? '600' : '400', marginLeft: 8 }}>
                       {timeAgo(item.last_message_at)}

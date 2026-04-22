@@ -178,6 +178,7 @@ export const acceptErrand = async (
   errandId: string,
   status: string,
   posterId: string,
+  errandInfo: { title: string; description: string; budget?: number },
 ): Promise<{ success: boolean; error: string }> => {
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
   if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
@@ -192,7 +193,13 @@ export const acceptErrand = async (
 
     const { data: convo, error: convoError } = await chatModel.getOrCreateConversation(user.id, posterId);
     if (convo) {
-      const { error: msgError } = await chatModel.sendSystemMessage(convo.id, 'This errand has been accepted. You can now coordinate the details here.');
+      const systemContent = JSON.stringify({
+        type: 'errand_accepted',
+        title: errandInfo.title,
+        description: errandInfo.description,
+        budget: errandInfo.budget,
+      });
+      const { error: msgError } = await chatModel.sendSystemMessage(convo.id, systemContent);
       if (msgError) console.warn('System message failed:', msgError.message);
     } else {
       console.warn('Failed to get/create conversation:', convoError?.message);

@@ -8,7 +8,7 @@ export type MessageStatus = 'sending' | 'sent' | 'seen';
 export type Message = {
   id: string;
   conversation_id: string;
-  sender_id: string;
+  sender_id: string | null;
   content: string;
   is_read: boolean;
   created_at: string;
