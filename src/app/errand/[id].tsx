@@ -156,6 +156,7 @@ export default function ErrandDetailScreen() {
                   if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
                   toast({ title: 'Errand accepted!', preset: 'done' });
                   setErrand(prev => prev ? { ...prev, status: 'In Progress', accepted_by: currentUserId } : prev);
+                  router.push(`/chat?userId=${errand.user_id}`);
                 }}
                 style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
               >
