@@ -12,8 +12,8 @@ import LoadingSpinner from '@/view/components/LoadingSpinner';
 import ErrandList from '@/view/presentation/dashboard/ErrandList';
 
 const TABS = [
-  { key: 'posted', label: 'Posted Errands', icon: 'paper-plane-outline' },
-  { key: 'accepted', label: 'Accepted Errands', icon: 'checkmark-circle-outline' },
+  { key: 'posted', label: 'My Posted Errands', icon: 'paper-plane-outline' },
+  { key: 'accepted', label: 'My Accepted Errands', icon: 'checkmark-circle-outline' },
 ];
 
 export default function DashboardScreen() {
