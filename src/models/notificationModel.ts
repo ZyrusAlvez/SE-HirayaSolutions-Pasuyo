@@ -11,8 +11,8 @@ export interface NotificationRow {
 }
 
 export const postNotification = (userId: string, title: string, message: string, action?: string) => {
-  if (!supabaseAdmin) throw new Error('Admin client not available');
-  return supabaseAdmin.from('notifications').insert({ user_id: userId, title, message, action });
+  const client = supabaseAdmin ?? supabase;
+  return client.from('notifications').insert({ user_id: userId, title, message, action });
 };
 
 export const getNotifications = async (userId: string) =>

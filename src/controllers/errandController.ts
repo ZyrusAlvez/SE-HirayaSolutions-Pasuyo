@@ -2,6 +2,7 @@ import * as errandModel from '@/models/errandModel';
 import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/models/errandModel';
 import * as ImagePicker from 'expo-image-picker';
 import * as chatModel from '@/models/chatModel';
+import { postNotification } from '@/models/notificationModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -205,6 +206,13 @@ export const acceptErrand = async (
     } else {
       console.warn('Failed to get/create conversation:', convoError?.message);
     }
+
+    await postNotification(
+      posterId,
+      'Errand Accepted',
+      `Your errand "${errandInfo.title}" has been accepted.`,
+      `/chat?userId=${user.id}`,
+    );
 
     return { success: true, error: '' };
   } catch {
