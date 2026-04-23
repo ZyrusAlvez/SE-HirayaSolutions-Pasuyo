@@ -198,6 +198,7 @@ export const acceptErrand = async (
       const systemContent = JSON.stringify({
         type: 'errand_accepted',
         acceptedBy: user.id,
+        errandId,
         title: errandInfo.title,
         description: errandInfo.description,
         budget: errandInfo.budget,

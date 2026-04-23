@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Message, MessageStatus } from '@/controllers/chatController';
 import ImageViewer from '@/view/components/ImageViewer';
 import SystemMessage from '@/view/presentation/chat/SystemMessage';
+import ErrandInfoCard from '@/view/presentation/chat/ErrandInfoCard';
 import FileBubble from '@/view/presentation/chat/FileBubble';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -166,6 +168,7 @@ function TypingIndicator() {
 }
 
 export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onSendFile, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+  const router = useRouter();
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -202,6 +205,18 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
 
   const lastOwnMsgId = [...messages].reverse().find((m) => m.sender_id === currentUserId)?.id;
 
+  const pinnedErrand = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (!messages[i].sender_id) {
+        try {
+          const parsed = JSON.parse(messages[i].content);
+          if (parsed?.type === 'errand_accepted') return parsed;
+        } catch {}
+      }
+    }
+    return null;
+  })();
+
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
@@ -228,6 +243,16 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           </Text>
         </View>
       </View>
+      {pinnedErrand && (
+        <ErrandInfoCard
+          title={pinnedErrand.title}
+          description={pinnedErrand.description}
+          budget={pinnedErrand.budget}
+          onMoreInfo={() => pinnedErrand.errandId && router.push(`/errand/${pinnedErrand.errandId}`)}
+          onMarkDone={() => {}}
+          onCancel={() => {}}
+        />
+      )}
       {loading ? (
         <ActivityIndicator style={{ flex: 1 }} color="#6B7280" />
       ) : messages.length === 0 ? (
