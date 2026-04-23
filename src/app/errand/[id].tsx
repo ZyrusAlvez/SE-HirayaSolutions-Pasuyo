@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,6 +34,7 @@ export default function ErrandDetailScreen() {
   const [isGuest, setIsGuest] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const acceptingRef = useRef(false);
 
   useEffect(() => {
     getProfile().then((result) => {
@@ -154,6 +155,8 @@ export default function ErrandDetailScreen() {
                 disabled={accepting}
                 onPress={async () => {
                   if (isGuest) { router.push(`/signup?redirect=/errand/${errand.id}`); return; }
+                  if (acceptingRef.current) return;
+                  acceptingRef.current = true;
                   setAccepting(true);
                   const result = await acceptErrand(errand.id, errand.status, errand.user_id, {
                     title: errand.title,

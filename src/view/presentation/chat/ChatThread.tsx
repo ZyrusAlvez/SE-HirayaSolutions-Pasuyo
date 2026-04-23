@@ -179,9 +179,11 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
 
   const pinnedErrands = messages
-    .filter((m) => !m.sender_id)
+    .filter((m) => {
+      try { return JSON.parse(m.content)?.type === 'errand_accepted'; } catch { return false; }
+    })
     .map((m) => { try { return JSON.parse(m.content); } catch { return null; } })
-    .filter((p) => p?.type === 'errand_accepted')
+    .filter((p) => p?.acceptedBy === currentUserId)
     .reverse();
   const hasMoreErrands = pinnedErrands.length > 1;
 
