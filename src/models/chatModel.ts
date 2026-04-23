@@ -64,7 +64,7 @@ export const uploadChatFile = async (conversationId: string, uri: string, fileNa
 };
 
 export const markMessagesAsRead = async (conversationId: string, userId: string) => {
-  const [msgResult, convoResult] = await Promise.all([
+  const [msgResult] = await Promise.all([
     supabase
       .from('messages')
       .update({ is_read: true })
@@ -79,16 +79,18 @@ export const markMessagesAsRead = async (conversationId: string, userId: string)
   return msgResult;
 };
 
-export const sendSystemMessage = (conversationId: string, content: string) =>
-  supabase.from('messages').insert({ conversation_id: conversationId, sender_id: null, content, is_read: true }).select().single();
+export const sendSystemMessage = async (conversationId: string, content: string, actorId: string) => {
+  const result = await supabase.from('messages').insert({ conversation_id: conversationId, sender_id: actorId, content, is_read: false }).select().single();
+  await supabase.from('conversations').update({ last_message_is_read: false, last_message: content, last_message_sender_id: actorId }).eq('id', conversationId);
+  return result;
+};
 
 export const getUnreadCount = async (userId: string): Promise<number> => {
   const { count } = await supabase
     .from('messages')
     .select('*', { count: 'exact', head: true })
     .eq('is_read', false)
-    .neq('sender_id', userId)
-    .not('sender_id', 'is', null);
+    .neq('sender_id', userId);
   return count ?? 0;
 };
 

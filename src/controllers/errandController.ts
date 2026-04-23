@@ -208,7 +208,7 @@ export const acceptErrand = async (
         description: errandInfo.description,
         budget: errandInfo.budget,
       });
-      const { error: msgError } = await chatModel.sendSystemMessage(convo.id, systemContent);
+      const { error: msgError } = await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
       if (msgError) console.warn('System message failed:', msgError.message);
     } else {
       console.warn('Failed to get/create conversation:', convoError?.message);

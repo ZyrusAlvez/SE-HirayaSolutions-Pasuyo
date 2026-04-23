@@ -29,16 +29,13 @@ function timeAgo(dateStr: string) {
 
 function formatPreview(message: string | undefined, senderId: string | undefined, currentUserId: string): { prefix: string; text: string; italic: boolean } {
   if (!message) return { prefix: '', text: 'No messages yet', italic: false };
-  if (!senderId) {
-    try {
-      const parsed = JSON.parse(message);
-      if (parsed?.type === 'errand_accepted') {
-        const isMe = parsed.acceptedBy === currentUserId;
-        return { prefix: isMe ? 'You: ' : '', text: 'Accepted Errand', italic: true };
-      }
-    } catch {}
-    return { prefix: '', text: message, italic: true };
-  }
+  try {
+    const parsed = JSON.parse(message);
+    if (parsed?.type === 'errand_accepted') {
+      const isMe = parsed.acceptedBy === currentUserId;
+      return { prefix: isMe ? 'You: ' : '', text: 'Accepted Errand', italic: true };
+    }
+  } catch {}
   const isMe = senderId === currentUserId;
   if (message === 'Sent a photo') return { prefix: isMe ? 'You: ' : '', text: 'Sent a photo', italic: true };
   if (message === 'Sent a file') return { prefix: isMe ? 'You: ' : '', text: 'Sent a file', italic: true };
@@ -73,7 +70,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
           renderItem={({ item }) => {
             const other = getOther(item);
             const selected = item.id === selectedId;
-            const unread = !selected && !!item.last_message_sender_id && item.last_message_sender_id !== currentUserId && !item.last_message_is_read;
+            const unread = !selected && item.last_message_sender_id !== currentUserId && !item.last_message_is_read;
             return (
               <Pressable
                 onPress={() => onSelect(item.id)}

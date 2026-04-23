@@ -308,7 +308,9 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
 
-            if (!item.sender_id) {
+            const isSystemMsg = (() => { try { return JSON.parse(item.content)?.type === 'errand_accepted'; } catch { return false; } })();
+
+            if (isSystemMsg) {
               return (
                 <>
                   <SystemMessage content={item.content} currentUserId={currentUserId} />
