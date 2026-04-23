@@ -1,6 +1,7 @@
-import { View, Text, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, Image, Pressable } from 'react-native';
 import { Conversation } from '@/controllers/chatController';
 import VerificationBadge from '@/view/components/VerificationBadge';
+import ConversationSkeleton from './ConversationSkeleton';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -58,9 +59,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
     <View style={{ width: fullWidth ? '100%' : 320, borderRightWidth: fullWidth ? 0 : 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
       <Text style={{ padding: 16, fontWeight: '700', fontSize: 18, color: '#111827' }}>Messages</Text>
       {loading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color="#6B7280" />
-        </View>
+        <ConversationSkeleton />
       ) : conversations.length === 0 ? (
         <Text style={{ padding: 16, color: '#9CA3AF', fontSize: 14 }}>No conversations yet. Start browsing errands and chat with task posters.</Text>
       ) : (

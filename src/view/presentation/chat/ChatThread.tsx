@@ -6,6 +6,7 @@ import { Message, MessageStatus } from '@/controllers/chatController';
 import ImageViewer from '@/view/components/ImageViewer';
 import SystemMessage from '@/view/presentation/chat/SystemMessage';
 import ErrandInfoCard from '@/view/presentation/chat/ErrandInfoCard';
+import ChatSkeleton from '@/view/presentation/chat/ChatSkeleton';
 import FileBubble from '@/view/presentation/chat/FileBubble';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -289,7 +290,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
         </Pressable>
       )}
       {loading ? (
-        <ActivityIndicator style={{ flex: 1 }} color="#6B7280" />
+        <ChatSkeleton />
       ) : messages.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#9CA3AF', fontSize: 14 }}>No messages yet. Say hello!</Text>
