@@ -66,10 +66,12 @@ export function useChat(targetUserId?: string) {
       }
       setMessagesLoading(false);
     });
-    if (isChatActive) markAsRead(selectedId, currentUserId);
-    setConversations((prev) =>
-      prev.map((c) => c.id === selectedId ? { ...c, last_message_is_read: true } : c)
-    );
+    if (isChatActive) {
+      markAsRead(selectedId, currentUserId);
+      setConversations((prev) =>
+        prev.map((c) => c.id === selectedId ? { ...c, last_message_is_read: true } : c)
+      );
+    }
   }, [selectedId]);
 
   const handleLoadMore = useCallback(() => {
@@ -191,7 +193,7 @@ export function useChat(targetUserId?: string) {
                     last_message: msg.content,
                     last_message_at: msg.created_at,
                     last_message_sender_id: msg.sender_id ?? undefined,
-                    last_message_is_read: msg.conversation_id === selId,
+                    last_message_is_read: msg.conversation_id === selId && isChatActiveRef.current,
                   }
                 : c
             )
