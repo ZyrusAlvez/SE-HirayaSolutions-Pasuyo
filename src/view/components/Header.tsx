@@ -43,7 +43,7 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
           <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} onUnreadChange={setUnreadCount} />
-          <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7} style={{ marginRight: 8 }}>
+          <TouchableOpacity testID="notifications-bell" onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7} style={{ marginRight: 8 }}>
             <View>
               <Ionicons name="notifications-outline" size={22} color="#6B7280" />
               {unreadCount > 0 && (

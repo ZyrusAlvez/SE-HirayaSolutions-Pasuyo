@@ -22,6 +22,7 @@ export default function ErrandTabToggle({ tab, onTabChange }: Props) {
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
+        testID="tab-remote"
         className={`flex-1 py-2 rounded-lg flex-row items-center justify-center gap-1 ${tab === 'remote' ? 'bg-white shadow' : ''}`}
         onPress={() => onTabChange('remote')}
         activeOpacity={0.8}

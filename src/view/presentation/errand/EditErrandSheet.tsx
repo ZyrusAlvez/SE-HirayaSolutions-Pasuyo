@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { editErrand } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
@@ -58,7 +58,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
     });
     setSaving(false);
     if (!result.success) {
-      Alert.alert('Required', result.error);
+      toast({ title: result.error, preset: 'error' });
       return;
     }
     toast({ title: 'Errand updated!', preset: 'done' });
@@ -85,8 +85,8 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
         </TouchableOpacity>
       </View>
 
-      <TextInput label="Title" required placeholder="e.g. Deliver documents to Makati" value={title} onChangeText={setTitle} />
-      <TextInput label="Description" required placeholder="Describe the task in detail..." value={description} onChangeText={setDescription} multiline numberOfLines={4} textAlignVertical="top" style={{ minHeight: 100 }} />
+      <TextInput testID="edit-errand-title" label="Title" required placeholder="e.g. Deliver documents to Makati" value={title} onChangeText={setTitle} />
+      <TextInput testID="edit-errand-description" label="Description" required placeholder="Describe the task in detail..." value={description} onChangeText={setDescription} multiline numberOfLines={4} textAlignVertical="top" style={{ minHeight: 100 }} />
 
       <TaskType isRemote={isRemote} onChange={setIsRemote} />
 
@@ -102,6 +102,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
       <ImageUploader images={images} errors={imageErrors} onChange={setImages} onErrors={setImageErrors} />
 
       <TouchableOpacity
+        testID="edit-errand-save"
         onPress={handleSave}
         disabled={saving}
         style={{ backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 8 }}

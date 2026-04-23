@@ -17,6 +17,7 @@ export default function TaskType({ isRemote, onChange }: Props) {
           return (
             <TouchableOpacity
               key={type}
+              testID={`task-type-${type.toLowerCase()}`}
               onPress={() => onChange(type === 'Remote')}
               className={`flex-1 py-4 rounded-2xl border items-center bg-gray-50 ${selected ? 'border-[#FEA405]' : 'border-gray-200'}`}
             >

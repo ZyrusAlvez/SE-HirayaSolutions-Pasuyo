@@ -8,6 +8,7 @@ interface Props {
 export default function Budget({ value, onChange }: Props) {
   return (
     <TextInput
+      testID="post-errand-budget"
       label="Budget (₱)"
       placeholder="e.g. 500"
       value={value}

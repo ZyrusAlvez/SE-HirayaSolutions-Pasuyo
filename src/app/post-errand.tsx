@@ -86,6 +86,7 @@ export default function PostErrandScreen() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View style={{ alignSelf: 'center', width: '100%', maxWidth: isLarge ? 640 : undefined, paddingHorizontal: 24, paddingTop: 16 }}>
           <TextInput
+            testID="post-errand-title"
             label="Title"
             required
             placeholder="e.g. Deliver documents to Makati"
@@ -94,6 +95,7 @@ export default function PostErrandScreen() {
           />
 
           <TextInput
+            testID="post-errand-description"
             label="Description"
             required
             placeholder="Describe the task in detail..."
@@ -128,6 +130,7 @@ export default function PostErrandScreen() {
           <View className="mb-4" />
 
           <TouchableOpacity
+            testID="post-errand-submit"
             onPress={handleSubmit}
             disabled={submitting}
             className="rounded-2xl py-4 items-center mb-8"

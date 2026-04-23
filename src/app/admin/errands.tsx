@@ -8,8 +8,8 @@ import ErrandCard from '../../view/presentation/admin/ErrandCard';
 
 const ACCENT = '#FEA405';
 
-type FilterKey = 'All' | 'Available' | 'In Progress' | 'Completed' | 'Expired';
-const FILTERS: FilterKey[] = ['All', 'Available', 'In Progress', 'Completed', 'Expired'];
+type FilterKey = 'All' | 'Available' | 'In Progress' | 'Completed' | 'Expired' | 'Cancelled';
+const FILTERS: FilterKey[] = ['All', 'Available', 'In Progress', 'Completed', 'Expired', 'Cancelled'];
 
 export default function AdminErrandsScreen() {
   const [errands, setErrands] = useState<Errand[]>([]);
@@ -79,6 +79,7 @@ export default function AdminErrandsScreen() {
                 <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-3 gap-2">
                   <Ionicons name="search-outline" size={18} color="#9CA3AF" />
                   <TextInput
+                    testID="admin-errand-search"
                     placeholder="Search by title or client..."
                     placeholderTextColor="#9CA3AF"
                     value={search}

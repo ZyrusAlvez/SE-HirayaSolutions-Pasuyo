@@ -136,6 +136,29 @@ export const deleteErrand = async (id: string): Promise<{ success: boolean; erro
   }
 };
 
+export const cancelErrand = async (id: string): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { error } = await errandModel.cancelErrand(id);
+    if (error) return { success: false, error: 'Failed to cancel errand' };
+
+    // Notify runner if one is assigned
+    const { data: errandData } = await errandModel.getErrandRunner(id);
+    if (errandData?.runner_id) {
+      const { postNotification } = await import('./notificationController');
+      await postNotification(
+        errandData.runner_id,
+        'Errand Cancelled',
+        'The errand you accepted has been cancelled by the client.',
+        'errand_cancelled',
+      );
+    }
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Failed to cancel errand' };
+  }
+};
+
 export const postErrand = async (
   params: PostErrandParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {

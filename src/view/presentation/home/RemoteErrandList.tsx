@@ -54,6 +54,7 @@ export default function RemoteErrandList({ errands }: Props) {
         {sorted.map((e, i) => (
           <TouchableOpacity
             key={e.id}
+            testID={`errand-row-${e.id}`}
             activeOpacity={0.7}
             onPress={() => router.push(`/errand/${e.id}`)}
             style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: i === sorted.length - 1 ? 0 : 1, borderBottomColor: '#F3F4F6' }}
