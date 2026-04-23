@@ -33,6 +33,7 @@ export default function ErrandDetailScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
     getProfile().then((result) => {
@@ -150,19 +151,21 @@ export default function ErrandDetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.85}
+                disabled={accepting}
                 onPress={async () => {
                   if (isGuest) { router.push(`/signup?redirect=/errand/${errand.id}`); return; }
+                  setAccepting(true);
                   const result = await acceptErrand(errand.id, errand.status, errand.user_id, {
                     title: errand.title,
                     description: errand.description,
                     budget: errand.budget,
                   });
-                  if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
+                  if (!result.success) { toast({ title: result.error, preset: 'error' }); setAccepting(false); return; }
                   toast({ title: 'Errand accepted!', preset: 'done' });
                   setErrand(prev => prev ? { ...prev, status: 'In Progress', accepted_by: currentUserId } : prev);
                   router.push(`/chat?userId=${errand.user_id}`);
                 }}
-                style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
+                style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center', opacity: accepting ? 0.6 : 1 }}
               >
                 <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>Accept Errand</Text>
               </TouchableOpacity>
