@@ -173,9 +173,17 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
   const [uploading, setUploading] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [attachHover, setAttachHover] = useState(false);
+  const [errandsExpanded, setErrandsExpanded] = useState(false);
 
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
+
+  const pinnedErrands = messages
+    .filter((m) => !m.sender_id)
+    .map((m) => { try { return JSON.parse(m.content); } catch { return null; } })
+    .filter((p) => p?.type === 'errand_accepted')
+    .reverse();
+  const hasMoreErrands = pinnedErrands.length > 1;
 
   const pickAttachment = async () => {
     try {
@@ -205,18 +213,6 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
 
   const lastOwnMsgId = [...messages].reverse().find((m) => m.sender_id === currentUserId)?.id;
 
-  const pinnedErrand = (() => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (!messages[i].sender_id) {
-        try {
-          const parsed = JSON.parse(messages[i].content);
-          if (parsed?.type === 'errand_accepted') return parsed;
-        } catch {}
-      }
-    }
-    return null;
-  })();
-
   return (
     <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
@@ -243,15 +239,52 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           </Text>
         </View>
       </View>
-      {pinnedErrand && (
-        <ErrandInfoCard
-          title={pinnedErrand.title}
-          description={pinnedErrand.description}
-          budget={pinnedErrand.budget}
-          onMoreInfo={() => pinnedErrand.errandId && router.push(`/errand/${pinnedErrand.errandId}`)}
-          onMarkDone={() => {}}
-          onCancel={() => {}}
-        />
+      {pinnedErrands.length > 0 && (
+        <Pressable
+          onPress={() => hasMoreErrands && setErrandsExpanded((v) => !v)}
+          disabled={!hasMoreErrands}
+          style={{ zIndex: 10, elevation: 10 }}
+        >
+          {errandsExpanded ? (
+            <View>
+              {pinnedErrands.map((errand: any, i: number) => (
+                <ErrandInfoCard
+                  key={errand.errandId ?? i}
+                  title={errand.title}
+                  description={errand.description}
+                  budget={errand.budget}
+                  onMoreInfo={() => errand.errandId && router.push(`/errand/${errand.errandId}`)}
+                  onMarkDone={() => {}}
+                  onCancel={() => {}}
+                />
+              ))}
+              <Pressable
+                onPress={() => setErrandsExpanded(false)}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 6, backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', gap: 4 }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#6B7280' }}>Show less</Text>
+                <Ionicons name="chevron-up" size={12} color="#6B7280" />
+              </Pressable>
+            </View>
+          ) : (
+            <View style={{ position: 'relative', zIndex: 10, marginBottom: pinnedErrands.length >= 3 ? 6 : pinnedErrands.length >= 2 ? 3 : 0 }}>
+              {pinnedErrands.length >= 3 && (
+                <View style={{ position: 'absolute', top: 6, left: 6, right: 6, bottom: -6, backgroundColor: '#FEF3C7', borderBottomWidth: 1, borderBottomColor: '#FDE68A', opacity: 0.5 }} />
+              )}
+              {pinnedErrands.length >= 2 && (
+                <View style={{ position: 'absolute', top: 3, left: 3, right: 3, bottom: -3, backgroundColor: '#FEF9C3', borderBottomWidth: 1, borderBottomColor: '#FDE68A', opacity: 0.7 }} />
+              )}
+              <ErrandInfoCard
+                title={pinnedErrands[0].title}
+                description={pinnedErrands[0].description}
+                budget={pinnedErrands[0].budget}
+                onMoreInfo={() => pinnedErrands[0].errandId && router.push(`/errand/${pinnedErrands[0].errandId}`)}
+                onMarkDone={() => {}}
+                onCancel={() => {}}
+              />
+            </View>
+          )}
+        </Pressable>
       )}
       {loading ? (
         <ActivityIndicator style={{ flex: 1 }} color="#6B7280" />
@@ -261,6 +294,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
         </View>
       ) : (
         <FlatList
+          style={{ zIndex: 1 }}
           data={[...messages].reverse()}
           inverted
           keyExtractor={(m) => m.id}
@@ -277,7 +311,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             if (!item.sender_id) {
               return (
                 <>
-                  <SystemMessage content={item.content} />
+                  <SystemMessage content={item.content} currentUserId={currentUserId} />
                   {showSeparator && (
                     <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
                       {formatSeparatorTime(item.created_at)}

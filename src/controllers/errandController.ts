@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
 import { sendErrandAcceptedEmail } from '@/models/emailModel';
+import { getDisplayProfile } from '@/models/profileModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -193,11 +194,15 @@ export const acceptErrand = async (
     const { error } = await errandModel.acceptErrand(errandId, user.id);
     if (error) return { success: false, error: 'Failed to accept errand' };
 
+    const profile = await getDisplayProfile(user.id);
+    const acceptorName = profile.name ?? 'Someone';
+
     const { data: convo, error: convoError } = await chatModel.getOrCreateConversation(user.id, posterId);
     if (convo) {
       const systemContent = JSON.stringify({
         type: 'errand_accepted',
         acceptedBy: user.id,
+        acceptedByName: acceptorName,
         errandId,
         title: errandInfo.title,
         description: errandInfo.description,
