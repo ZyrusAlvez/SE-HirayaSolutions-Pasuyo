@@ -184,20 +184,30 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
 
+  const parsedMessages = messages.map((m) => {
+    try { return { ...JSON.parse(m.content), _created: m.created_at }; } catch { return null; }
+  }).filter(Boolean);
+
+  const lastAcceptTime: Record<string, string> = {};
+  for (const p of parsedMessages) {
+    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId) {
+      lastAcceptTime[p.errandId] = p._created;
+    }
+  }
+
   const cancelledErrandIds = new Set(
-    messages
-      .map((m) => { try { return JSON.parse(m.content); } catch { return null; } })
-      .filter((p) => p?.type === 'errand_cancelled')
+    parsedMessages
+      .filter((p) => p.type === 'errand_cancelled' && (!lastAcceptTime[p.errandId] || p._created > lastAcceptTime[p.errandId]))
       .map((p) => p.errandId)
   );
 
-  const pinnedErrands = messages
-    .filter((m) => {
-      try { return JSON.parse(m.content)?.type === 'errand_accepted'; } catch { return false; }
-    })
-    .map((m) => { try { return JSON.parse(m.content); } catch { return null; } })
-    .filter((p) => p?.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId))
-    .reverse();
+  const pinnedErrandsMap = new Map<string, any>();
+  for (const p of parsedMessages) {
+    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId)) {
+      pinnedErrandsMap.set(p.errandId, p);
+    }
+  }
+  const pinnedErrands = [...pinnedErrandsMap.values()].reverse();
   const hasMoreErrands = pinnedErrands.length > 1;
 
   const pickAttachment = async () => {

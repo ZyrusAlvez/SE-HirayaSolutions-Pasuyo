@@ -3,7 +3,7 @@ import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/m
 import * as ImagePicker from 'expo-image-picker';
 import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
-import { sendErrandAcceptedEmail } from '@/models/emailModel';
+import { sendErrandAcceptedEmail, sendErrandCancelledEmail } from '@/models/emailModel';
 import { getDisplayProfile } from '@/models/profileModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
@@ -240,7 +240,10 @@ export const cancelAcceptedErrand = async (
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    const profile = await getDisplayProfile(user.id);
+    const [profile, { data: errandData }] = await Promise.all([
+      getDisplayProfile(user.id),
+      errandModel.getErrandById(errandId),
+    ]);
     const cancellerName = profile.name ?? 'The runner';
 
     const { error: cancelErr } = await errandModel.insertErrandCancellation(errandId, user.id, reason, details);
@@ -266,6 +269,14 @@ export const cancelAcceptedErrand = async (
       'Errand Cancelled',
       `Your errand "${errandTitle}" has been cancelled by ${cancellerName}.`,
       `/errand/${errandId}`,
+    );
+
+    sendErrandCancelledEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      cancellerName,
+      reason,
+      errandId,
     );
 
     return { success: true, error: '' };
