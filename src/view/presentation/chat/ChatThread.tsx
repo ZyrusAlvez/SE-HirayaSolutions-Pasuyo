@@ -182,7 +182,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
   const [attachHover, setAttachHover] = useState(false);
   const [errandsExpanded, setErrandsExpanded] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{ errandId: string; title: string; posterId?: string } | null>(null);
-  const [doneTarget, setDoneTarget] = useState<{ errandId: string; title: string; budget?: number } | null>(null);
+  const [doneTarget, setDoneTarget] = useState<{ errandId: string; title: string; description?: string; budget?: number } | null>(null);
 
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
@@ -288,7 +288,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
                   description={errand.description}
                   budget={errand.budget}
                   onMoreInfo={() => errand.errandId && router.push(`/errand/${errand.errandId}`)}
-                  onMarkDone={() => setDoneTarget({ errandId: errand.errandId, title: errand.title, budget: errand.budget })}
+                  onMarkDone={() => setDoneTarget({ errandId: errand.errandId, title: errand.title, description: errand.description, budget: errand.budget })}
                   onCancel={() => setCancelTarget({ errandId: errand.errandId, title: errand.title, posterId: errand.posterId })}
                 />
               ))}
@@ -313,7 +313,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
                 description={pinnedErrands[0].description}
                 budget={pinnedErrands[0].budget}
                 onMoreInfo={() => pinnedErrands[0].errandId && router.push(`/errand/${pinnedErrands[0].errandId}`)}
-                onMarkDone={() => setDoneTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, budget: pinnedErrands[0].budget })}
+                onMarkDone={() => setDoneTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, description: pinnedErrands[0].description, budget: pinnedErrands[0].budget })}
                 onCancel={() => setCancelTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, posterId: pinnedErrands[0].posterId })}
               />
             </View>
@@ -338,6 +338,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
       <MarkDoneModal
         visible={!!doneTarget}
         errandTitle={doneTarget?.title}
+        description={doneTarget?.description}
         budget={doneTarget?.budget}
         onClose={() => setDoneTarget(null)}
         onConfirm={async () => {
