@@ -16,14 +16,15 @@ export const postNotification = async (userId: string, title: string, message: s
   }
 };
 
-export const getNotifications = async (): Promise<Result<Notification[]>> => {
+export const getNotifications = async (offset = 0): Promise<Result<{ notifications: Notification[]; hasMore: boolean }>> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    const { data, error } = await notificationModel.getNotifications(user.id);
+    const { data, error } = await notificationModel.getNotifications(user.id, offset);
     if (error) return { success: false, error: error.message };
-    return { success: true, data: (data ?? []) as Notification[] };
+    const notifications = (data ?? []) as Notification[];
+    return { success: true, data: { notifications, hasMore: notifications.length === 30 } };
   } catch {
     return { success: false, error: 'Failed to fetch notifications' };
   }

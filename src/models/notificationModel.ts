@@ -15,12 +15,15 @@ export const postNotification = (userId: string, title: string, message: string,
   return client.from('notifications').insert({ user_id: userId, title, message, action });
 };
 
-export const getNotifications = async (userId: string) =>
+const PAGE_SIZE = 30;
+
+export const getNotifications = async (userId: string, offset = 0) =>
   supabase
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
 
 export const getUnreadCount = async (userId: string) =>
   supabase
