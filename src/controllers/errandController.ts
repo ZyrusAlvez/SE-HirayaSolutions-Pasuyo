@@ -194,34 +194,32 @@ export const acceptErrand = async (
     const { error } = await errandModel.acceptErrand(errandId, user.id);
     if (error) return { success: false, error: 'Failed to accept errand' };
 
-    const profile = await getDisplayProfile(user.id);
-    const acceptorName = profile.name ?? 'Someone';
+    // Fire-and-forget: system message, notification, email
+    (async () => {
+      try {
+        const profile = await getDisplayProfile(user.id);
+        const acceptorName = profile.name ?? 'Someone';
 
-    const { data: convo, error: convoError } = await chatModel.getOrCreateConversation(user.id, posterId);
-    if (convo) {
-      const systemContent = JSON.stringify({
-        type: 'errand_accepted',
-        acceptedBy: user.id,
-        acceptedByName: acceptorName,
-        errandId,
-        title: errandInfo.title,
-        description: errandInfo.description,
-        budget: errandInfo.budget,
-      });
-      const { error: msgError } = await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
-      if (msgError) console.warn('System message failed:', msgError.message);
-    } else {
-      console.warn('Failed to get/create conversation:', convoError?.message);
-    }
+        const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+        if (convo) {
+          const systemContent = JSON.stringify({
+            type: 'errand_accepted',
+            acceptedBy: user.id,
+            acceptedByName: acceptorName,
+            errandId,
+            title: errandInfo.title,
+            description: errandInfo.description,
+            budget: errandInfo.budget,
+          });
+          await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+        }
 
-    await postNotification(
-      posterId,
-      'Errand Accepted',
-      `Your errand "${errandInfo.title}" has been accepted.`,
-      `/chat?userId=${user.id}`,
-    );
-
-    sendErrandAcceptedEmail(posterId, errandInfo, user.id);
+        postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
+        sendErrandAcceptedEmail(posterId, errandInfo, user.id);
+      } catch (e) {
+        console.warn('Accept errand side-effects failed:', e);
+      }
+    })();
 
     return { success: true, error: '' };
   } catch {

@@ -170,7 +170,7 @@ export default function ErrandDetailScreen() {
                 }}
                 style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center', opacity: accepting ? 0.6 : 1 }}
               >
-                <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>Accept Errand</Text>
+                <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>{accepting ? 'Accepting...' : 'Accept Errand'}</Text>
               </TouchableOpacity>
             </View>
           )}
