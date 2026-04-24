@@ -240,6 +240,9 @@ export const cancelAcceptedErrand = async (
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 
+    const profile = await getDisplayProfile(user.id);
+    const cancellerName = profile.name ?? 'The runner';
+
     const { error: cancelErr } = await errandModel.insertErrandCancellation(errandId, user.id, reason, details);
     if (cancelErr) return { success: false, error: 'Failed to record cancellation' };
 
@@ -261,7 +264,7 @@ export const cancelAcceptedErrand = async (
     await postNotification(
       posterId,
       'Errand Cancelled',
-      `Your errand "${errandTitle}" has been cancelled by the runner.`,
+      `Your errand "${errandTitle}" has been cancelled by ${cancellerName}.`,
       `/errand/${errandId}`,
     );
 
