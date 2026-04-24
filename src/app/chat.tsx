@@ -18,8 +18,8 @@ export default function ChatScreen() {
   const {
     conversations, selectedId, setSelectedId, messages, currentUserId,
     loading, messagesLoading, hasMore, loadingMore,
-    otherTyping, typingConvos, otherLastSeen, otherUser, otherIsOnline,
-    onSend, onSendFile, handleLoadMore, handleTyping,
+    otherTyping, typingConvos, otherLastSeen, otherUser, otherUserId, otherIsOnline,
+    onCancelErrand, onSend, onSendFile, handleLoadMore, handleTyping,
   } = useChat(targetUserId);
 
   const showThread = isMobile ? !!selectedId : true;
@@ -44,11 +44,13 @@ export default function ChatScreen() {
           <ChatThread
             messages={messages}
             currentUserId={currentUserId}
+            otherUserId={otherUserId}
             otherUser={otherUser}
             loading={messagesLoading}
             selected={!!selectedId}
             onSend={onSend}
             onSendFile={onSendFile}
+            onCancelErrand={onCancelErrand}
             onBack={isMobile ? () => setSelectedId(null) : undefined}
             onLoadMore={handleLoadMore}
             loadingMore={loadingMore}

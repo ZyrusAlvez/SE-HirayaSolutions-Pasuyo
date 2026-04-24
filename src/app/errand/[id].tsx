@@ -107,7 +107,7 @@ export default function ErrandDetailScreen() {
             <EditErrandSheet
               errand={errand}
               onSaved={(updated) => {
-                setErrand(prev => prev ? { ...prev, ...updated } : prev);
+                setErrand(prev => prev ? { ...prev, ...updated } as Errand : prev);
                 setIsEditing(false);
               }}
               onCancel={() => setIsEditing(false)}
@@ -165,7 +165,7 @@ export default function ErrandDetailScreen() {
                   });
                   if (!result.success) { toast({ title: result.error, preset: 'error' }); setAccepting(false); return; }
                   toast({ title: 'Errand accepted!', preset: 'done' });
-                  setErrand(prev => prev ? { ...prev, status: 'In Progress', accepted_by: currentUserId } : prev);
+                  setErrand(prev => prev ? { ...prev, status: 'In Progress' as const, accepted_by: currentUserId } : prev);
                   router.push(`/chat?userId=${errand.user_id}`);
                 }}
                 style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center', opacity: accepting ? 0.6 : 1 }}

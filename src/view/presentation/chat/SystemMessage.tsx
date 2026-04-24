@@ -14,6 +14,12 @@ export default function SystemMessage({ content, currentUserId }: Props) {
       const isMe = parsed.acceptedBy === currentUserId;
       const name = isMe ? 'you' : (parsed.acceptedByName ?? 'someone');
       label = `The errand "${title}" has been accepted by ${name}`;
+    } else if (parsed?.type === 'errand_cancelled') {
+      const title = parsed.title ?? 'an errand';
+      const isMe = parsed.cancelledBy === currentUserId;
+      label = isMe
+        ? `You cancelled the errand "${title}"`
+        : `The errand "${title}" has been cancelled by the runner`;
     }
   } catch {}
 

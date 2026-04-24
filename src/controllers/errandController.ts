@@ -229,6 +229,48 @@ export const acceptErrand = async (
   }
 };
 
+export const cancelAcceptedErrand = async (
+  errandId: string,
+  posterId: string,
+  errandTitle: string,
+  reason: string,
+  details: string | null,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error: cancelErr } = await errandModel.insertErrandCancellation(errandId, user.id, reason, details);
+    if (cancelErr) return { success: false, error: 'Failed to record cancellation' };
+
+    const { error: updateErr } = await errandModel.cancelErrand(errandId);
+    if (updateErr) return { success: false, error: 'Failed to cancel errand' };
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_cancelled',
+        cancelledBy: user.id,
+        errandId,
+        title: errandTitle,
+        reason,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(
+      posterId,
+      'Errand Cancelled',
+      `Your errand "${errandTitle}" has been cancelled by the runner.`,
+      `/errand/${errandId}`,
+    );
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
 export const postErrand = async (
   params: PostErrandParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {

@@ -8,6 +8,8 @@ import SystemMessage from '@/view/presentation/chat/SystemMessage';
 import ErrandInfoCard from '@/view/presentation/chat/ErrandInfoCard';
 import ChatSkeleton from '@/view/presentation/chat/ChatSkeleton';
 import FileBubble from '@/view/presentation/chat/FileBubble';
+import CancelErrandModal from '@/view/presentation/chat/CancelErrandModal';
+import { toast } from '@/utils/toast';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -17,11 +19,13 @@ const getAvatarSource = (avatar: string | null | undefined) =>
 type Props = {
   messages: Message[];
   currentUserId: string;
+  otherUserId?: string | null;
   otherUser: { name: string; avatar: string | null } | null;
   loading: boolean;
   selected: boolean;
   onSend: (content: string) => void;
   onSendFile?: (uri: string, fileName: string, mimeType: string, fileSize?: number) => void;
+  onCancelErrand?: (errandId: string, title: string, reason: string, details: string | null) => Promise<boolean>;
   onBack?: () => void;
   onLoadMore?: () => void;
   loadingMore?: boolean;
@@ -168,23 +172,31 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onSendFile, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUserId, otherUser, loading, selected, onSend, onSendFile, onCancelErrand, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const router = useRouter();
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [attachHover, setAttachHover] = useState(false);
   const [errandsExpanded, setErrandsExpanded] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<{ errandId: string; title: string; posterId?: string } | null>(null);
 
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
+
+  const cancelledErrandIds = new Set(
+    messages
+      .map((m) => { try { return JSON.parse(m.content); } catch { return null; } })
+      .filter((p) => p?.type === 'errand_cancelled')
+      .map((p) => p.errandId)
+  );
 
   const pinnedErrands = messages
     .filter((m) => {
       try { return JSON.parse(m.content)?.type === 'errand_accepted'; } catch { return false; }
     })
     .map((m) => { try { return JSON.parse(m.content); } catch { return null; } })
-    .filter((p) => p?.acceptedBy === currentUserId)
+    .filter((p) => p?.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId))
     .reverse();
   const hasMoreErrands = pinnedErrands.length > 1;
 
@@ -258,7 +270,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
                   budget={errand.budget}
                   onMoreInfo={() => errand.errandId && router.push(`/errand/${errand.errandId}`)}
                   onMarkDone={() => {}}
-                  onCancel={() => {}}
+                  onCancel={() => setCancelTarget({ errandId: errand.errandId, title: errand.title, posterId: errand.posterId })}
                 />
               ))}
               <Pressable
@@ -283,12 +295,27 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
                 budget={pinnedErrands[0].budget}
                 onMoreInfo={() => pinnedErrands[0].errandId && router.push(`/errand/${pinnedErrands[0].errandId}`)}
                 onMarkDone={() => {}}
-                onCancel={() => {}}
+                onCancel={() => setCancelTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, posterId: pinnedErrands[0].posterId })}
               />
             </View>
           )}
         </Pressable>
       )}
+      <CancelErrandModal
+        visible={!!cancelTarget}
+        errandTitle={cancelTarget?.title}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={async (reason, details) => {
+          if (!cancelTarget?.errandId) return;
+          const success = await onCancelErrand?.(cancelTarget.errandId, cancelTarget.title, reason, details);
+          if (success) {
+            toast({ title: 'Errand cancelled', preset: 'done' });
+          } else {
+            toast({ title: 'Failed to cancel errand', preset: 'error' });
+          }
+          setCancelTarget(null);
+        }}
+      />
       {loading ? (
         <ChatSkeleton />
       ) : messages.length === 0 ? (
@@ -311,7 +338,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
 
-            const isSystemMsg = (() => { try { return JSON.parse(item.content)?.type === 'errand_accepted'; } catch { return false; } })();
+            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled'; } catch { return false; } })();
 
             if (isSystemMsg) {
               return (

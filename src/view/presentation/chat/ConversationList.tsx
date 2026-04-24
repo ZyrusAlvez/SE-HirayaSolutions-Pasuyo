@@ -36,6 +36,10 @@ function formatPreview(message: string | undefined, senderId: string | undefined
       const isMe = parsed.acceptedBy === currentUserId;
       return { prefix: isMe ? 'You: ' : '', text: 'Accepted Errand', italic: true };
     }
+    if (parsed?.type === 'errand_cancelled') {
+      const isMe = parsed.cancelledBy === currentUserId;
+      return { prefix: isMe ? 'You: ' : '', text: 'Cancelled the errand', italic: true };
+    }
   } catch {}
   const isMe = senderId === currentUserId;
   if (message === 'Sent a photo') return { prefix: isMe ? 'You: ' : '', text: 'Sent a photo', italic: true };
