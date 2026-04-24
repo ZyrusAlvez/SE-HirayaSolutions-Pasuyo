@@ -9,6 +9,7 @@ import ErrandInfoCard from '@/view/presentation/chat/ErrandInfoCard';
 import ChatSkeleton from '@/view/presentation/chat/ChatSkeleton';
 import FileBubble from '@/view/presentation/chat/FileBubble';
 import CancelErrandModal from '@/view/presentation/chat/CancelErrandModal';
+import MarkDoneModal from '@/view/presentation/chat/MarkDoneModal';
 import { toast } from '@/utils/toast';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -180,6 +181,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
   const [attachHover, setAttachHover] = useState(false);
   const [errandsExpanded, setErrandsExpanded] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{ errandId: string; title: string; posterId?: string } | null>(null);
+  const [doneTarget, setDoneTarget] = useState<{ errandId: string; title: string; budget?: number } | null>(null);
 
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
@@ -279,7 +281,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
                   description={errand.description}
                   budget={errand.budget}
                   onMoreInfo={() => errand.errandId && router.push(`/errand/${errand.errandId}`)}
-                  onMarkDone={() => {}}
+                  onMarkDone={() => setDoneTarget({ errandId: errand.errandId, title: errand.title, budget: errand.budget })}
                   onCancel={() => setCancelTarget({ errandId: errand.errandId, title: errand.title, posterId: errand.posterId })}
                 />
               ))}
@@ -304,7 +306,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
                 description={pinnedErrands[0].description}
                 budget={pinnedErrands[0].budget}
                 onMoreInfo={() => pinnedErrands[0].errandId && router.push(`/errand/${pinnedErrands[0].errandId}`)}
-                onMarkDone={() => {}}
+                onMarkDone={() => setDoneTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, budget: pinnedErrands[0].budget })}
                 onCancel={() => setCancelTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, posterId: pinnedErrands[0].posterId })}
               />
             </View>
@@ -324,6 +326,16 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             toast({ title: 'Failed to cancel errand', preset: 'error' });
           }
           setCancelTarget(null);
+        }}
+      />
+      <MarkDoneModal
+        visible={!!doneTarget}
+        errandTitle={doneTarget?.title}
+        budget={doneTarget?.budget}
+        onClose={() => setDoneTarget(null)}
+        onConfirm={async () => {
+          // TODO: controller logic
+          setDoneTarget(null);
         }}
       />
       {loading ? (
