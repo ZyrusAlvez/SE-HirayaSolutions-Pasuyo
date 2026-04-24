@@ -3,7 +3,7 @@ import { supabase } from '@/utils/supabase';
 interface SendEmailParams {
   to: string;
   subject: string;
-  template: 'errand-accepted' | 'errand-cancelled';
+  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done';
   data: Record<string, string>;
 }
 
@@ -62,6 +62,33 @@ export const sendErrandCancelledEmail = async (
     const { data, error } = await supabase.functions.invoke('send-email', { body });
     if (error) console.warn('Errand cancelled email failed:', error.message, error);
     else console.log('Errand cancelled email sent:', data);
+  } catch (e: any) {
+    console.warn('Email invoke error:', e.message);
+  }
+};
+
+export const sendErrandMarkedDoneEmail = async (
+  posterId: string,
+  errandInfo: { title: string; description?: string; budget?: number },
+  runnerName: string,
+  runnerId: string,
+) => {
+  try {
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: {
+        userId: posterId,
+        template: 'errand-marked-done',
+        subject: 'Your errand has been marked as done',
+        data: {
+          errand_title: errandInfo.title,
+          errand_description: errandInfo.description ?? '',
+          errand_budget: errandInfo.budget != null ? `\u20b1${errandInfo.budget.toLocaleString()}` : '',
+          runner_name: runnerName,
+          chat_url: `https://pasuyo.xyz/chat?userId=${runnerId}`,
+        },
+      },
+    });
+    if (error) console.warn('Errand marked done email failed:', error.message);
   } catch (e: any) {
     console.warn('Email invoke error:', e.message);
   }

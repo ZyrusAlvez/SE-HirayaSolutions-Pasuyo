@@ -3,7 +3,7 @@ import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/m
 import * as ImagePicker from 'expo-image-picker';
 import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
-import { sendErrandAcceptedEmail, sendErrandCancelledEmail } from '@/models/emailModel';
+import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDoneEmail } from '@/models/emailModel';
 import { getDisplayProfile } from '@/models/profileModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
@@ -305,6 +305,14 @@ export const markErrandAsDone = async (
       'Errand Completed',
       `${runnerName} has marked your errand "${errandTitle}" as done.`,
       `/chat?userId=${user.id}`,
+    );
+
+    const { data: errandData } = await errandModel.getErrandById(errandId);
+    sendErrandMarkedDoneEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      runnerName,
+      user.id,
     );
 
     return { success: true, error: '' };
