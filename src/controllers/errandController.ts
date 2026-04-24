@@ -1,6 +1,10 @@
 import * as errandModel from '@/models/errandModel';
 import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/models/errandModel';
 import * as ImagePicker from 'expo-image-picker';
+import * as chatModel from '@/models/chatModel';
+import { postNotification } from '@/models/notificationModel';
+import { sendErrandAcceptedEmail, sendErrandCancelledEmail } from '@/models/emailModel';
+import { getDisplayProfile } from '@/models/profileModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -176,6 +180,8 @@ export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardE
 export const acceptErrand = async (
   errandId: string,
   status: string,
+  posterId: string,
+  errandInfo: { title: string; description: string; budget?: number },
 ): Promise<{ success: boolean; error: string }> => {
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
   if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
@@ -187,6 +193,89 @@ export const acceptErrand = async (
 
     const { error } = await errandModel.acceptErrand(errandId, user.id);
     if (error) return { success: false, error: 'Failed to accept errand' };
+
+    // Fire-and-forget: system message, notification, email
+    (async () => {
+      try {
+        const profile = await getDisplayProfile(user.id);
+        const acceptorName = profile.name ?? 'Someone';
+
+        const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+        if (convo) {
+          const systemContent = JSON.stringify({
+            type: 'errand_accepted',
+            acceptedBy: user.id,
+            acceptedByName: acceptorName,
+            errandId,
+            title: errandInfo.title,
+            description: errandInfo.description,
+            budget: errandInfo.budget,
+          });
+          await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+        }
+
+        postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
+        sendErrandAcceptedEmail(posterId, errandInfo, user.id);
+      } catch (e) {
+        console.warn('Accept errand side-effects failed:', e);
+      }
+    })();
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const cancelAcceptedErrand = async (
+  errandId: string,
+  posterId: string,
+  errandTitle: string,
+  reason: string,
+  details: string | null,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [profile, { data: errandData }] = await Promise.all([
+      getDisplayProfile(user.id),
+      errandModel.getErrandById(errandId),
+    ]);
+    const cancellerName = profile.name ?? 'The runner';
+
+    const { error: cancelErr } = await errandModel.insertErrandCancellation(errandId, user.id, reason, details);
+    if (cancelErr) return { success: false, error: 'Failed to record cancellation' };
+
+    const { error: updateErr } = await errandModel.cancelErrand(errandId);
+    if (updateErr) return { success: false, error: 'Failed to cancel errand' };
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_cancelled',
+        cancelledBy: user.id,
+        errandId,
+        title: errandTitle,
+        reason,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(
+      posterId,
+      'Errand Cancelled',
+      `Your errand "${errandTitle}" has been cancelled by ${cancellerName}.`,
+      `/errand/${errandId}`,
+    );
+
+    sendErrandCancelledEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      cancellerName,
+      reason,
+      errandId,
+    );
 
     return { success: true, error: '' };
   } catch {

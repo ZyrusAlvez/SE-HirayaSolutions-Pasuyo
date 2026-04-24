@@ -21,15 +21,29 @@ export default function NotificationsPanel({ visible, onClose, onUnreadChange }:
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const channelName = useRef(`notifications-panel-${Date.now()}`);
 
   const loadNotifications = async () => {
-    const result = await getNotifications();
+    const result = await getNotifications(0);
     if (result.success) {
-      setNotifications(result.data);
-      onUnreadChange?.(result.data.filter(n => !n.is_read).length);
+      setNotifications(result.data.notifications);
+      setHasMore(result.data.hasMore);
+      onUnreadChange?.(result.data.notifications.filter(n => !n.is_read).length);
     }
     setLoading(false);
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const result = await getNotifications(notifications.length);
+    if (result.success) {
+      setNotifications(prev => [...prev, ...result.data.notifications]);
+      setHasMore(result.data.hasMore);
+    }
+    setLoadingMore(false);
   };
 
   const loadRef = useRef(loadNotifications);
@@ -98,6 +112,9 @@ export default function NotificationsPanel({ visible, onClose, onUnreadChange }:
                 data={notifications}
                 keyExtractor={item => item.id}
                 style={{ maxHeight: 400 }}
+                onEndReached={hasMore ? loadMore : undefined}
+                onEndReachedThreshold={0.3}
+                ListFooterComponent={loadingMore ? <Text style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 12, paddingVertical: 12 }}>Loading...</Text> : null}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     activeOpacity={0.7}
