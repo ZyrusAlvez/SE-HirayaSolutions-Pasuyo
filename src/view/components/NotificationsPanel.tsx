@@ -75,7 +75,7 @@ export default function NotificationsPanel({ visible, onClose, onUnreadChange }:
     return () => { removeNotificationsSubscription(channel); };
   }, [visible]);
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = (notifications ?? []).filter(n => !n.is_read).length;
   const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0;
   const topOffset = Platform.OS === 'web' ? 52 : 100 + statusBarHeight;
 

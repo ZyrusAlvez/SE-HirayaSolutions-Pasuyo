@@ -27,6 +27,7 @@ type Props = {
   onSend: (content: string) => void;
   onSendFile?: (uri: string, fileName: string, mimeType: string, fileSize?: number) => void;
   onCancelErrand?: (errandId: string, title: string, reason: string, details: string | null) => Promise<boolean>;
+  onMarkDone?: (errandId: string, title: string) => Promise<boolean>;
   onBack?: () => void;
   onLoadMore?: () => void;
   loadingMore?: boolean;
@@ -173,7 +174,7 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUserId, otherUser, loading, selected, onSend, onSendFile, onCancelErrand, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUserId, otherUser, loading, selected, onSend, onSendFile, onCancelErrand, onMarkDone, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const router = useRouter();
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -203,9 +204,15 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
       .map((p) => p.errandId)
   );
 
+  const doneErrandIds = new Set(
+    parsedMessages
+      .filter((p) => p.type === 'errand_marked_done')
+      .map((p) => p.errandId)
+  );
+
   const pinnedErrandsMap = new Map<string, any>();
   for (const p of parsedMessages) {
-    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId)) {
+    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId) && !doneErrandIds.has(p.errandId)) {
       pinnedErrandsMap.set(p.errandId, p);
     }
   }
@@ -334,7 +341,13 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
         budget={doneTarget?.budget}
         onClose={() => setDoneTarget(null)}
         onConfirm={async () => {
-          // TODO: controller logic
+          if (!doneTarget?.errandId) return;
+          const success = await onMarkDone?.(doneTarget.errandId, doneTarget.title);
+          if (success) {
+            toast({ title: 'Errand marked as done', preset: 'done' });
+          } else {
+            toast({ title: 'Failed to mark errand as done', preset: 'error' });
+          }
           setDoneTarget(null);
         }}
       />
@@ -360,7 +373,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
 
-            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled'; } catch { return false; } })();
+            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled' || t === 'errand_marked_done'; } catch { return false; } })();
 
             if (isSystemMsg) {
               return (

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { usePathname } from 'expo-router';
 import { loadConversations, loadMessages, handleSendMessage, handleSendFile, markAsRead, startConversation, Conversation, Message } from '@/controllers/chatController';
-import { cancelAcceptedErrand } from '@/controllers/errandController';
+import { cancelAcceptedErrand, markErrandAsDone } from '@/controllers/errandController';
 import { subscribeToMessages, subscribeToTyping, broadcastTyping } from '@/models/chatModel';
 import { getLastSeen } from '@/models/presenceModel';
 import { usePresence } from '@/context/PresenceContext';
@@ -307,6 +307,32 @@ export function useChat(targetUserId?: string) {
     return true;
   }, [selectedId, currentUserId, otherUserId]);
 
+  const onMarkDone = useCallback(async (errandId: string, title: string): Promise<boolean> => {
+    if (!selectedId || !currentUserId || !otherUserId) return false;
+    const result = await markErrandAsDone(errandId, otherUserId, title);
+    if (!result.success) return false;
+
+    const systemContent = JSON.stringify({ type: 'errand_marked_done', markedBy: currentUserId, errandId, title });
+    const doneMsg: Message = {
+      id: `done-${Date.now()}`,
+      conversation_id: selectedId,
+      sender_id: currentUserId,
+      content: systemContent,
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, doneMsg]);
+    setConversations((prev) =>
+      prev
+        .map((c) => c.id === selectedId
+          ? { ...c, last_message: systemContent, last_message_at: doneMsg.created_at, last_message_sender_id: currentUserId, last_message_is_read: false }
+          : c
+        )
+        .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
+    );
+    return true;
+  }, [selectedId, currentUserId, otherUserId]);
+
   return {
     conversations,
     selectedId,
@@ -323,6 +349,7 @@ export function useChat(targetUserId?: string) {
     otherUser,
     otherUserId,
     otherIsOnline,
+    onMarkDone,
     onCancelErrand,
     onSend,
     onSendFile,

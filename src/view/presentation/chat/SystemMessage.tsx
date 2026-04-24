@@ -20,6 +20,12 @@ export default function SystemMessage({ content, currentUserId }: Props) {
       label = isMe
         ? `You cancelled the errand "${title}"`
         : `The errand "${title}" has been cancelled by the runner`;
+    } else if (parsed?.type === 'errand_marked_done') {
+      const title = parsed.title ?? 'an errand';
+      const isMe = parsed.markedBy === currentUserId;
+      label = isMe
+        ? `You marked the errand "${title}" as done`
+        : `The errand "${title}" has been marked as done by ${parsed.markedByName ?? 'the runner'}`;
     }
   } catch {}
 

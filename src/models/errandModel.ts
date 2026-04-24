@@ -95,6 +95,9 @@ export const acceptErrand = (id: string, userId: string) =>
 export const cancelErrand = (id: string) =>
   supabase.from('errands').update({ accepted_by: null, status: 'Available' }).eq('id', id);
 
+export const markErrandDone = (id: string) =>
+  supabase.from('errands').update({ status: 'Completed' }).eq('id', id);
+
 export const insertErrandCancellation = (errandId: string, cancelledBy: string, reason: string, details: string | null) =>
   supabase.from('errand_cancellations').insert({ errand_id: errandId, cancelled_by: cancelledBy, reason, details });
 
