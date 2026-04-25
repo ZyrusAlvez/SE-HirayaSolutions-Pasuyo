@@ -27,7 +27,12 @@ export default function ErrandRow({ errand, search = '', tab = 'posted' }: { err
     { label: 'Edit', icon: 'create-outline', onPress: () => {} },
     { label: 'Delete', icon: 'trash-outline', onPress: () => {} },
     { label: 'Share', icon: 'share-outline', onPress: () => {} },
-  ] : [];
+  ] : [
+    { label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => {} },
+    { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', onPress: () => {} },
+    { label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => {} },
+    { label: 'Share', icon: 'share-outline', onPress: () => {} },
+  ];
 
   return (
     <TouchableOpacity
