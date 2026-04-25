@@ -10,9 +10,10 @@ interface Props {
   viewMode: 'card' | 'list';
   search?: string;
   tab?: string;
+  onDelete?: () => void;
 }
 
-export default function ErrandList({ errands, emptyText, viewMode, search = '', tab = 'posted' }: Props) {
+export default function ErrandList({ errands, emptyText, viewMode, search = '', tab = 'posted', onDelete }: Props) {
   if (errands.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
@@ -28,7 +29,7 @@ export default function ErrandList({ errands, emptyText, viewMode, search = '', 
         <View style={{ backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: '#F3F4F6', overflow: 'hidden' }}>
           {errands.map((e, i) => (
             <View key={e.id} style={i < errands.length - 1 ? { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' } : undefined}>
-              <ErrandRow errand={e} search={search} tab={tab} />
+              <ErrandRow errand={e} search={search} tab={tab} onDelete={onDelete} />
             </View>
           ))}
         </View>
@@ -45,7 +46,7 @@ export default function ErrandList({ errands, emptyText, viewMode, search = '', 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         {errands.map((e) => (
           <View key={e.id} style={{ width: cardWidth }}>
-            <ErrandCard errand={e} search={search} tab={tab} />
+            <ErrandCard errand={e} search={search} tab={tab} onDelete={onDelete} />
           </View>
         ))}
       </View>

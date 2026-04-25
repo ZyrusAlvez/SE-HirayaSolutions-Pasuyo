@@ -52,6 +52,15 @@ export default function DashboardScreen() {
     })();
   }, []);
 
+  const refreshErrands = useCallback(() => {
+    getDashboardErrands().then((result) => {
+      if (result.success) {
+        setPosted(result.data.posted);
+        setAccepted(result.data.accepted);
+      }
+    });
+  }, []);
+
   useFocusEffect(useCallback(() => {
     setLoading(true);
     getDashboardErrands().then((result) => {
@@ -138,6 +147,7 @@ export default function DashboardScreen() {
             viewMode={viewMode}
             search={search}
             tab={tab}
+            onDelete={refreshErrands}
           />
         )}
       </View>

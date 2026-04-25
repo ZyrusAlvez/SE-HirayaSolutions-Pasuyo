@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { DashboardErrand } from '@/controllers/errandController';
+import { deleteErrand } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
 import KebabMenu from '@/view/components/KebabMenu';
 import type { KebabAction } from '@/view/components/KebabMenu';
+import ConfirmModal from '@/view/components/ConfirmModal';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -16,8 +19,9 @@ const STATUS_COLORS: Record<string, string> = {
   Cancelled: '#6B7280',
 };
 
-export default function ErrandRow({ errand, search = '', tab = 'posted' }: { errand: DashboardErrand; search?: string; tab?: string }) {
+export default function ErrandRow({ errand, search = '', tab = 'posted', onDelete }: { errand: DashboardErrand; search?: string; tab?: string; onDelete?: () => void }) {
   const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const color = STATUS_COLORS[errand.status] ?? '#6B7280';
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
     ? { uri: errand.poster_avatar }
@@ -28,7 +32,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted' }: { err
       if (errand.status === 'In Progress') { toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' }); return; }
       router.push(`/errand/${errand.id}?edit=true`);
     }},
-    { label: 'Delete', icon: 'trash-outline', onPress: () => {} },
+    { label: 'Delete', icon: 'trash-outline', onPress: () => setShowDeleteConfirm(true) },
     { label: 'Share', icon: 'share-outline', onPress: () => {} },
   ];
 
@@ -74,6 +78,22 @@ export default function ErrandRow({ errand, search = '', tab = 'posted' }: { err
         </View>
         <KebabMenu actions={actions} />
       </View>
+
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Errand"
+        message="Are you sure you want to delete this errand? This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          setShowDeleteConfirm(false);
+          const result = await deleteErrand(errand.id, errand.status);
+          if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
+          toast({ title: 'Errand deleted.', preset: 'done' });
+          onDelete?.();
+        }}
+      />
     </TouchableOpacity>
   );
 }
