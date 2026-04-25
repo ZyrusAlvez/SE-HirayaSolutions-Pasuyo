@@ -36,7 +36,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortState>({ key: 'deadline', dir: 'asc' });
+  const [sort, setSort] = useState<SortState>({ key: 'budget', dir: 'asc' });
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
 
