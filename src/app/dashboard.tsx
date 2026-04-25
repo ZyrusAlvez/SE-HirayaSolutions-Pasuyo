@@ -10,7 +10,7 @@ import NavBar from '@/view/components/NavBar';
 import TabToggle from '@/view/components/TabToggle';
 import LoadingSpinner from '@/view/components/LoadingSpinner';
 import ErrandList from '@/view/presentation/dashboard/ErrandList';
-import StatusFilter from '@/view/presentation/dashboard/StatusFilter';
+import SortFilterBar from '@/view/presentation/dashboard/SortFilterBar';
 
 const TABS = [
   { key: 'posted', label: 'My Posted Errands', icon: 'paper-plane-outline' },
@@ -25,6 +25,7 @@ export default function DashboardScreen() {
   const [accepted, setAccepted] = useState<DashboardErrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
@@ -42,9 +43,11 @@ export default function DashboardScreen() {
   const filterOptions = tab === 'posted' ? POSTED_STATUSES : ACCEPTED_STATUSES;
 
   const filteredErrands = useMemo(() => {
-    const source = tab === 'posted' ? posted : accepted;
-    return statusFilter ? source.filter(e => e.status === statusFilter) : source;
-  }, [tab, posted, accepted, statusFilter]);
+    let source = tab === 'posted' ? posted : accepted;
+    if (statusFilter) source = source.filter(e => e.status === statusFilter);
+    if (typeFilter) source = source.filter(e => typeFilter === 'Remote' ? e.is_remote : !e.is_remote);
+    return source;
+  }, [tab, posted, accepted, statusFilter, typeFilter]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
@@ -63,14 +66,14 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
         <View style={{ paddingVertical: 8, zIndex: 10 }}>
-          <StatusFilter options={filterOptions} selected={statusFilter} onSelect={setStatusFilter} />
+          <SortFilterBar statusOptions={filterOptions} statusFilter={statusFilter} onStatusChange={setStatusFilter} typeFilter={typeFilter} onTypeChange={setTypeFilter} />
         </View>
         {loading ? (
           <LoadingSpinner />
         ) : (
           <ErrandList
             errands={filteredErrands}
-            emptyText={statusFilter ? `No ${statusFilter.toLowerCase()} errands.` : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
+            emptyText={(statusFilter || typeFilter) ? 'No errands match the selected filters.' : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
             viewMode={viewMode}
           />
         )}
