@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import RateErrandCard from '@/view/presentation/chat/RateErrandCard';
 
 interface Props {
   content: string;
@@ -7,6 +8,8 @@ interface Props {
 
 export default function SystemMessage({ content, currentUserId }: Props) {
   let label = content;
+  let rateCard: React.ReactNode = null;
+
   try {
     const parsed = JSON.parse(content);
     if (parsed?.type === 'errand_accepted') {
@@ -26,6 +29,22 @@ export default function SystemMessage({ content, currentUserId }: Props) {
       label = isMe
         ? `You marked the errand "${title}" as done`
         : `The errand "${title}" has been marked as done by ${parsed.markedByName ?? 'the runner'}`;
+      if (!isMe && currentUserId && parsed.errandId && parsed.markedBy) {
+        rateCard = (
+          <RateErrandCard
+            errandId={parsed.errandId}
+            reviewedId={parsed.markedBy}
+            workerName={parsed.markedByName ?? 'the runner'}
+            currentUserId={currentUserId}
+          />
+        );
+      }
+    } else if (parsed?.type === 'errand_reviewed') {
+      const isMe = parsed.reviewerId === currentUserId;
+      const stars = '★'.repeat(parsed.rating ?? 0) + '☆'.repeat(5 - (parsed.rating ?? 0));
+      label = isMe
+        ? `You left a review  ${stars}`
+        : `You received a review  ${stars}`;
     }
   } catch {}
 
@@ -33,6 +52,7 @@ export default function SystemMessage({ content, currentUserId }: Props) {
     <View style={{ marginVertical: 16 }}>
       <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
       <Text style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', paddingVertical: 8, lineHeight: 16, fontStyle: 'italic' }}>{label}</Text>
+      {rateCard}
       <View style={{ height: 1, backgroundColor: '#E5E7EB' }} />
     </View>
   );

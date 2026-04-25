@@ -321,6 +321,37 @@ export const markErrandAsDone = async (
   }
 };
 
+export const submitErrandReview = async (
+  errandId: string,
+  reviewedId: string,
+  rating: number,
+  feedback: string | null,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await errandModel.insertErrandReview(errandId, user.id, reviewedId, rating, feedback);
+    if (error) return { success: false, error: error.message.includes('duplicate') ? 'You have already reviewed this errand' : 'Failed to submit review' };
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, reviewedId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_reviewed',
+        reviewerId: user.id,
+        reviewedId,
+        errandId,
+        rating,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
 export const postErrand = async (
   params: PostErrandParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {

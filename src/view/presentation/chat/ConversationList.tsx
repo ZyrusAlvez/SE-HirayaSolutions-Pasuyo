@@ -44,6 +44,10 @@ function formatPreview(message: string | undefined, senderId: string | undefined
       const isMe = parsed.markedBy === currentUserId;
       return { prefix: isMe ? 'You: ' : '', text: 'Marked errand as done', italic: true };
     }
+    if (parsed?.type === 'errand_reviewed') {
+      const isMe = parsed.reviewerId === currentUserId;
+      return { prefix: isMe ? 'You: ' : '', text: 'Left a review', italic: true };
+    }
   } catch {}
   const isMe = senderId === currentUserId;
   if (message === 'Sent a photo') return { prefix: isMe ? 'You: ' : '', text: 'Sent a photo', italic: true };

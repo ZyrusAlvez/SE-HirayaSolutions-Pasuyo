@@ -20,7 +20,6 @@ export type Errand = {
   created_at: string;
   poster_name?: string;
   poster_avatar?: string;
-  poster_rating?: number;
   poster_is_verified?: boolean;
 };
 
@@ -97,6 +96,12 @@ export const cancelErrand = (id: string) =>
 
 export const markErrandDone = (id: string) =>
   supabase.from('errands').update({ status: 'Completed' }).eq('id', id);
+
+export const insertErrandReview = (errandId: string, reviewerId: string, reviewedId: string, rating: number, feedback: string | null) =>
+  supabase.from('errand_reviews').insert({ errand_id: errandId, reviewer_id: reviewerId, reviewed_id: reviewedId, rating, feedback });
+
+export const getErrandReview = (errandId: string, reviewerId: string) =>
+  supabase.from('errand_reviews').select('rating, feedback').eq('errand_id', errandId).eq('reviewer_id', reviewerId).maybeSingle();
 
 export const insertErrandCancellation = (errandId: string, cancelledBy: string, reason: string, details: string | null) =>
   supabase.from('errand_cancellations').insert({ errand_id: errandId, cancelled_by: cancelledBy, reason, details });

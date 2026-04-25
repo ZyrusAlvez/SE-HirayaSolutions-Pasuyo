@@ -131,7 +131,7 @@ export default function ErrandDetailScreen() {
           <PosterCard
             name={errand.poster_name}
             avatar={errand.poster_avatar}
-            rating={errand.poster_rating}
+            rating={undefined}
             isVerified={errand.poster_is_verified}
             postedOn={new Date(errand.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
           />

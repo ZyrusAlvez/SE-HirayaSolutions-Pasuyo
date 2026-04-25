@@ -374,7 +374,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
 
-            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled' || t === 'errand_marked_done'; } catch { return false; } })();
+            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled' || t === 'errand_marked_done' || t === 'errand_reviewed'; } catch { return false; } })();
 
             if (isSystemMsg) {
               return (
