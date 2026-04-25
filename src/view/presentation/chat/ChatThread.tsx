@@ -9,6 +9,7 @@ import ErrandInfoCard from '@/view/presentation/chat/ErrandInfoCard';
 import ChatSkeleton from '@/view/presentation/chat/ChatSkeleton';
 import FileBubble from '@/view/presentation/chat/FileBubble';
 import CancelErrandModal from '@/view/presentation/chat/CancelErrandModal';
+import MarkDoneModal from '@/view/presentation/chat/MarkDoneModal';
 import { toast } from '@/utils/toast';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -26,6 +27,7 @@ type Props = {
   onSend: (content: string) => void;
   onSendFile?: (uri: string, fileName: string, mimeType: string, fileSize?: number) => void;
   onCancelErrand?: (errandId: string, title: string, reason: string, details: string | null) => Promise<boolean>;
+  onMarkDone?: (errandId: string, title: string) => Promise<boolean>;
   onBack?: () => void;
   onLoadMore?: () => void;
   loadingMore?: boolean;
@@ -172,7 +174,7 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUserId, otherUser, loading, selected, onSend, onSendFile, onCancelErrand, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUserId, otherUser, loading, selected, onSend, onSendFile, onCancelErrand, onMarkDone, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
   const router = useRouter();
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -180,6 +182,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
   const [attachHover, setAttachHover] = useState(false);
   const [errandsExpanded, setErrandsExpanded] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{ errandId: string; title: string; posterId?: string } | null>(null);
+  const [doneTarget, setDoneTarget] = useState<{ errandId: string; title: string; description?: string; budget?: number } | null>(null);
 
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
@@ -201,9 +204,15 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
       .map((p) => p.errandId)
   );
 
+  const doneErrandIds = new Set(
+    parsedMessages
+      .filter((p) => p.type === 'errand_marked_done')
+      .map((p) => p.errandId)
+  );
+
   const pinnedErrandsMap = new Map<string, any>();
   for (const p of parsedMessages) {
-    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId)) {
+    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId) && !doneErrandIds.has(p.errandId)) {
       pinnedErrandsMap.set(p.errandId, p);
     }
   }
@@ -279,7 +288,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
                   description={errand.description}
                   budget={errand.budget}
                   onMoreInfo={() => errand.errandId && router.push(`/errand/${errand.errandId}`)}
-                  onMarkDone={() => {}}
+                  onMarkDone={() => setDoneTarget({ errandId: errand.errandId, title: errand.title, description: errand.description, budget: errand.budget })}
                   onCancel={() => setCancelTarget({ errandId: errand.errandId, title: errand.title, posterId: errand.posterId })}
                 />
               ))}
@@ -304,7 +313,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
                 description={pinnedErrands[0].description}
                 budget={pinnedErrands[0].budget}
                 onMoreInfo={() => pinnedErrands[0].errandId && router.push(`/errand/${pinnedErrands[0].errandId}`)}
-                onMarkDone={() => {}}
+                onMarkDone={() => setDoneTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, description: pinnedErrands[0].description, budget: pinnedErrands[0].budget })}
                 onCancel={() => setCancelTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, posterId: pinnedErrands[0].posterId })}
               />
             </View>
@@ -324,6 +333,23 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             toast({ title: 'Failed to cancel errand', preset: 'error' });
           }
           setCancelTarget(null);
+        }}
+      />
+      <MarkDoneModal
+        visible={!!doneTarget}
+        errandTitle={doneTarget?.title}
+        description={doneTarget?.description}
+        budget={doneTarget?.budget}
+        onClose={() => setDoneTarget(null)}
+        onConfirm={async () => {
+          if (!doneTarget?.errandId) return;
+          const success = await onMarkDone?.(doneTarget.errandId, doneTarget.title);
+          if (success) {
+            toast({ title: 'Errand marked as done', preset: 'done' });
+          } else {
+            toast({ title: 'Failed to mark errand as done', preset: 'error' });
+          }
+          setDoneTarget(null);
         }}
       />
       {loading ? (
@@ -348,7 +374,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
 
-            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled'; } catch { return false; } })();
+            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled' || t === 'errand_marked_done' || t === 'errand_reviewed'; } catch { return false; } })();
 
             if (isSystemMsg) {
               return (

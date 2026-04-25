@@ -3,7 +3,7 @@ import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/m
 import * as ImagePicker from 'expo-image-picker';
 import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
-import { sendErrandAcceptedEmail, sendErrandCancelledEmail } from '@/models/emailModel';
+import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDoneEmail } from '@/models/emailModel';
 import { getDisplayProfile } from '@/models/profileModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
@@ -194,32 +194,25 @@ export const acceptErrand = async (
     const { error } = await errandModel.acceptErrand(errandId, user.id);
     if (error) return { success: false, error: 'Failed to accept errand' };
 
-    // Fire-and-forget: system message, notification, email
-    (async () => {
-      try {
-        const profile = await getDisplayProfile(user.id);
-        const acceptorName = profile.name ?? 'Someone';
+    const profile = await getDisplayProfile(user.id);
+    const acceptorName = profile.name ?? 'Someone';
 
-        const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
-        if (convo) {
-          const systemContent = JSON.stringify({
-            type: 'errand_accepted',
-            acceptedBy: user.id,
-            acceptedByName: acceptorName,
-            errandId,
-            title: errandInfo.title,
-            description: errandInfo.description,
-            budget: errandInfo.budget,
-          });
-          await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
-        }
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_accepted',
+        acceptedBy: user.id,
+        acceptedByName: acceptorName,
+        errandId,
+        title: errandInfo.title,
+        description: errandInfo.description,
+        budget: errandInfo.budget,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
 
-        postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
-        sendErrandAcceptedEmail(posterId, errandInfo, user.id);
-      } catch (e) {
-        console.warn('Accept errand side-effects failed:', e);
-      }
-    })();
+    postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
+    sendErrandAcceptedEmail(posterId, errandInfo, user.id);
 
     return { success: true, error: '' };
   } catch {
@@ -276,6 +269,87 @@ export const cancelAcceptedErrand = async (
       reason,
       errandId,
     );
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const markErrandAsDone = async (
+  errandId: string,
+  posterId: string,
+  errandTitle: string,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const profile = await getDisplayProfile(user.id);
+    const runnerName = profile.name ?? 'The runner';
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_marked_done',
+        markedBy: user.id,
+        markedByName: runnerName,
+        errandId,
+        title: errandTitle,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(
+      posterId,
+      'Errand Completed',
+      `${runnerName} has marked your errand "${errandTitle}" as done.`,
+      `/chat?userId=${user.id}`,
+    );
+
+    const { data: errandData } = await errandModel.getErrandById(errandId);
+    sendErrandMarkedDoneEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      runnerName,
+      user.id,
+    );
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const submitErrandReview = async (
+  errandId: string,
+  reviewedId: string,
+  rating: number,
+  feedback: string | null,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [{ error }, { data: errandData }] = await Promise.all([
+      errandModel.insertErrandReview(errandId, user.id, reviewedId, rating, feedback),
+      errandModel.getErrandById(errandId),
+    ]);
+    if (error) return { success: false, error: error.message.includes('duplicate') ? 'You have already reviewed this errand' : 'Failed to submit review' };
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, reviewedId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_reviewed',
+        reviewerId: user.id,
+        reviewedId,
+        errandId,
+        rating,
+        feedback: feedback || null,
+        title: errandData?.title ?? null,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
 
     return { success: true, error: '' };
   } catch {

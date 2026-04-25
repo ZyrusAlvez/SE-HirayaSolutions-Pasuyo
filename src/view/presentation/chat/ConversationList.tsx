@@ -34,11 +34,26 @@ function formatPreview(message: string | undefined, senderId: string | undefined
     const parsed = JSON.parse(message);
     if (parsed?.type === 'errand_accepted') {
       const isMe = parsed.acceptedBy === currentUserId;
-      return { prefix: isMe ? 'You: ' : '', text: 'Accepted Errand', italic: true };
+      const title = parsed.title ? `"${parsed.title}"` : 'an errand';
+      return { prefix: isMe ? 'You: ' : '', text: `Accepted ${title}`, italic: true };
     }
     if (parsed?.type === 'errand_cancelled') {
       const isMe = parsed.cancelledBy === currentUserId;
-      return { prefix: isMe ? 'You: ' : '', text: 'Cancelled the errand', italic: true };
+      const title = parsed.title ? `"${parsed.title}"` : 'the errand';
+      return { prefix: isMe ? 'You: ' : '', text: `Cancelled ${title}`, italic: true };
+    }
+    if (parsed?.type === 'errand_marked_done') {
+      const isMe = parsed.markedBy === currentUserId;
+      const title = parsed.title ? `"${parsed.title}"` : 'errand';
+      return { prefix: isMe ? 'You: ' : '', text: `Marked ${title} as done`, italic: true };
+    }
+    if (parsed?.type === 'errand_reviewed') {
+      const isMe = parsed.reviewerId === currentUserId;
+      const title = parsed.title ? ` for "${parsed.title}"` : '';
+      const stars = '★'.repeat(parsed.rating ?? 0) + '☆'.repeat(5 - (parsed.rating ?? 0));
+      let text = `Left a review${title} ${stars}`;
+      if (parsed.feedback) text += ` — "${parsed.feedback}"`;
+      return { prefix: isMe ? 'You: ' : '', text, italic: true };
     }
   } catch {}
   const isMe = senderId === currentUserId;
