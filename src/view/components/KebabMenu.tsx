@@ -26,8 +26,8 @@ export default function KebabMenu({ actions }: Props) {
 
   return (
     <View ref={ref}>
-      <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6} onPress={open}>
-        <Ionicons name="ellipsis-vertical" size={14} color="#9CA3AF" />
+      <TouchableOpacity style={{ padding: 8, margin: -8 }} activeOpacity={0.6} onPress={open}>
+        <Ionicons name="ellipsis-vertical" size={16} color="#9CA3AF" />
       </TouchableOpacity>
       <Modal visible={visible} transparent animationType="none" onRequestClose={() => setVisible(false)}>
         <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setVisible(false)}>
