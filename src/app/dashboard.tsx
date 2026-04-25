@@ -134,7 +134,7 @@ export default function DashboardScreen() {
         ) : (
           <ErrandList
             errands={filteredErrands}
-            emptyText={(search || statusFilter || typeFilter) ? 'No errands match your search or filters.' : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
+            emptyText={(search || statusFilter || typeFilter) ? 'No tasks found for selected options.' : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
             viewMode={viewMode}
             search={search}
           />
