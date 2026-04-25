@@ -34,8 +34,13 @@ export default function ErrandCard({ errand }: { errand: DashboardErrand }) {
             {errand.poster_name ?? 'Unknown'}
           </Text>
         </View>
-        <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color }}>{errand.status}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color }}>{errand.status}</Text>
+          </View>
+          <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6}>
+            <Ionicons name="ellipsis-vertical" size={16} color="#9CA3AF" />
+          </TouchableOpacity>
         </View>
       </View>
 

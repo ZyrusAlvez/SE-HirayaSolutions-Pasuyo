@@ -28,11 +28,16 @@ export default function ErrandRow({ errand }: { errand: DashboardErrand }) {
       <Image source={avatar} style={{ width: 36, height: 36, borderRadius: 18, marginTop: 2 }} />
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }} numberOfLines={1}>
+          <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151', flex: 1 }} numberOfLines={1}>
             {errand.poster_name ?? 'Unknown'}
           </Text>
-          <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
-            <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+              <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
+            </View>
+            <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6}>
+              <Ionicons name="ellipsis-vertical" size={14} color="#9CA3AF" />
+            </TouchableOpacity>
           </View>
         </View>
         <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginTop: 2 }} numberOfLines={1}>{errand.title}</Text>
