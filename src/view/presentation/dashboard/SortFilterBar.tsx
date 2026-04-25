@@ -87,7 +87,7 @@ export default function SortFilterBar({ statusOptions, statusFilter, onStatusCha
       {(statusFilter || typeFilter) && (
         <>
           <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
-          <TouchableOpacity onPress={() => { onStatusChange(null); onTypeChange(null); }} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+          <TouchableOpacity onPress={() => { onStatusChange(null); onTypeChange(null); setOpenId(null); }} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
             <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '600' }}>Clear</Text>
           </TouchableOpacity>
         </>
