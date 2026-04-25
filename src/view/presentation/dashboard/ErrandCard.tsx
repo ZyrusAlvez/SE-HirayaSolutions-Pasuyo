@@ -29,34 +29,37 @@ export default function ErrandCard({ errand, search = '' }: { errand: DashboardE
         backgroundColor: 'white', borderRadius: 14, padding: 14,
         shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
       }}>
+      {/* Header: status + kebab */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-          <Image source={avatar} style={{ width: 28, height: 28, borderRadius: 14 }} />
-          <HighlightText text={errand.poster_name ?? 'Unknown'} query={search} style={{ fontSize: 13, fontWeight: '600', color: '#374151' }} numberOfLines={1} />
+        <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+          <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', color }}>{errand.status}</Text>
-          </View>
-          <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6}>
-            <Ionicons name="ellipsis-vertical" size={16} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6}>
+          <Ionicons name="ellipsis-vertical" size={14} color="#9CA3AF" />
+        </TouchableOpacity>
       </View>
 
-      <HighlightText text={errand.title} query={search} style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 4 }} numberOfLines={1} />
-      <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 18 }} numberOfLines={2}>{errand.description}</Text>
+      {/* Title + description */}
+      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 2 }} numberOfLines={1}>{errand.title}</Text>
+      <Text style={{ fontSize: 12, color: '#9CA3AF', lineHeight: 17 }} numberOfLines={2}>{errand.description}</Text>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons name={errand.is_remote ? 'cloud-outline' : 'location-outline'} size={13} color="#9CA3AF" />
-          <Text style={{ fontSize: 12, color: '#9CA3AF', fontWeight: '500' }}>{errand.is_remote ? 'Remote' : 'Onsite'}</Text>
+      {/* Meta: type + budget */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 16, justifyContent: 'center' }}>
+          <View style={{ width: 14, height: 14, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name={errand.is_remote ? 'cloud-outline' : 'location-outline'} size={12} color="#9CA3AF" />
+          </View>
+          <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>{errand.is_remote ? 'Remote' : 'Onsite'}</Text>
         </View>
         {errand.budget != null && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: '#D97706' }}>₱{errand.budget.toLocaleString()}</Text>
-          </View>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: '#D97706' }}>₱{errand.budget.toLocaleString()}</Text>
         )}
+      </View>
+
+      {/* Footer: poster */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
+        <Image source={avatar} style={{ width: 20, height: 20, borderRadius: 10 }} />
+        <Text style={{ fontSize: 11, fontWeight: '500', color: '#6B7280' }} numberOfLines={1}>{errand.poster_name ?? 'Unknown'}</Text>
       </View>
     </TouchableOpacity>
   );

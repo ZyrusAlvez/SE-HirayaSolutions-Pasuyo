@@ -25,34 +25,36 @@ export default function ErrandRow({ errand, search = '' }: { errand: DashboardEr
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={() => router.push(`/errand/${errand.id}`)}
-      style={{ flexDirection: 'row', padding: 12, gap: 10 }}
+      style={{ flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10 }}
     >
-      <Image source={avatar} style={{ width: 36, height: 36, borderRadius: 18, marginTop: 2 }} />
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151', flex: 1 }} numberOfLines={1}>
-            {errand.poster_name ?? 'Unknown'}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
-              <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
+      {/* Avatar */}
+      <Image source={avatar} style={{ width: 32, height: 32, borderRadius: 16 }} />
+
+      {/* Content */}
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ fontSize: 13, fontWeight: '700', color: '#111827' }} numberOfLines={1}>{errand.title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontSize: 11, color: '#6B7280' }} numberOfLines={1}>{errand.poster_name ?? 'Unknown'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, height: 14, justifyContent: 'center' }}>
+            <View style={{ width: 12, height: 12, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={errand.is_remote ? 'cloud-outline' : 'location-outline'} size={10} color="#9CA3AF" />
             </View>
-            <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6}>
-              <Ionicons name="ellipsis-vertical" size={14} color="#9CA3AF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <HighlightText text={errand.title} query={search} style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginTop: 2 }} numberOfLines={1} />
-        <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 17, marginTop: 2 }} numberOfLines={1}>{errand.description}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-            <Ionicons name={errand.is_remote ? 'cloud-outline' : 'location-outline'} size={11} color="#9CA3AF" />
-            <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>{errand.is_remote ? 'Remote' : 'Onsite'}</Text>
+            <Text style={{ fontSize: 10, color: '#9CA3AF', fontWeight: '500' }}>{errand.is_remote ? 'Remote' : 'Onsite'}</Text>
           </View>
           {errand.budget != null && (
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#D97706' }}>₱{errand.budget.toLocaleString()}</Text>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: '#D97706' }}>₱{errand.budget.toLocaleString()}</Text>
           )}
         </View>
+      </View>
+
+      {/* Status + kebab */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+          <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
+        </View>
+        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6}>
+          <Ionicons name="ellipsis-vertical" size={14} color="#9CA3AF" />
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
