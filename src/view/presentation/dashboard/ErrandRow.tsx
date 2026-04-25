@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import type { DashboardErrand } from '@/controllers/errandController';
 import { deleteErrand } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
@@ -27,20 +28,28 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
     ? { uri: errand.poster_avatar }
     : DEFAULT_AVATAR;
 
+  const handleShare = async () => {
+    const url = Platform.OS === 'web'
+      ? `${window.location.origin}/errand/${errand.id}`
+      : `https://pasuyo.app/errand/${errand.id}`;
+    await Clipboard.setStringAsync(url);
+    toast({ title: 'Link copied to clipboard', preset: 'done' });
+  };
+
   const postedActions: KebabAction[] = [
     { label: 'Edit', icon: 'create-outline', onPress: () => {
       if (errand.status === 'In Progress') { toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' }); return; }
       router.push(`/errand/${errand.id}?edit=true`);
     }},
     { label: 'Delete', icon: 'trash-outline', onPress: () => setShowDeleteConfirm(true) },
-    { label: 'Share', icon: 'share-outline', onPress: () => {} },
+    { label: 'Share', icon: 'share-outline', onPress: handleShare },
   ];
 
   const acceptedActions: KebabAction[] = [
     { label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => {} },
     { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', onPress: () => {} },
     { label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => {} },
-    { label: 'Share', icon: 'share-outline', onPress: () => {} },
+    { label: 'Share', icon: 'share-outline', onPress: handleShare },
   ];
 
   const actions = tab === 'posted' ? postedActions : acceptedActions;
