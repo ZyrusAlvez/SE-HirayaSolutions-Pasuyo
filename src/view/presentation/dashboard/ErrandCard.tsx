@@ -2,6 +2,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { DashboardErrand } from '@/controllers/errandController';
+import HighlightText from '@/view/components/HighlightText';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -10,9 +11,10 @@ const STATUS_COLORS: Record<string, string> = {
   'In Progress': '#F59E0B',
   Completed: '#3B82F6',
   Expired: '#EF4444',
+  Cancelled: '#6B7280',
 };
 
-export default function ErrandCard({ errand }: { errand: DashboardErrand }) {
+export default function ErrandCard({ errand, search = '' }: { errand: DashboardErrand; search?: string }) {
   const router = useRouter();
   const color = STATUS_COLORS[errand.status] ?? '#6B7280';
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
@@ -30,9 +32,7 @@ export default function ErrandCard({ errand }: { errand: DashboardErrand }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
           <Image source={avatar} style={{ width: 28, height: 28, borderRadius: 14 }} />
-          <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151' }} numberOfLines={1}>
-            {errand.poster_name ?? 'Unknown'}
-          </Text>
+          <HighlightText text={errand.poster_name ?? 'Unknown'} query={search} style={{ fontSize: 13, fontWeight: '600', color: '#374151' }} numberOfLines={1} />
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
@@ -44,7 +44,7 @@ export default function ErrandCard({ errand }: { errand: DashboardErrand }) {
         </View>
       </View>
 
-      <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 4 }} numberOfLines={1}>{errand.title}</Text>
+      <HighlightText text={errand.title} query={search} style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 4 }} numberOfLines={1} />
       <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 18 }} numberOfLines={2}>{errand.description}</Text>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10 }}>

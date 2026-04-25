@@ -2,6 +2,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { DashboardErrand } from '@/controllers/errandController';
+import HighlightText from '@/view/components/HighlightText';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -10,9 +11,10 @@ const STATUS_COLORS: Record<string, string> = {
   'In Progress': '#F59E0B',
   Completed: '#3B82F6',
   Expired: '#EF4444',
+  Cancelled: '#6B7280',
 };
 
-export default function ErrandRow({ errand }: { errand: DashboardErrand }) {
+export default function ErrandRow({ errand, search = '' }: { errand: DashboardErrand; search?: string }) {
   const router = useRouter();
   const color = STATUS_COLORS[errand.status] ?? '#6B7280';
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
@@ -40,7 +42,7 @@ export default function ErrandRow({ errand }: { errand: DashboardErrand }) {
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginTop: 2 }} numberOfLines={1}>{errand.title}</Text>
+        <HighlightText text={errand.title} query={search} style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginTop: 2 }} numberOfLines={1} />
         <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 17, marginTop: 2 }} numberOfLines={1}>{errand.description}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>

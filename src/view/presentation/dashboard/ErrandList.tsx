@@ -8,9 +8,10 @@ interface Props {
   errands: DashboardErrand[];
   emptyText: string;
   viewMode: 'card' | 'list';
+  search?: string;
 }
 
-export default function ErrandList({ errands, emptyText, viewMode }: Props) {
+export default function ErrandList({ errands, emptyText, viewMode, search = '' }: Props) {
   if (errands.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
@@ -26,7 +27,7 @@ export default function ErrandList({ errands, emptyText, viewMode }: Props) {
         <View style={{ backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: '#F3F4F6', overflow: 'hidden' }}>
           {errands.map((e, i) => (
             <View key={e.id} style={i < errands.length - 1 ? { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' } : undefined}>
-              <ErrandRow errand={e} />
+              <ErrandRow errand={e} search={search} />
             </View>
           ))}
         </View>
@@ -43,7 +44,7 @@ export default function ErrandList({ errands, emptyText, viewMode }: Props) {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         {errands.map((e) => (
           <View key={e.id} style={{ width: cardWidth }}>
-            <ErrandCard errand={e} />
+            <ErrandCard errand={e} search={search} />
           </View>
         ))}
       </View>
