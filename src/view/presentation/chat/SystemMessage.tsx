@@ -41,10 +41,14 @@ export default function SystemMessage({ content, currentUserId }: Props) {
       }
     } else if (parsed?.type === 'errand_reviewed') {
       const isMe = parsed.reviewerId === currentUserId;
+      const title = parsed.title ? ` for "${parsed.title}"` : '';
       const stars = '★'.repeat(parsed.rating ?? 0) + '☆'.repeat(5 - (parsed.rating ?? 0));
       label = isMe
-        ? `You left a review  ${stars}`
-        : `You received a review  ${stars}`;
+        ? `You left a review${title}  ${stars}`
+        : `You received a review${title}  ${stars}`;
+      if (parsed.feedback) {
+        label += `\n"${parsed.feedback}"`;
+      }
     }
   } catch {}
 
