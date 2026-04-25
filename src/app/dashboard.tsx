@@ -62,7 +62,7 @@ export default function DashboardScreen() {
             <Ionicons name={viewMode === 'card' ? 'list-outline' : 'grid-outline'} size={20} color="#6B7280" />
           </TouchableOpacity>
         </View>
-        <View style={{ paddingVertical: 8 }}>
+        <View style={{ paddingVertical: 8, zIndex: 10 }}>
           <StatusFilter options={filterOptions} selected={statusFilter} onSelect={setStatusFilter} />
         </View>
         {loading ? (
