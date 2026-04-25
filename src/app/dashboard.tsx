@@ -11,6 +11,7 @@ import NavBar from '@/view/components/NavBar';
 import TabToggle from '@/view/components/TabToggle';
 import LoadingSpinner from '@/view/components/LoadingSpinner';
 import ErrandList from '@/view/presentation/dashboard/ErrandList';
+import SearchBar from '@/view/components/SearchBar';
 import SortFilterBar from '@/view/presentation/dashboard/SortFilterBar';
 import type { SortState } from '@/view/presentation/dashboard/SortFilterBar';
 
@@ -36,6 +37,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortState>({ key: 'budget', dir: 'asc' });
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
@@ -72,6 +74,10 @@ export default function DashboardScreen() {
 
   const filteredErrands = useMemo(() => {
     let source = tab === 'posted' ? posted : accepted;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      source = source.filter(e => e.title.toLowerCase().includes(q) || (e.poster_name ?? '').toLowerCase().includes(q));
+    }
     if (statusFilter) source = source.filter(e => e.status === statusFilter);
     if (typeFilter) source = source.filter(e => typeFilter === 'Remote' ? e.is_remote : !e.is_remote);
 
@@ -90,7 +96,7 @@ export default function DashboardScreen() {
       }
       return effectiveSort.dir === 'asc' ? diff : -diff;
     });
-  }, [tab, posted, accepted, statusFilter, typeFilter, effectiveSort, userLat, userLng]);
+  }, [tab, posted, accepted, search, statusFilter, typeFilter, effectiveSort, userLat, userLng]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
@@ -107,6 +113,9 @@ export default function DashboardScreen() {
           >
             <Ionicons name={viewMode === 'card' ? 'list-outline' : 'grid-outline'} size={20} color="#6B7280" />
           </TouchableOpacity>
+        </View>
+        <View style={{ paddingTop: 8, paddingBottom: 4 }}>
+          <SearchBar value={search} onChangeText={setSearch} />
         </View>
         <View style={{ paddingVertical: 8, zIndex: 10 }}>
           <SortFilterBar
@@ -125,7 +134,7 @@ export default function DashboardScreen() {
         ) : (
           <ErrandList
             errands={filteredErrands}
-            emptyText={(statusFilter || typeFilter) ? 'No errands match the selected filters.' : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
+            emptyText={(search || statusFilter || typeFilter) ? 'No errands match your search or filters.' : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
             viewMode={viewMode}
           />
         )}
