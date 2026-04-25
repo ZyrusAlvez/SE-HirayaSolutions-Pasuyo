@@ -149,7 +149,10 @@ export type DashboardErrand = {
   description: string;
   status: string;
   budget?: number;
+  deadline?: string;
   is_remote: boolean;
+  location_lat?: number | null;
+  location_lng?: number | null;
   poster_name?: string;
   poster_avatar?: string;
   created_at: string;
