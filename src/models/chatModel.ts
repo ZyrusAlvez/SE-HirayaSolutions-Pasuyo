@@ -74,14 +74,15 @@ export const markMessagesAsRead = async (conversationId: string, userId: string)
     supabase
       .from('conversations')
       .update({ last_message_is_read: true })
-      .eq('id', conversationId),
+      .eq('id', conversationId)
+      .neq('last_message_sender_id', userId),
   ]);
   return msgResult;
 };
 
 export const sendSystemMessage = async (conversationId: string, content: string, actorId: string) => {
   const result = await supabase.from('messages').insert({ conversation_id: conversationId, sender_id: actorId, content, is_read: false }).select().single();
-  await supabase.from('conversations').update({ last_message_is_read: false, last_message: content, last_message_sender_id: actorId }).eq('id', conversationId);
+  await supabase.from('conversations').update({ last_message_is_read: false, last_message: content, last_message_sender_id: actorId, last_message_at: new Date().toISOString() }).eq('id', conversationId);
   return result;
 };
 

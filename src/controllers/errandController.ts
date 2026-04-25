@@ -145,6 +145,7 @@ export const deleteErrand = async (id: string, status: string): Promise<{ succes
 
 export type DashboardErrand = {
   id: string;
+  user_id: string;
   title: string;
   description: string;
   status: string;
@@ -153,6 +154,7 @@ export type DashboardErrand = {
   is_remote: boolean;
   location_lat?: number | null;
   location_lng?: number | null;
+  accepted_by?: string | null;
   poster_name?: string;
   poster_avatar?: string;
   created_at: string;
@@ -179,8 +181,8 @@ export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardE
     }
 
     const allAccepted = [
-      ...acceptedData.map(e => cancelledIds.has(e.id) ? { ...e, status: 'Cancelled' } : e),
-      ...cancelledErrands,
+      ...acceptedData.map(e => (cancelledIds.has(e.id) && e.accepted_by !== user.id) ? { ...e, status: 'Cancelled' } : e),
+      ...cancelledErrands.filter(e => e.accepted_by !== user.id),
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return {
@@ -229,7 +231,7 @@ export const acceptErrand = async (
       await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
     }
 
-    postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
+    await postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
     sendErrandAcceptedEmail(posterId, errandInfo, user.id);
 
     return { success: true, error: '' };
@@ -303,6 +305,14 @@ export const markErrandAsDone = async (
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 
+    const { data: errandData } = await errandModel.getErrandById(errandId);
+    if (!errandData) return { success: false, error: 'Errand not found' };
+    if (errandData.status !== 'In Progress') return { success: false, error: 'Only errands that are in progress can be marked as done.' };
+    if (errandData.accepted_by !== user.id) return { success: false, error: 'Only the assigned runner can mark this errand as done.' };
+
+    const { error: updateErr } = await errandModel.markErrandDone(errandId);
+    if (updateErr) return { success: false, error: 'Failed to update errand status.' };
+
     const profile = await getDisplayProfile(user.id);
     const runnerName = profile.name ?? 'The runner';
 
@@ -325,7 +335,6 @@ export const markErrandAsDone = async (
       `/chat?userId=${user.id}`,
     );
 
-    const { data: errandData } = await errandModel.getErrandById(errandId);
     sendErrandMarkedDoneEmail(
       posterId,
       { title: errandTitle, description: errandData?.description, budget: errandData?.budget },

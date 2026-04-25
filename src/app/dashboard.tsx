@@ -52,6 +52,15 @@ export default function DashboardScreen() {
     })();
   }, []);
 
+  const refreshErrands = useCallback(() => {
+    getDashboardErrands().then((result) => {
+      if (result.success) {
+        setPosted(result.data.posted);
+        setAccepted(result.data.accepted);
+      }
+    });
+  }, []);
+
   useFocusEffect(useCallback(() => {
     setLoading(true);
     getDashboardErrands().then((result) => {
@@ -137,6 +146,8 @@ export default function DashboardScreen() {
             emptyText={(search || statusFilter || typeFilter) ? 'No tasks found for selected options.' : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
             viewMode={viewMode}
             search={search}
+            tab={tab}
+            onDelete={refreshErrands}
           />
         )}
       </View>
