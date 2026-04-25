@@ -231,7 +231,7 @@ export const acceptErrand = async (
       await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
     }
 
-    postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
+    await postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
     sendErrandAcceptedEmail(posterId, errandInfo, user.id);
 
     return { success: true, error: '' };
