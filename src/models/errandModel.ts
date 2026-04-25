@@ -109,13 +109,28 @@ export const insertErrandCancellation = (errandId: string, cancelledBy: string, 
 export const getPostedErrands = (userId: string) =>
   supabase
     .from('errands_with_profiles')
-    .select('id, title, description, status, budget, is_remote, poster_name, poster_avatar, created_at')
+    .select('id, title, description, status, budget, deadline, is_remote, location_lat, location_lng, poster_name, poster_avatar, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
 export const getAcceptedErrands = (userId: string) =>
   supabase
     .from('errands_with_profiles')
-    .select('id, title, description, status, budget, is_remote, poster_name, poster_avatar, created_at')
+    .select('id, title, description, status, budget, deadline, is_remote, location_lat, location_lng, poster_name, poster_avatar, created_at')
     .eq('accepted_by', userId)
+    .order('created_at', { ascending: false });
+
+export const getCancelledErrandIds = async (userId: string): Promise<Set<string>> => {
+  const { data } = await supabase
+    .from('errand_cancellations')
+    .select('errand_id')
+    .eq('cancelled_by', userId);
+  return new Set((data ?? []).map(r => r.errand_id));
+};
+
+export const getCancelledErrands = (errandIds: string[]) =>
+  supabase
+    .from('errands_with_profiles')
+    .select('id, title, description, status, budget, deadline, is_remote, location_lat, location_lng, poster_name, poster_avatar, created_at')
+    .in('id', errandIds)
     .order('created_at', { ascending: false });

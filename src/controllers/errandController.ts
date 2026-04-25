@@ -149,7 +149,10 @@ export type DashboardErrand = {
   description: string;
   status: string;
   budget?: number;
+  deadline?: string;
   is_remote: boolean;
+  location_lat?: number | null;
+  location_lng?: number | null;
   poster_name?: string;
   poster_avatar?: string;
   created_at: string;
@@ -160,16 +163,31 @@ export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardE
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    const [posted, accepted] = await Promise.all([
+    const [posted, accepted, cancelledIds] = await Promise.all([
       errandModel.getPostedErrands(user.id),
       errandModel.getAcceptedErrands(user.id),
+      errandModel.getCancelledErrandIds(user.id),
     ]);
+
+    const acceptedData = (accepted.data ?? []) as DashboardErrand[];
+
+    const extraCancelledIds = [...cancelledIds].filter(id => !acceptedData.some(e => e.id === id));
+    let cancelledErrands: DashboardErrand[] = [];
+    if (extraCancelledIds.length > 0) {
+      const { data } = await errandModel.getCancelledErrands(extraCancelledIds);
+      cancelledErrands = ((data ?? []) as DashboardErrand[]).map(e => ({ ...e, status: 'Cancelled' }));
+    }
+
+    const allAccepted = [
+      ...acceptedData.map(e => cancelledIds.has(e.id) ? { ...e, status: 'Cancelled' } : e),
+      ...cancelledErrands,
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return {
       success: true,
       data: {
         posted: (posted.data ?? []) as DashboardErrand[],
-        accepted: (accepted.data ?? []) as DashboardErrand[],
+        accepted: allAccepted,
       },
     };
   } catch {
