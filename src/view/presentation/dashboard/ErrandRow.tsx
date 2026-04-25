@@ -10,6 +10,7 @@ const STATUS_COLORS: Record<string, string> = {
   'In Progress': '#F59E0B',
   Completed: '#3B82F6',
   Expired: '#EF4444',
+  Cancelled: '#6B7280',
 };
 
 export default function ErrandRow({ errand }: { errand: DashboardErrand }) {

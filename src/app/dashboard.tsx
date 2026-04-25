@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { View, TouchableOpacity, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import NavBar from '@/view/components/NavBar';
 import TabToggle from '@/view/components/TabToggle';
 import LoadingSpinner from '@/view/components/LoadingSpinner';
 import ErrandList from '@/view/presentation/dashboard/ErrandList';
+import StatusFilter from '@/view/presentation/dashboard/StatusFilter';
 
 const TABS = [
   { key: 'posted', label: 'My Posted Errands', icon: 'paper-plane-outline' },
@@ -23,6 +24,7 @@ export default function DashboardScreen() {
   const [posted, setPosted] = useState<DashboardErrand[]>([]);
   const [accepted, setAccepted] = useState<DashboardErrand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
@@ -34,6 +36,15 @@ export default function DashboardScreen() {
       setLoading(false);
     });
   }, []));
+
+  const POSTED_STATUSES = ['Available', 'In Progress', 'Completed', 'Expired'];
+  const ACCEPTED_STATUSES = ['Available', 'In Progress', 'Completed', 'Expired', 'Cancelled'];
+  const filterOptions = tab === 'posted' ? POSTED_STATUSES : ACCEPTED_STATUSES;
+
+  const filteredErrands = useMemo(() => {
+    const source = tab === 'posted' ? posted : accepted;
+    return statusFilter ? source.filter(e => e.status === statusFilter) : source;
+  }, [tab, posted, accepted, statusFilter]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
@@ -51,12 +62,17 @@ export default function DashboardScreen() {
             <Ionicons name={viewMode === 'card' ? 'list-outline' : 'grid-outline'} size={20} color="#6B7280" />
           </TouchableOpacity>
         </View>
+        <View style={{ paddingVertical: 8 }}>
+          <StatusFilter options={filterOptions} selected={statusFilter} onSelect={setStatusFilter} />
+        </View>
         {loading ? (
           <LoadingSpinner />
-        ) : tab === 'posted' ? (
-          <ErrandList errands={posted} emptyText="You haven't posted any errands yet." viewMode={viewMode} />
         ) : (
-          <ErrandList errands={accepted} emptyText="You haven't accepted any errands yet." viewMode={viewMode} />
+          <ErrandList
+            errands={filteredErrands}
+            emptyText={statusFilter ? `No ${statusFilter.toLowerCase()} errands.` : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
+            viewMode={viewMode}
+          />
         )}
       </View>
       <NavBar />
