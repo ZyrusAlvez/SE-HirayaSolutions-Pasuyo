@@ -142,6 +142,7 @@ export default function VerifyScreen() {
       <View style={{ paddingHorizontal: 24, paddingBottom: Platform.OS === 'web' ? 16 : 32, paddingTop: 16, alignItems: isLarge ? 'center' : undefined }}>
         <View style={{ width: contentWidth ?? '100%' }}>
           <TouchableOpacity
+            testID="verify-next-btn"
             className={`py-4 rounded-2xl items-center ${submitting ? 'bg-[#FEA405]/60' : 'bg-[#FEA405]'}`}
             onPress={handleNext}
             activeOpacity={0.8}

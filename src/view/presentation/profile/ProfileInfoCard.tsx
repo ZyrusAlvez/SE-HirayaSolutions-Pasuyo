@@ -76,6 +76,7 @@ export default function ProfileInfoCard({
 
       {verificationStatus === 'not_verified' && (
         <TouchableOpacity
+          testID="verify-account-btn"
           className="flex-row items-center justify-between bg-[#FEA405] rounded-2xl px-4 py-4"
           onPress={onVerify}
           activeOpacity={0.7}

@@ -65,15 +65,16 @@ function formatLastSeen(dateStr: string | null | undefined) {
 
 function StatusIndicator({ status, otherAvatar }: { status?: MessageStatus; otherAvatar?: string | null }) {
   if (!status) return null;
-  if (status === 'sending') return <ActivityIndicator size={10} color="#9CA3AF" style={{ marginTop: 2 }} />;
+  if (status === 'sending') return <ActivityIndicator testID="status-sending" size={10} color="#9CA3AF" style={{ marginTop: 2 }} />;
   if (status === 'seen') return (
     <Image
+      testID="status-seen"
       source={getAvatarSource(otherAvatar)}
       style={{ width: 14, height: 14, borderRadius: 7, marginTop: 2 }}
     />
   );
   // sent
-  return <Ionicons name="checkmark-circle" size={14} color="#9CA3AF" style={{ marginTop: 2 }} />;
+  return <Ionicons testID="status-sent" name="checkmark-circle" size={14} color="#9CA3AF" style={{ marginTop: 2 }} />;
 }
 
 function getStatusLabel(status?: MessageStatus) {
@@ -89,6 +90,7 @@ function MessageBubble({ item, isMe, otherAvatar, isLastOwn, onImagePress }: { i
 
   return (
     <Pressable
+      testID={`message-bubble-${item.id}`}
       onPress={() => setRevealed((v) => !v)}
       style={{ alignItems: isMe ? 'flex-end' : 'flex-start', marginBottom: 4 }}
     >
@@ -109,7 +111,7 @@ function MessageBubble({ item, isMe, otherAvatar, isLastOwn, onImagePress }: { i
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
           <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{formatTime(item.created_at)}</Text>
           {isMe && getStatusLabel(item._status) && (
-            <Text style={{ fontSize: 10, color: '#9CA3AF' }}> · {getStatusLabel(item._status)}</Text>
+            <Text testID={`status-label-${item.id}`} style={{ fontSize: 10, color: '#9CA3AF' }}> · {getStatusLabel(item._status)}</Text>
           )}
         </View>
       )}
@@ -154,7 +156,7 @@ function TypingIndicator() {
   });
 
   return (
-    <View style={{ alignItems: 'flex-start', marginBottom: 4 }}>
+    <View testID="typing-indicator" style={{ alignItems: 'flex-start', marginBottom: 4 }}>
       <View style={{ backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center' }}>
         <Animated.View style={dotStyle(dot1)} />
         <Animated.View style={dotStyle(dot2)} />
@@ -202,7 +204,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
   const lastOwnMsgId = [...messages].reverse().find((m) => m.sender_id === currentUserId)?.id;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <View testID="chat-thread-panel" style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
         {onBack && (
           <Pressable onPress={onBack} style={{ marginRight: 8 }}>
@@ -228,13 +230,14 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
         </View>
       </View>
       {loading ? (
-        <ActivityIndicator style={{ flex: 1 }} color="#6B7280" />
+        <ActivityIndicator testID="chat-thread-loading" style={{ flex: 1 }} color="#6B7280" />
       ) : messages.length === 0 ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View testID="chat-thread-empty" style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#9CA3AF', fontSize: 14 }}>No messages yet. Say hello!</Text>
         </View>
       ) : (
         <FlatList
+          testID="chat-thread-list"
           data={[...messages].reverse()}
           inverted
           keyExtractor={(m) => m.id}
@@ -273,6 +276,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
         <View style={{ position: 'relative' }}>
           <Pressable
+            testID="chat-attach-btn"
             onPress={pickAttachment}
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setAttachHover(true)}
@@ -289,6 +293,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           )}
         </View>
         <TextInput
+          testID="chat-message-input"
           value={input}
           onChangeText={(text) => { setInput(text); onTyping?.(); }}
           onSubmitEditing={send}
@@ -306,6 +311,7 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           }}
         />
         <Pressable
+          testID="chat-send-btn"
           onPress={send}
           style={{
             marginLeft: 8,

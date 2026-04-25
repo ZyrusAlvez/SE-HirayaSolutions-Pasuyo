@@ -34,14 +34,14 @@ export default function ConversationList({ conversations, currentUserId, selecte
       : { name: c.user1_name, avatar: c.user1_avatar, verified: c.user1_verified };
 
   return (
-    <View style={{ width: fullWidth ? '100%' : 320, borderRightWidth: fullWidth ? 0 : 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
+    <View testID="conversation-list-panel" style={{ width: fullWidth ? '100%' : 320, borderRightWidth: fullWidth ? 0 : 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
       <Text style={{ padding: 16, fontWeight: '700', fontSize: 18, color: '#111827' }}>Messages</Text>
       {loading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View testID="conversation-list-loading" style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color="#6B7280" />
         </View>
       ) : conversations.length === 0 ? (
-        <Text style={{ padding: 16, color: '#9CA3AF', fontSize: 14 }}>No conversations yet. Start browsing errands and chat with task posters.</Text>
+        <Text testID="conversation-list-empty" style={{ padding: 16, color: '#9CA3AF', fontSize: 14 }}>No conversations yet. Start browsing errands and chat with task posters.</Text>
       ) : (
         <FlatList
           data={conversations}
@@ -52,6 +52,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
             const unread = item.last_message_sender_id !== currentUserId && !item.last_message_is_read;
             return (
               <Pressable
+                testID={`conversation-item-${item.id}`}
                 onPress={() => onSelect(item.id)}
                 style={{
                   flexDirection: 'row',
@@ -71,11 +72,11 @@ export default function ConversationList({ conversations, currentUserId, selecte
                   <VerificationBadge status={other.verified ? 'verified' : 'not_verified'} variant="icon" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontWeight: unread ? '700' : '600', fontSize: 14, color: '#111827' }} numberOfLines={1}>
+                  <Text testID={`conversation-name-${item.id}`} style={{ fontWeight: unread ? '700' : '600', fontSize: 14, color: '#111827' }} numberOfLines={1}>
                     {other.name ?? 'Unknown'}
                   </Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
-                    <Text style={{ flex: 1, fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400' }} numberOfLines={1}>
+                    <Text testID={`conversation-last-message-${item.id}`} style={{ flex: 1, fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400' }} numberOfLines={1}>
                       {typingConvos?.has(item.id) ? (
                         <Text style={{ color: '#3B82F6', fontStyle: 'italic' }}>typing...</Text>
                       ) : item.last_message ? (
@@ -84,7 +85,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
                         'No messages yet'
                       )}
                     </Text>
-                    <Text style={{ fontSize: 11, color: unread ? '#3B82F6' : '#9CA3AF', fontWeight: unread ? '600' : '400', marginLeft: 8 }}>
+                    <Text testID={`conversation-timestamp-${item.id}`} style={{ fontSize: 11, color: unread ? '#3B82F6' : '#9CA3AF', fontWeight: unread ? '600' : '400', marginLeft: 8 }}>
                       {timeAgo(item.last_message_at)}
                     </Text>
                   </View>

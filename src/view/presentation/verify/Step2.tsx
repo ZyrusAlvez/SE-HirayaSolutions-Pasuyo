@@ -110,6 +110,7 @@ export default function Step2(props: Step2Props) {
           {(['House', 'Apartment', 'Building'] as const).map((type) => (
             <TouchableOpacity
               key={type}
+              testID={`step2-address-type-${type.toLowerCase()}`}
               className={`flex-1 py-3 rounded-2xl border ${
                 props.addressType === type ? 'bg-[#FEA405] border-[#FEA405]' : 'bg-gray-50 border-gray-200'
               }`}
@@ -125,6 +126,7 @@ export default function Step2(props: Step2Props) {
       </View>
 
       <AddressDropdown
+        testID="step2-province"
         label="Province"
         placeholder="Select province"
         value={props.province}
@@ -134,6 +136,7 @@ export default function Step2(props: Step2Props) {
       />
 
       <AddressDropdown
+        testID="step2-city"
         label="City/Municipality"
         placeholder="Select city"
         value={props.city}
@@ -144,6 +147,7 @@ export default function Step2(props: Step2Props) {
       />
 
       <AddressDropdown
+        testID="step2-barangay"
         label="Barangay"
         placeholder="Select barangay"
         value={props.barangay}
@@ -156,6 +160,7 @@ export default function Step2(props: Step2Props) {
       {props.addressType === 'House' && (
         <>
           <TextInput
+            testID="step2-house-no"
             label="House No."
             required
             placeholder="123"
@@ -163,6 +168,7 @@ export default function Step2(props: Step2Props) {
             onChangeText={props.setHouseNo}
           />
           <TextInput
+            testID="step2-street"
             label="Street"
             required
             placeholder="Main Street"
