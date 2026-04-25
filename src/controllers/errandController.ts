@@ -310,6 +310,9 @@ export const markErrandAsDone = async (
     if (errandData.status !== 'In Progress') return { success: false, error: 'Only errands that are in progress can be marked as done.' };
     if (errandData.accepted_by !== user.id) return { success: false, error: 'Only the assigned runner can mark this errand as done.' };
 
+    const { error: updateErr } = await errandModel.markErrandDone(errandId);
+    if (updateErr) return { success: false, error: 'Failed to update errand status.' };
+
     const profile = await getDisplayProfile(user.id);
     const runnerName = profile.name ?? 'The runner';
 
