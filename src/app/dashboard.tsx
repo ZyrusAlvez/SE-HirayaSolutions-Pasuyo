@@ -137,6 +137,7 @@ export default function DashboardScreen() {
             emptyText={(search || statusFilter || typeFilter) ? 'No tasks found for selected options.' : (tab === 'posted' ? "You haven't posted any errands yet." : "You haven't accepted any errands yet.")}
             viewMode={viewMode}
             search={search}
+            tab={tab}
           />
         )}
       </View>

@@ -3,6 +3,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { DashboardErrand } from '@/controllers/errandController';
 import HighlightText from '@/view/components/HighlightText';
+import KebabMenu from '@/view/components/KebabMenu';
+import type { KebabAction } from '@/view/components/KebabMenu';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -14,12 +16,18 @@ const STATUS_COLORS: Record<string, string> = {
   Cancelled: '#6B7280',
 };
 
-export default function ErrandCard({ errand, search = '' }: { errand: DashboardErrand; search?: string }) {
+export default function ErrandCard({ errand, search = '', tab = 'posted' }: { errand: DashboardErrand; search?: string; tab?: string }) {
   const router = useRouter();
   const color = STATUS_COLORS[errand.status] ?? '#6B7280';
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
     ? { uri: errand.poster_avatar }
     : DEFAULT_AVATAR;
+
+  const actions: KebabAction[] = tab === 'posted' ? [
+    { label: 'Edit', icon: 'create-outline', onPress: () => {} },
+    { label: 'Delete', icon: 'trash-outline', onPress: () => {} },
+    { label: 'Share', icon: 'share-outline', onPress: () => {} },
+  ] : [];
 
   return (
     <TouchableOpacity
@@ -34,9 +42,7 @@ export default function ErrandCard({ errand, search = '' }: { errand: DashboardE
         <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
           <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
         </View>
-        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.6}>
-          <Ionicons name="ellipsis-vertical" size={14} color="#9CA3AF" />
-        </TouchableOpacity>
+        <KebabMenu actions={actions} />
       </View>
 
       {/* Title + description */}
