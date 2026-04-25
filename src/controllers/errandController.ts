@@ -145,6 +145,7 @@ export const deleteErrand = async (id: string, status: string): Promise<{ succes
 
 export type DashboardErrand = {
   id: string;
+  user_id: string;
   title: string;
   description: string;
   status: string;
