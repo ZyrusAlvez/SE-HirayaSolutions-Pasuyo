@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import type { DashboardErrand } from '@/controllers/errandController';
-import { deleteErrand, cancelAcceptedErrand } from '@/controllers/errandController';
+import { deleteErrand, cancelAcceptedErrand, markErrandAsDone } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
 import KebabMenu from '@/view/components/KebabMenu';
 import type { KebabAction } from '@/view/components/KebabMenu';
@@ -25,6 +25,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showMarkDoneConfirm, setShowMarkDoneConfirm] = useState(false);
   const color = STATUS_COLORS[errand.status] ?? '#6B7280';
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
     ? { uri: errand.poster_avatar }
@@ -48,7 +49,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
   ];
 
   const acceptedActions: KebabAction[] = [
-    { label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => {} },
+    { label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => setShowMarkDoneConfirm(true) },
     { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', onPress: () => router.push(`/chat?userId=${errand.user_id}`) },
     { label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => setShowCancelModal(true) },
     { label: 'Share', icon: 'share-outline', onPress: handleShare },
@@ -102,6 +103,20 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
           const result = await deleteErrand(errand.id, errand.status);
           if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
           toast({ title: 'Errand deleted.', preset: 'done' });
+          onDelete?.();
+        }}
+      />
+      <ConfirmModal
+        visible={showMarkDoneConfirm}
+        title="Mark as Done"
+        message={`Mark "${errand.title}" as completed?`}
+        confirmLabel="Mark Done"
+        onCancel={() => setShowMarkDoneConfirm(false)}
+        onConfirm={async () => {
+          setShowMarkDoneConfirm(false);
+          const result = await markErrandAsDone(errand.id, errand.user_id, errand.title);
+          if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
+          toast({ title: 'Errand marked as done!', preset: 'done' });
           onDelete?.();
         }}
       />
