@@ -21,7 +21,7 @@ const ACCENT = '#FEA405';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
 export default function ErrandDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, edit } = useLocalSearchParams<{ id: string; edit?: string }>();
   const { width } = useWindowDimensions();
   const router = useRouter();
 
@@ -30,7 +30,7 @@ export default function ErrandDetailScreen() {
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(edit === 'true');
   const [isGuest, setIsGuest] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [accepting, setAccepting] = useState(false);
@@ -103,7 +103,7 @@ export default function ErrandDetailScreen() {
             />
           )}
 
-          {isEditing ? (
+          {isEditing && isOwner ? (
             <EditErrandSheet
               errand={errand}
               onSaved={(updated) => {

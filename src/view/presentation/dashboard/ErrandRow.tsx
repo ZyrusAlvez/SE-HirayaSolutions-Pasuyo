@@ -2,7 +2,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import type { DashboardErrand } from '@/controllers/errandController';
-import HighlightText from '@/view/components/HighlightText';
+import { toast } from '@/utils/toast';
 import KebabMenu from '@/view/components/KebabMenu';
 import type { KebabAction } from '@/view/components/KebabMenu';
 
@@ -23,16 +23,23 @@ export default function ErrandRow({ errand, search = '', tab = 'posted' }: { err
     ? { uri: errand.poster_avatar }
     : DEFAULT_AVATAR;
 
-  const actions: KebabAction[] = tab === 'posted' ? [
-    { label: 'Edit', icon: 'create-outline', onPress: () => {} },
+  const postedActions: KebabAction[] = [
+    { label: 'Edit', icon: 'create-outline', onPress: () => {
+      if (errand.status === 'In Progress') { toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' }); return; }
+      router.push(`/errand/${errand.id}?edit=true`);
+    }},
     { label: 'Delete', icon: 'trash-outline', onPress: () => {} },
     { label: 'Share', icon: 'share-outline', onPress: () => {} },
-  ] : [
+  ];
+
+  const acceptedActions: KebabAction[] = [
     { label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => {} },
     { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', onPress: () => {} },
     { label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => {} },
     { label: 'Share', icon: 'share-outline', onPress: () => {} },
   ];
+
+  const actions = tab === 'posted' ? postedActions : acceptedActions;
 
   return (
     <TouchableOpacity
