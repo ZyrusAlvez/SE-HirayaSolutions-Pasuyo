@@ -25,7 +25,7 @@ export default function ErrandList({ errands, emptyText, viewMode, search = '', 
 
   if (viewMode === 'list') {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
         <View style={{ backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: '#F3F4F6', overflow: 'hidden' }}>
           {errands.map((e, i) => (
             <View key={e.id} style={i < errands.length - 1 ? { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' } : undefined}>
@@ -42,7 +42,7 @@ export default function ErrandList({ errands, emptyText, viewMode, search = '', 
   const cardWidth = `${Math.floor(100 / columns) - 2}%` as const;
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
+    <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         {errands.map((e) => (
           <View key={e.id} style={{ width: cardWidth }}>
