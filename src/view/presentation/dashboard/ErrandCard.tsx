@@ -16,7 +16,7 @@ const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 const STATUS_COLORS: Record<string, string> = {
   Available: '#10B981',
   'In Progress': '#F59E0B',
-  Completed: '#3B82F6',
+  Completed: '#10B981',
   Expired: '#EF4444',
   Cancelled: '#6B7280',
 };
@@ -48,10 +48,12 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
     { label: 'Share', icon: 'share-outline', onPress: handleShare },
   ];
 
+  const canActOnAccepted = errand.status !== 'Cancelled' && errand.status !== 'Completed';
+
   const acceptedActions: KebabAction[] = [
-    { label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => setShowMarkDoneConfirm(true) },
+    ...(canActOnAccepted ? [{ label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => setShowMarkDoneConfirm(true) }] : []),
     { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', onPress: () => router.push(`/chat?userId=${errand.user_id}`) },
-    { label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => setShowCancelModal(true) },
+    ...(canActOnAccepted ? [{ label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => setShowCancelModal(true) }] : []),
     { label: 'Share', icon: 'share-outline', onPress: handleShare },
   ];
 
