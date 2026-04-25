@@ -1,6 +1,7 @@
-import { View, Text, FlatList, Image, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, Image, Pressable } from 'react-native';
 import { Conversation } from '@/controllers/chatController';
 import VerificationBadge from '@/view/components/VerificationBadge';
+import ConversationSkeleton from './ConversationSkeleton';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -27,6 +28,35 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(hrs / 24)}d`;
 }
 
+function formatPreview(message: string | undefined, senderId: string | undefined, currentUserId: string): { prefix: string; text: string; italic: boolean } {
+  if (!message) return { prefix: '', text: 'No messages yet', italic: false };
+  try {
+    const parsed = JSON.parse(message);
+    if (parsed?.type === 'errand_accepted') {
+      const isMe = parsed.acceptedBy === currentUserId;
+      return { prefix: isMe ? 'You: ' : '', text: 'Accepted Errand', italic: true };
+    }
+    if (parsed?.type === 'errand_cancelled') {
+      const isMe = parsed.cancelledBy === currentUserId;
+      return { prefix: isMe ? 'You: ' : '', text: 'Cancelled the errand', italic: true };
+    }
+    if (parsed?.type === 'errand_marked_done') {
+      const isMe = parsed.markedBy === currentUserId;
+      return { prefix: isMe ? 'You: ' : '', text: 'Marked errand as done', italic: true };
+    }
+  } catch {}
+  const isMe = senderId === currentUserId;
+  if (message === 'Sent a photo') return { prefix: isMe ? 'You: ' : '', text: 'Sent a photo', italic: true };
+  if (message === 'Sent a file') return { prefix: isMe ? 'You: ' : '', text: 'Sent a file', italic: true };
+  return { prefix: isMe ? 'You: ' : '', text: message, italic: false };
+}
+
+function isSpecialPreview(message: string | undefined, senderId: string | undefined) {
+  if (!message) return false;
+  if (!senderId) return true;
+  return message === '📷 Photo' || message.startsWith('📎 ');
+}
+
 export default function ConversationList({ conversations, currentUserId, selectedId, onSelect, loading, fullWidth, typingConvos }: Props) {
   const getOther = (c: Conversation) =>
     c.user1_id === currentUserId
@@ -37,9 +67,13 @@ export default function ConversationList({ conversations, currentUserId, selecte
     <View testID="conversation-list-panel" style={{ width: fullWidth ? '100%' : 320, borderRightWidth: fullWidth ? 0 : 1, borderRightColor: '#E5E7EB', backgroundColor: '#F9FAFB' }}>
       <Text style={{ padding: 16, fontWeight: '700', fontSize: 18, color: '#111827' }}>Messages</Text>
       {loading ? (
+<<<<<<< HEAD
         <View testID="conversation-list-loading" style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color="#6B7280" />
         </View>
+=======
+        <ConversationSkeleton />
+>>>>>>> a673190613b66e7bf3ddbe3997b32754c19e02b3
       ) : conversations.length === 0 ? (
         <Text testID="conversation-list-empty" style={{ padding: 16, color: '#9CA3AF', fontSize: 14 }}>No conversations yet. Start browsing errands and chat with task posters.</Text>
       ) : (
@@ -49,7 +83,7 @@ export default function ConversationList({ conversations, currentUserId, selecte
           renderItem={({ item }) => {
             const other = getOther(item);
             const selected = item.id === selectedId;
-            const unread = item.last_message_sender_id !== currentUserId && !item.last_message_is_read;
+            const unread = !selected && item.last_message_sender_id !== currentUserId && !item.last_message_is_read;
             return (
               <Pressable
                 testID={`conversation-item-${item.id}`}
@@ -79,11 +113,15 @@ export default function ConversationList({ conversations, currentUserId, selecte
                     <Text testID={`conversation-last-message-${item.id}`} style={{ flex: 1, fontSize: 13, color: unread ? '#111827' : '#6B7280', fontWeight: unread ? '600' : '400' }} numberOfLines={1}>
                       {typingConvos?.has(item.id) ? (
                         <Text style={{ color: '#3B82F6', fontStyle: 'italic' }}>typing...</Text>
-                      ) : item.last_message ? (
-                        item.last_message_sender_id === currentUserId ? `You: ${item.last_message}` : item.last_message
-                      ) : (
-                        'No messages yet'
-                      )}
+                      ) : (() => {
+                        const preview = formatPreview(item.last_message, item.last_message_sender_id, currentUserId);
+                        return (
+                          <>
+                            {preview.prefix ? <Text>{preview.prefix}</Text> : null}
+                            <Text style={preview.italic ? { fontStyle: 'italic' } : undefined}>{preview.text}</Text>
+                          </>
+                        );
+                      })()}
                     </Text>
                     <Text testID={`conversation-timestamp-${item.id}`} style={{ fontSize: 11, color: unread ? '#3B82F6' : '#9CA3AF', fontWeight: unread ? '600' : '400', marginLeft: 8 }}>
                       {timeAgo(item.last_message_at)}

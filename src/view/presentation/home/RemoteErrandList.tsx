@@ -40,7 +40,7 @@ export default function RemoteErrandList({ errands }: Props) {
   if (errands.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
-        <Ionicons name="globe-outline" size={48} color="#9CA3AF" />
+        <Ionicons name="cloud-outline" size={48} color="#9CA3AF" />
         <Text style={{ color: '#9CA3AF', marginTop: 8 }}>No remote errands yet</Text>
       </View>
     );

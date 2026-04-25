@@ -11,16 +11,19 @@ export interface NotificationRow {
 }
 
 export const postNotification = (userId: string, title: string, message: string, action?: string) => {
-  if (!supabaseAdmin) throw new Error('Admin client not available');
-  return supabaseAdmin.from('notifications').insert({ user_id: userId, title, message, action });
+  const client = supabaseAdmin ?? supabase;
+  return client.from('notifications').insert({ user_id: userId, title, message, action });
 };
 
-export const getNotifications = async (userId: string) =>
+const PAGE_SIZE = 30;
+
+export const getNotifications = async (userId: string, offset = 0) =>
   supabase
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
 
 export const getUnreadCount = async (userId: string) =>
   supabase

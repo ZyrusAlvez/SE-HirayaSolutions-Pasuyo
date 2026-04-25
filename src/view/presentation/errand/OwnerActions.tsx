@@ -9,19 +9,27 @@ const ACCENT = '#FEA405';
 
 interface Props {
   errandId: string;
+  status: string;
   isEditing: boolean;
   onEditToggle: () => void;
 }
 
-export default function OwnerActions({ errandId, isEditing, onEditToggle }: Props) {
+export default function OwnerActions({ errandId, status, isEditing, onEditToggle }: Props) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
+<<<<<<< HEAD
   const handleCancel = async () => {
     setCancelling(true);
     const result = await cancelErrand(errandId);
+=======
+  const handleDelete = async () => {
+    setDeleting(true);
+    const result = await deleteErrand(errandId, status);
+>>>>>>> a673190613b66e7bf3ddbe3997b32754c19e02b3
     if (!result.success) {
+      setConfirmVisible(false);
       toast({ title: result.error, preset: 'error' });
       setCancelling(false);
     } else {
@@ -76,8 +84,18 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
     </Modal>
     <View style={{ flexDirection: 'row', gap: 8 }}>
       <TouchableOpacity
+<<<<<<< HEAD
         testID="edit-errand-btn"
         onPress={onEditToggle}
+=======
+        onPress={() => {
+          if (!isEditing && status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' });
+            return;
+          }
+          onEditToggle();
+        }}
+>>>>>>> a673190613b66e7bf3ddbe3997b32754c19e02b3
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
           gap: 6, paddingVertical: 12, borderRadius: 14,
@@ -93,9 +111,20 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
       </TouchableOpacity>
 
       <TouchableOpacity
+<<<<<<< HEAD
         testID="cancel-errand-btn"
         onPress={() => setConfirmVisible(true)}
         disabled={cancelling}
+=======
+        onPress={() => {
+          if (status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be deleted.', preset: 'error' });
+            return;
+          }
+          setConfirmVisible(true);
+        }}
+        disabled={deleting}
+>>>>>>> a673190613b66e7bf3ddbe3997b32754c19e02b3
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
           gap: 6, paddingVertical: 12, borderRadius: 14,

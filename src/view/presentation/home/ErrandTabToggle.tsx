@@ -1,14 +1,17 @@
-import { View, TouchableOpacity, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import TabToggle from '@/view/components/TabToggle';
 
-type Tab = 'onsite' | 'remote';
+const TABS = [
+  { key: 'onsite', label: 'Onsite Errands', icon: 'location-outline' },
+  { key: 'remote', label: 'Remote Errands', icon: 'cloud-outline' },
+];
 
 interface Props {
-  tab: Tab;
-  onTabChange: (tab: Tab) => void;
+  tab: 'onsite' | 'remote';
+  onTabChange: (tab: 'onsite' | 'remote') => void;
 }
 
 export default function ErrandTabToggle({ tab, onTabChange }: Props) {
+<<<<<<< HEAD
   return (
     <View className="flex-row mx-6 mt-4 mb-2 bg-gray-100 rounded-xl p-1">
       <TouchableOpacity
@@ -34,4 +37,7 @@ export default function ErrandTabToggle({ tab, onTabChange }: Props) {
       </TouchableOpacity>
     </View>
   );
+=======
+  return <TabToggle tabs={TABS} activeKey={tab} onTabChange={(key) => onTabChange(key as 'onsite' | 'remote')} />;
+>>>>>>> a673190613b66e7bf3ddbe3997b32754c19e02b3
 }

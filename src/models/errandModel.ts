@@ -9,6 +9,7 @@ export type Errand = {
   description: string;
   is_remote: boolean;
   status: ErrandStatus;
+  accepted_by: string | null;
   location_lat: number | null;
   location_lng: number | null;
   location_name?: string;
@@ -79,7 +80,8 @@ export const getAvailableErrands = () =>
   supabase
     .from('errands_with_profiles')
     .select('id, title, description, is_remote, location_lat, location_lng, location_name, budget, deadline, images, poster_name, poster_avatar, poster_is_verified')
-    .eq('status', 'Available');
+    .eq('status', 'Available')
+    .or('deadline.is.null,deadline.gt.' + new Date().toISOString());
 
 export const deleteErrand = (id: string) =>
   supabase.from('errands').delete().eq('id', id);
@@ -92,3 +94,29 @@ export const getErrandRunner = (id: string) =>
 
 export const updateErrand = (id: string, updates: Record<string, any>) =>
   supabase.from('errands').update(updates).eq('id', id);
+
+export const acceptErrand = (id: string, userId: string) =>
+  supabase.from('errands').update({ accepted_by: userId, status: 'In Progress' }).eq('id', id);
+
+export const cancelErrand = (id: string) =>
+  supabase.from('errands').update({ accepted_by: null, status: 'Available' }).eq('id', id);
+
+export const markErrandDone = (id: string) =>
+  supabase.from('errands').update({ status: 'Completed' }).eq('id', id);
+
+export const insertErrandCancellation = (errandId: string, cancelledBy: string, reason: string, details: string | null) =>
+  supabase.from('errand_cancellations').insert({ errand_id: errandId, cancelled_by: cancelledBy, reason, details });
+
+export const getPostedErrands = (userId: string) =>
+  supabase
+    .from('errands_with_profiles')
+    .select('id, title, description, status, budget, is_remote, poster_name, poster_avatar, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+export const getAcceptedErrands = (userId: string) =>
+  supabase
+    .from('errands_with_profiles')
+    .select('id, title, description, status, budget, is_remote, poster_name, poster_avatar, created_at')
+    .eq('accepted_by', userId)
+    .order('created_at', { ascending: false });

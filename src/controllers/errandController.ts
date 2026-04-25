@@ -1,6 +1,10 @@
 import * as errandModel from '@/models/errandModel';
 import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/models/errandModel';
 import * as ImagePicker from 'expo-image-picker';
+import * as chatModel from '@/models/chatModel';
+import { postNotification } from '@/models/notificationModel';
+import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDoneEmail } from '@/models/emailModel';
+import { getDisplayProfile } from '@/models/profileModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -89,8 +93,10 @@ export type ErrandUpdates = {
 export const editErrand = async (
   errandId: string,
   params: ErrandEditParams,
+  status: string,
 ): Promise<{ success: boolean; error: string; data?: ErrandUpdates }> => {
   const { title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation } = params;
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be edited.' };
   if (!title.trim()) return { success: false, error: 'Title cannot be empty.' };
   if (!description.trim()) return { success: false, error: 'Description cannot be empty.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
@@ -126,7 +132,8 @@ export const editErrand = async (
   }
 };
 
-export const deleteErrand = async (id: string): Promise<{ success: boolean; error: string }> => {
+export const deleteErrand = async (id: string, status: string): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be deleted.' };
   try {
     const { error } = await errandModel.deleteErrand(id);
     if (error) return { success: false, error: 'Failed to delete errand' };
@@ -136,6 +143,7 @@ export const deleteErrand = async (id: string): Promise<{ success: boolean; erro
   }
 };
 
+<<<<<<< HEAD
 export const cancelErrand = async (id: string): Promise<{ success: boolean; error: string }> => {
   try {
     const { error } = await errandModel.cancelErrand(id);
@@ -156,6 +164,183 @@ export const cancelErrand = async (id: string): Promise<{ success: boolean; erro
     return { success: true, error: '' };
   } catch {
     return { success: false, error: 'Failed to cancel errand' };
+=======
+export type DashboardErrand = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  budget?: number;
+  is_remote: boolean;
+  poster_name?: string;
+  poster_avatar?: string;
+  created_at: string;
+};
+
+export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardErrand[]; accepted: DashboardErrand[] }>> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [posted, accepted] = await Promise.all([
+      errandModel.getPostedErrands(user.id),
+      errandModel.getAcceptedErrands(user.id),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        posted: (posted.data ?? []) as DashboardErrand[],
+        accepted: (accepted.data ?? []) as DashboardErrand[],
+      },
+    };
+  } catch {
+    return { success: false, error: 'Failed to load dashboard' };
+  }
+};
+
+export const acceptErrand = async (
+  errandId: string,
+  status: string,
+  posterId: string,
+  errandInfo: { title: string; description: string; budget?: number },
+): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
+  if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has already been completed.' };
+
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await errandModel.acceptErrand(errandId, user.id);
+    if (error) return { success: false, error: 'Failed to accept errand' };
+
+    const profile = await getDisplayProfile(user.id);
+    const acceptorName = profile.name ?? 'Someone';
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_accepted',
+        acceptedBy: user.id,
+        acceptedByName: acceptorName,
+        errandId,
+        title: errandInfo.title,
+        description: errandInfo.description,
+        budget: errandInfo.budget,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
+    sendErrandAcceptedEmail(posterId, errandInfo, user.id);
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const cancelAcceptedErrand = async (
+  errandId: string,
+  posterId: string,
+  errandTitle: string,
+  reason: string,
+  details: string | null,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [profile, { data: errandData }] = await Promise.all([
+      getDisplayProfile(user.id),
+      errandModel.getErrandById(errandId),
+    ]);
+    const cancellerName = profile.name ?? 'The runner';
+
+    const { error: cancelErr } = await errandModel.insertErrandCancellation(errandId, user.id, reason, details);
+    if (cancelErr) return { success: false, error: 'Failed to record cancellation' };
+
+    const { error: updateErr } = await errandModel.cancelErrand(errandId);
+    if (updateErr) return { success: false, error: 'Failed to cancel errand' };
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_cancelled',
+        cancelledBy: user.id,
+        errandId,
+        title: errandTitle,
+        reason,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(
+      posterId,
+      'Errand Cancelled',
+      `Your errand "${errandTitle}" has been cancelled by ${cancellerName}.`,
+      `/errand/${errandId}`,
+    );
+
+    sendErrandCancelledEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      cancellerName,
+      reason,
+      errandId,
+    );
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const markErrandAsDone = async (
+  errandId: string,
+  posterId: string,
+  errandTitle: string,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const profile = await getDisplayProfile(user.id);
+    const runnerName = profile.name ?? 'The runner';
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_marked_done',
+        markedBy: user.id,
+        markedByName: runnerName,
+        errandId,
+        title: errandTitle,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(
+      posterId,
+      'Errand Completed',
+      `${runnerName} has marked your errand "${errandTitle}" as done.`,
+      `/chat?userId=${user.id}`,
+    );
+
+    const { data: errandData } = await errandModel.getErrandById(errandId);
+    sendErrandMarkedDoneEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      runnerName,
+      user.id,
+    );
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+>>>>>>> a673190613b66e7bf3ddbe3997b32754c19e02b3
   }
 };
 

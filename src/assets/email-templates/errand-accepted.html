@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reset Your Password</title>
+  <title>Errand Accepted</title>
   <style>
     body {
       margin: 0;
@@ -39,26 +39,32 @@
       line-height: 1.7;
       margin: 0 0 24px;
     }
-    .otp-box {
-      background-color: #F9FAFB;
-      border: 1px solid #E5E7EB;
+    .errand-card {
+      background-color: #FFFBEB;
+      border: 1px solid #FDE68A;
       border-radius: 12px;
-      text-align: center;
-      padding: 24px;
+      padding: 16px;
       margin-bottom: 24px;
     }
-    .otp-box span {
-      display: block;
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 8px;
-      color: #111827;
+    .errand-card .description {
+      color: #6B7280;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 6px 0 0;
     }
-    .otp-box small {
-      display: block;
-      margin-top: 8px;
-      font-size: 12px;
-      color: #9CA3AF;
+    .cta-wrap {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #FEA405;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 12px;
     }
     .footer {
       padding: 20px 40px;
@@ -80,21 +86,24 @@
     </div>
 
     <div class="body">
-      <h2>Reset Your Password</h2>
-      <p>
-        We received a request to reset your Pasuyo account password.
-        Use the code below to complete the process. This code expires in <strong>1 hour</strong>.
-      </p>
+      <h2>Your Errand Has Been Accepted!</h2>
+      <p>Great news! Someone has accepted your errand. You can now coordinate the details through chat.</p>
 
-      <div class="otp-box">
-        <span>{{ .Token }}</span>
-        <small>Password reset code</small>
+      <div class="errand-card">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="font-size: 15px; font-weight: 700; color: #111827;">{{errand_title}}</td>
+            <td style="font-size: 14px; font-weight: 700; color: #D97706; text-align: right; white-space: nowrap; padding-left: 12px;">{{errand_budget}}</td>
+          </tr>
+        </table>
+        <p class="description">{{errand_description}}</p>
       </div>
 
-      <p>
-        If you didn't request a password reset, you can safely ignore this email.
-        Your password will remain unchanged.
-      </p>
+      <div class="cta-wrap">
+        <a href="{{chat_url}}" class="cta-button">Open Chat</a>
+      </div>
+
+      <p>If you have any questions, feel free to reach out through the app.</p>
     </div>
 
     <div class="footer">
