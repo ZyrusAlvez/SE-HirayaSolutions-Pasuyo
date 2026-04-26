@@ -15,6 +15,7 @@ export default function UserProfileScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reportHover, setReportHover] = useState(false);
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
   const contentWidth = isLarge ? Math.min(width * 0.55, 640) : undefined;
@@ -43,7 +44,23 @@ export default function UserProfileScreen() {
         <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
           <Ionicons name="arrow-back" size={24} color="#111827" />
         </Pressable>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>User Profile</Text>
+        <Text style={{ flex: 1, fontSize: 18, fontWeight: '700', color: '#111827' }}>User Profile</Text>
+        <View style={{ position: 'relative' }}>
+          <Pressable
+            onPress={() => {}}
+            // @ts-ignore — web-only hover props
+            onMouseEnter={() => setReportHover(true)}
+            onMouseLeave={() => setReportHover(false)}
+            style={{ padding: 6 }}
+          >
+            <Ionicons name="flag-outline" size={22} color="#EF4444" />
+          </Pressable>
+          {reportHover && (
+            <View style={{ position: 'absolute', bottom: -32, right: 0, backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, whiteSpace: 'nowrap' } as any}>Report {profile?.name ?? 'user'}</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ alignItems: isLarge ? 'center' : undefined, paddingBottom: 48 }}>
