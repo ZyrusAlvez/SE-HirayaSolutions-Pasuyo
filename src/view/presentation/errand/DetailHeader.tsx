@@ -9,9 +9,10 @@ import { toast } from '@/utils/toast';
 interface Props {
   isRemote: boolean;
   errandId: string;
+  isGuest?: boolean;
 }
 
-export default function ErrandDetailHeader({ isRemote, errandId }: Props) {
+export default function ErrandDetailHeader({ isRemote, errandId, isGuest }: Props) {
   const router = useRouter();
   const [reportHover, setReportHover] = useState(false);
   const [shareHover, setShareHover] = useState(false);
@@ -59,7 +60,7 @@ export default function ErrandDetailHeader({ isRemote, errandId }: Props) {
         </View>
         <View style={{ position: 'relative' }}>
           <Pressable
-            onPress={() => {}}
+            onPress={() => isGuest ? router.push(`/login`) : undefined}
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setReportHover(true)}
             onMouseLeave={() => setReportHover(false)}
