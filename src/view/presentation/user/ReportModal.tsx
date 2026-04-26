@@ -27,17 +27,19 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
   const [details, setDetails] = useState('');
   const [files, setFiles] = useState<ReportFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const reset = () => { setSelected(null); setDetails(''); setFiles([]); };
+  const reset = () => { setSelected(null); setDetails(''); setFiles([]); setFileError(null); };
   const handleClose = () => { if (!submitting) { reset(); onClose(); } };
 
   const pickFiles = async () => {
     if (files.length >= MAX_REPORT_FILES) {
-      toast({ title: `Maximum ${MAX_REPORT_FILES} files allowed`, preset: 'error' });
+      setFileError(`Maximum ${MAX_REPORT_FILES} files allowed`);
       return;
     }
+    setFileError(null);
     if (Platform.OS === 'web') {
       fileInputRef.current?.click();
       return;
@@ -48,9 +50,10 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
       if (result.canceled || !result.assets?.[0]) return;
       const asset = result.assets[0];
       if (asset.size && asset.size > MAX_REPORT_FILE_SIZE) {
-        toast({ title: `"${asset.name}" exceeds 5 MB`, preset: 'error' });
+        setFileError(`"${asset.name}" exceeds 5 MB`);
         return;
       }
+      setFileError(null);
       setFiles(prev => [
         ...prev,
         { uri: asset.uri, name: asset.name, mimeType: asset.mimeType || 'application/octet-stream', size: asset.size },
@@ -62,16 +65,17 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_REPORT_FILE_SIZE) {
-      toast({ title: `"${file.name}" exceeds 5 MB`, preset: 'error' });
+      setFileError(`"${file.name}" exceeds 5 MB`);
       e.target.value = '';
       return;
     }
+    setFileError(null);
     const uri = URL.createObjectURL(file);
     setFiles(prev => [...prev, { uri, name: file.name, mimeType: file.type || 'application/octet-stream', size: file.size }]);
     e.target.value = '';
   };
 
-  const removeFile = (index: number) => setFiles(prev => prev.filter((_, i) => i !== index));
+  const removeFile = (index: number) => { setFiles(prev => prev.filter((_, i) => i !== index)); setFileError(null); };
 
   const handleSubmit = async () => {
     if (!selected || !reportedId) return;
@@ -144,6 +148,12 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
             <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 16, marginBottom: 6 }}>
               Attachments - optional ({files.length}/{MAX_REPORT_FILES}, 5 MB each):
             </Text>
+            {fileError && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <Ionicons name="alert-circle" size={14} color="#EF4444" />
+                <Text style={{ fontSize: 12, color: '#EF4444' }}>{fileError}</Text>
+              </View>
+            )}
             {files.length > 0 && (
               <View style={{ gap: 8, marginBottom: 8 }}>
                 {files.map((f, i) => (
