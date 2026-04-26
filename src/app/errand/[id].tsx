@@ -129,6 +129,7 @@ export default function ErrandDetailScreen() {
           )}
 
           <PosterCard
+            userId={errand.user_id}
             name={errand.poster_name}
             avatar={errand.poster_avatar}
             rating={undefined}
