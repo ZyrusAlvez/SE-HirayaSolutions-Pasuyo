@@ -1,10 +1,34 @@
 import * as profileModel from '@/models/profileModel';
-import type { VerificationStatus, ProfileData, VerifyFormState } from '@/models/profileModel';
+import type { VerificationStatus, ProfileData, VerifyFormState, DisplayProfile, UserProfile } from '@/models/profileModel';
 import * as ImagePicker from 'expo-image-picker';
 
-export type { VerificationStatus, ProfileData, VerifyFormState };
+export type { VerificationStatus, ProfileData, VerifyFormState, DisplayProfile, UserProfile };
 
 type Result<T = void> = { success: true; data: T } | { success: false; error: string };
+
+export const getUserProfile = async (userId: string): Promise<Result<UserProfile>> => {
+  const [profile, completed, posted, reviews] = await Promise.all([
+    profileModel.getDisplayProfile(userId),
+    profileModel.getCompletedErrandsCount(userId),
+    profileModel.getPostedCompletedCount(userId),
+    profileModel.getUserReviewRatings(userId),
+  ]);
+
+  const ratings = (reviews.data ?? []).map(r => r.rating);
+  const avgRating = ratings.length
+    ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+    : null;
+
+  return {
+    success: true,
+    data: {
+      ...profile,
+      completedErrands: completed.count ?? 0,
+      postedCompleted: posted.count ?? 0,
+      rating: avgRating,
+    },
+  };
+};
 
 export const getProfile = async (): Promise<Result<ProfileData | null>> => {
   const { data: { user } } = await profileModel.getUser();

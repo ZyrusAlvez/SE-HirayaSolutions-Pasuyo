@@ -255,23 +255,25 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
         )}
-        <View style={{ position: 'relative' }}>
-          <Image
-            source={getAvatarSource(otherUser?.avatar)}
-            style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
-          />
-          {otherIsOnline ? (
-            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
-          ) : (
-            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#9CA3AF', borderWidth: 2, borderColor: '#FFFFFF' }} />
-          )}
-        </View>
-        <View>
-          <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
-          <Text style={{ fontSize: 11, color: otherIsOnline ? '#22C55E' : '#9CA3AF', marginTop: 1 }}>
-            {otherIsOnline ? 'Active now' : formatLastSeen(otherLastSeen)}
-          </Text>
-        </View>
+        <Pressable onPress={() => otherUserId && router.push(`/user/${otherUserId}`)} style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ position: 'relative' }}>
+            <Image
+              source={getAvatarSource(otherUser?.avatar)}
+              style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
+            />
+            {otherIsOnline ? (
+              <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
+            ) : (
+              <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#9CA3AF', borderWidth: 2, borderColor: '#FFFFFF' }} />
+            )}
+          </View>
+          <View>
+            <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
+            <Text style={{ fontSize: 11, color: otherIsOnline ? '#22C55E' : '#9CA3AF', marginTop: 1 }}>
+              {otherIsOnline ? 'Active now' : formatLastSeen(otherLastSeen)}
+            </Text>
+          </View>
+        </Pressable>
       </View>
       {pinnedErrands.length > 0 && (
         <Pressable
