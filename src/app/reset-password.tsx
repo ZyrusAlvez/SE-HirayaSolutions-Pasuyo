@@ -5,6 +5,7 @@ import { toast } from '../utils/toast';
 import { sendResetCode, verifyResetCode, updatePassword, getSession } from '@/controllers/authController';
 import PasswordInput from '@/view/components/PasswordInput';
 import PasswordStrength from '@/view/components/PasswordStrength';
+import CircleCountdown from '@/view/components/CircleCountdown';
 
 type Step = 'email' | 'code' | 'password';
 
@@ -130,16 +131,22 @@ export default function ResetPasswordScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              <TouchableOpacity
-                className={`border px-4 rounded-2xl justify-center ${cooldown > 0 ? 'bg-gray-50 border-gray-100' : 'bg-gray-100 border-gray-200'}`}
-                onPress={() => sendCode(email)}
-                disabled={loading || !email || cooldown > 0}
-                activeOpacity={0.8}
-              >
-                <Text className={`text-sm font-semibold ${cooldown > 0 ? 'text-gray-400' : 'text-gray-700'}`}>
-                  {loading ? 'Sending...' : cooldown > 0 ? `${cooldown}s` : 'Send Code'}
-                </Text>
-              </TouchableOpacity>
+              {cooldown > 0 ? (
+                <View className="justify-center">
+                  <CircleCountdown seconds={cooldown} total={30} />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  className="bg-gray-100 border border-gray-200 px-4 rounded-2xl justify-center"
+                  onPress={() => sendCode(email)}
+                  disabled={loading || !email}
+                  activeOpacity={0.8}
+                >
+                  <Text className="text-gray-700 text-sm font-semibold">
+                    {loading ? 'Sending...' : 'Send Code'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
