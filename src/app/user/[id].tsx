@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Image, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { getDisplayProfile } from '@/models/profileModel';
 import type { DisplayProfile } from '@/models/profileModel';
+import VerificationBadge from '@/view/components/VerificationBadge';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
@@ -30,6 +31,17 @@ export default function UserProfileScreen() {
   }
 
   const avatarSource = profile?.avatarUrl ? { uri: profile.avatarUrl } : DEFAULT_AVATAR;
+  const address = [profile?.address_barangay, profile?.address_city, profile?.address_province].filter(Boolean).join(', ');
+
+  const infoRows: { label: string; value: string }[] = [
+    { label: 'Name', value: profile?.name ?? '—' },
+    { label: 'Email', value: profile?.email ?? '—' },
+    ...(profile?.verified ? [
+      { label: 'Gender', value: profile.gender ?? '—' },
+      { label: 'Date of Birth', value: profile.date_of_birth ?? '—' },
+      { label: 'Address', value: address || '—' },
+    ] : []),
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
@@ -40,15 +52,30 @@ export default function UserProfileScreen() {
         <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>User Profile</Text>
       </View>
 
-      <View style={{ flex: 1, alignItems: 'center', paddingTop: 48 }}>
-        <Image source={avatarSource} style={{ width: 112, height: 112, borderRadius: 56 }} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 16 }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827' }}>
-            {profile?.name ?? 'Unknown'}
-          </Text>
-          {profile?.verified && <MaterialIcons name="verified" size={20} color="#1D9BF0" />}
+      <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 48 }}>
+        <View style={{ alignItems: 'center', paddingTop: 40, marginBottom: 24 }}>
+          <Image source={avatarSource} style={{ width: 112, height: 112, borderRadius: 56 }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 16 }}>
+            <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827' }}>
+              {profile?.name ?? 'Unknown'}
+            </Text>
+            {profile?.verified && <MaterialIcons name="verified" size={20} color="#1D9BF0" />}
+          </View>
+          <VerificationBadge status={profile?.verificationStatus ?? 'not_verified'} />
         </View>
-      </View>
+
+        <View style={{ width: '100%', maxWidth: 480, paddingHorizontal: 16 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Account Info</Text>
+            {infoRows.map(({ label, value }) => (
+              <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
+                <Text style={{ fontSize: 14, color: '#9CA3AF' }}>{label}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', flexShrink: 0, marginLeft: 16, textAlign: 'right' }} numberOfLines={2}>{value}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
