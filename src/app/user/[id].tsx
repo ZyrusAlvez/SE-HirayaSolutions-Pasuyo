@@ -40,7 +40,7 @@ export default function UserProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <UserProfileHeader userName={profile?.name} />
+      <UserProfileHeader userName={profile?.name} userId={id} />
 
       <ScrollView contentContainerStyle={{ alignItems: isLarge ? 'center' : undefined, paddingBottom: 48 }}>
         <View style={{ alignItems: 'center', paddingTop: 40, marginBottom: 24 }}>

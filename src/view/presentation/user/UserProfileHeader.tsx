@@ -6,9 +6,10 @@ import ReportModal from '@/view/presentation/user/ReportModal';
 
 interface Props {
   userName?: string;
+  userId?: string;
 }
 
-export default function UserProfileHeader({ userName }: Props) {
+export default function UserProfileHeader({ userName, userId }: Props) {
   const router = useRouter();
   const isWeb = Platform.OS === 'web';
   const [reportHover, setReportHover] = useState(false);
@@ -53,7 +54,7 @@ export default function UserProfileHeader({ userName }: Props) {
           )}
         </View>
       </View>
-      <ReportModal visible={reportVisible} userName={userName} onClose={() => setReportVisible(false)} />
+      <ReportModal visible={reportVisible} userName={userName} reportedId={userId} onClose={() => setReportVisible(false)} />
     </View>
   );
 }

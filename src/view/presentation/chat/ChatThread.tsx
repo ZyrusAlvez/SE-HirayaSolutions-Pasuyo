@@ -294,7 +294,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
           )}
         </View>
       </View>
-      <ReportModal visible={reportVisible} userName={otherUser?.name} onClose={() => setReportVisible(false)} />
+      <ReportModal visible={reportVisible} userName={otherUser?.name} reportedId={otherUserId ?? undefined} onClose={() => setReportVisible(false)} />
       {pinnedErrands.length > 0 && (
         <Pressable
           onPress={() => hasMoreErrands && setErrandsExpanded((v) => !v)}
