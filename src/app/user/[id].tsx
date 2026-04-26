@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { getUserProfile } from '@/controllers/profileController';
 import type { UserProfile } from '@/controllers/profileController';
 import VerificationBadge from '@/view/components/VerificationBadge';
+import UserProfileHeader from '@/view/presentation/user/UserProfileHeader';
 import UserInfoCard from '@/view/presentation/user/UserInfoCard';
 import ErrandActivityCard from '@/view/presentation/profile/ErrandActivityCard';
 
@@ -39,12 +40,7 @@ export default function UserProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB', backgroundColor: '#FFFFFF' }}>
-        <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
-          <Ionicons name="arrow-back" size={24} color="#111827" />
-        </Pressable>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>User Profile</Text>
-      </View>
+      <UserProfileHeader userName={profile?.name} userId={id} />
 
       <ScrollView contentContainerStyle={{ alignItems: isLarge ? 'center' : undefined, paddingBottom: 48 }}>
         <View style={{ alignItems: 'center', paddingTop: 40, marginBottom: 24 }}>

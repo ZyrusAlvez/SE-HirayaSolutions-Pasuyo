@@ -11,6 +11,7 @@ import FileBubble from '@/view/presentation/chat/FileBubble';
 import CancelErrandModal from '@/view/presentation/chat/CancelErrandModal';
 import MarkDoneModal from '@/view/presentation/chat/MarkDoneModal';
 import { toast } from '@/utils/toast';
+import ReportModal from '@/view/presentation/user/ReportModal';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -180,6 +181,8 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
   const [uploading, setUploading] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [attachHover, setAttachHover] = useState(false);
+  const [reportHover, setReportHover] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
   const [errandsExpanded, setErrandsExpanded] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{ errandId: string; title: string; posterId?: string } | null>(null);
   const [doneTarget, setDoneTarget] = useState<{ errandId: string; title: string; description?: string; budget?: number } | null>(null);
@@ -255,7 +258,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
         )}
-        <Pressable onPress={() => otherUserId && router.push(`/user/${otherUserId}`)} style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Pressable onPress={() => otherUserId && router.push(`/user/${otherUserId}`)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ position: 'relative' }}>
             <Image
               source={getAvatarSource(otherUser?.avatar)}
@@ -274,7 +277,24 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             </Text>
           </View>
         </Pressable>
+        <View style={{ position: 'relative' }}>
+          <Pressable
+            onPress={() => setReportVisible(true)}
+            // @ts-ignore — web-only hover props
+            onMouseEnter={() => setReportHover(true)}
+            onMouseLeave={() => setReportHover(false)}
+            style={{ padding: 6 }}
+          >
+            <Ionicons name="flag-outline" size={22} color="#EF4444" />
+          </Pressable>
+          {reportHover && (
+            <View style={{ position: 'absolute', bottom: -32, right: 0, backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, whiteSpace: 'nowrap' } as any}>Report {otherUser?.name ?? 'user'}</Text>
+            </View>
+          )}
+        </View>
       </View>
+      <ReportModal visible={reportVisible} userName={otherUser?.name} reportedId={otherUserId ?? undefined} onClose={() => setReportVisible(false)} />
       {pinnedErrands.length > 0 && (
         <Pressable
           onPress={() => hasMoreErrands && setErrandsExpanded((v) => !v)}
