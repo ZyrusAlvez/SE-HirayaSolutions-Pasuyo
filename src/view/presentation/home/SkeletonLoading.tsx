@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, Dimensions, Platform, Linking, StyleProp, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -45,9 +45,13 @@ function PanelSkeleton() {
   );
 }
 
-const isTablet = Dimensions.get('window').width >= 600;
-
 export default function SkeletonLoading({ locationDenied, onRetryLocation }: { locationDenied?: boolean; onRetryLocation?: () => void } = {}) {
+  const [isTablet, setIsTablet] = useState(Dimensions.get('window').width >= 600);
+
+  useEffect(() => {
+    const sub = Dimensions.addEventListener('change', ({ window }) => setIsTablet(window.width >= 600));
+    return () => sub.remove();
+  }, []);
   return (
     <View style={{ flex: 1, flexDirection: isTablet ? 'row' : 'column', gap: isTablet ? 12 : 0, padding: isTablet ? 12 : 0 }}>
       {/* Map placeholder */}
