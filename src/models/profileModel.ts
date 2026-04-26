@@ -112,6 +112,21 @@ export type DisplayProfile = {
   address_barangay?: string;
 };
 
+export type UserProfile = DisplayProfile & {
+  completedErrands: number;
+  postedCompleted: number;
+  rating: number | null;
+};
+
+export const getCompletedErrandsCount = (userId: string) =>
+  supabase.from('errands').select('id', { count: 'exact', head: true }).eq('accepted_by', userId).eq('status', 'Completed');
+
+export const getPostedCompletedCount = (userId: string) =>
+  supabase.from('errands').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'Completed');
+
+export const getUserReviewRatings = (userId: string) =>
+  supabase.from('errand_reviews').select('rating').eq('reviewed_id', userId);
+
 export const getDisplayProfile = async (userId: string): Promise<DisplayProfile> => {
   const client = supabaseAdmin ?? supabase;
   const { data: profile } = await client
