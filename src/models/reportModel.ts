@@ -24,6 +24,18 @@ export const uploadReportFile = async (reporterId: string, uri: string, fileName
   return data.publicUrl;
 };
 
+export const getExistingReport = (reporterId: string, reportedId: string, type: string, errandId?: string) => {
+  let query = supabase
+    .from('reports')
+    .select('id, status')
+    .eq('reporter_id', reporterId)
+    .eq('reported_id', reportedId)
+    .eq('type', type)
+    .eq('status', 'pending');
+  if (type === 'errand' && errandId) query = query.eq('errand_id', errandId);
+  return query.maybeSingle();
+};
+
 export const insertReport = (reporterId: string, reportedId: string, type: string, reason: string, details: string | null, fileUrls: string[], errandId?: string) =>
   supabase.from('reports').insert({
     reporter_id: reporterId,

@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Pressable, ScrollView, ActivityIndicator, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { submitReport, MAX_REPORT_FILES, MAX_REPORT_FILE_SIZE } from '@/controllers/reportController';
+import { submitReport, checkExistingReport, MAX_REPORT_FILES, MAX_REPORT_FILE_SIZE } from '@/controllers/reportController';
 import type { ReportType, ReportFile } from '@/controllers/reportController';
 import { toast } from '@/utils/toast';
 
@@ -38,8 +38,20 @@ export default function ReportModal({ visible, userName, reportedId, errandId, t
   const [files, setFiles] = useState<ReportFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [alreadyReported, setAlreadyReported] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!visible || !reportedId) return;
+    setChecking(true);
+    setAlreadyReported(false);
+    checkExistingReport(reportedId, type, errandId).then((res) => {
+      if ('exists' in res) setAlreadyReported(res.exists);
+      setChecking(false);
+    });
+  }, [visible, reportedId, type, errandId]);
 
   const isErrand = type === 'errand';
   const reasons = isErrand ? ERRAND_REASONS : USER_REASONS;
@@ -123,6 +135,25 @@ export default function ReportModal({ visible, userName, reportedId, errandId, t
               </View>
             </View>
 
+            {checking ? (
+              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+                <ActivityIndicator size="large" color="#FEA405" />
+              </View>
+            ) : alreadyReported ? (
+              <View style={{ alignItems: 'center', paddingVertical: 16, gap: 12 }}>
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="time-outline" size={24} color="#D97706" />
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', textAlign: 'center' }}>Report already submitted</Text>
+                <Text style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 20 }}>
+                  Your report is currently being reviewed by our team. We'll take action as soon as possible.
+                </Text>
+                <TouchableOpacity onPress={handleClose} activeOpacity={0.8} style={{ marginTop: 8, paddingVertical: 12, paddingHorizontal: 32, borderRadius: 10, backgroundColor: '#F3F4F6' }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151' }}>Got it</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
             <Text style={{ fontSize: 13, color: '#374151', marginBottom: 12 }}>{prompt}</Text>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
@@ -228,6 +259,8 @@ export default function ReportModal({ visible, userName, reportedId, errandId, t
                 }
               </TouchableOpacity>
             </View>
+              </>
+            )}
           </ScrollView>
         </Pressable>
       </Pressable>

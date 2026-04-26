@@ -1,6 +1,7 @@
 import * as reportModel from '@/models/reportModel';
 
 type Result = { success: true } | { success: false; error: string };
+type CheckResult = { exists: boolean } | { success: false; error: string };
 
 export type ReportType = 'user' | 'errand';
 
@@ -8,6 +9,17 @@ export type ReportFile = { uri: string; name: string; mimeType: string; size?: n
 
 export const MAX_REPORT_FILES = 5;
 export const MAX_REPORT_FILE_SIZE = 5 * 1024 * 1024;
+
+export const checkExistingReport = async (
+  reportedId: string,
+  type: ReportType,
+  errandId?: string,
+): Promise<CheckResult> => {
+  const reporterId = await reportModel.getCurrentUserId();
+  if (!reporterId) return { success: false, error: 'Not logged in' };
+  const { data } = await reportModel.getExistingReport(reporterId, reportedId, type, errandId);
+  return { exists: !!data };
+};
 
 export const submitReport = async (
   reportedId: string,
@@ -25,6 +37,9 @@ export const submitReport = async (
   const reporterId = await reportModel.getCurrentUserId();
   if (!reporterId) return { success: false, error: 'You must be logged in to submit a report' };
   if (type === 'user' && reporterId === reportedId) return { success: false, error: 'You cannot report yourself' };
+
+  const { data: existing } = await reportModel.getExistingReport(reporterId, reportedId, type, errandId);
+  if (existing) return { success: false, error: 'You have already submitted a report. It is currently being reviewed.' };
 
   const fileUrls: string[] = [];
   for (const f of files) {
