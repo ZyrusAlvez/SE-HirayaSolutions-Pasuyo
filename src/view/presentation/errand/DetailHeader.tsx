@@ -14,6 +14,7 @@ interface Props {
 export default function ErrandDetailHeader({ isRemote, errandId }: Props) {
   const router = useRouter();
   const [reportHover, setReportHover] = useState(false);
+  const [shareHover, setShareHover] = useState(false);
   const typeLabel = isRemote ? 'Remote Errand' : 'Onsite Errand';
   const typeIcon = isRemote ? 'cloud-outline' : 'location-outline';
 
@@ -40,9 +41,22 @@ export default function ErrandDetailHeader({ isRemote, errandId }: Props) {
           <Ionicons name={typeIcon} size={12} color="#6B7280" />
           <Text style={{ fontSize: 11, fontWeight: '700', color: '#6B7280' }}>{typeLabel}</Text>
         </View>
-        <TouchableOpacity onPress={handleShare} activeOpacity={0.7}>
-          <Ionicons name="share-social-outline" size={20} color="#6B7280" />
-        </TouchableOpacity>
+        <View style={{ position: 'relative' }}>
+          <Pressable
+            onPress={handleShare}
+            // @ts-ignore — web-only hover props
+            onMouseEnter={() => setShareHover(true)}
+            onMouseLeave={() => setShareHover(false)}
+            style={{ padding: 4 }}
+          >
+            <Ionicons name="share-social-outline" size={20} color="#6B7280" />
+          </Pressable>
+          {shareHover && (
+            <View style={{ position: 'absolute', top: 32, right: 0, backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, zIndex: 9999, elevation: 9999 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, whiteSpace: 'nowrap' } as any}>Copy Errand's URL</Text>
+            </View>
+          )}
+        </View>
         <View style={{ position: 'relative' }}>
           <Pressable
             onPress={() => {}}
