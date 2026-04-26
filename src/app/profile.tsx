@@ -107,7 +107,7 @@ export default function ProfileScreen() {
           displayName={displayName}
           email={email}
           onNameChange={setDisplayName}
-          onChangePassword={() => router.push({ pathname: '/reset-password', params: { from: 'profile', email } })}
+          onChangePassword={() => router.push({ pathname: '/reset-password', params: { from: 'profile' } })}
           onVerify={() => router.push('/verify')}
         />
       </ScrollView>
