@@ -24,7 +24,7 @@ export const uploadReportFile = async (reporterId: string, uri: string, fileName
   return data.publicUrl;
 };
 
-export const insertReport = (reporterId: string, reportedId: string, type: string, reason: string, details: string | null, fileUrls: string[]) =>
+export const insertReport = (reporterId: string, reportedId: string, type: string, reason: string, details: string | null, fileUrls: string[], errandId?: string) =>
   supabase.from('reports').insert({
     reporter_id: reporterId,
     reported_id: reportedId,
@@ -32,4 +32,5 @@ export const insertReport = (reporterId: string, reportedId: string, type: strin
     reason,
     details,
     file_urls: fileUrls.length ? fileUrls : null,
+    ...(errandId ? { errand_id: errandId } : {}),
   });

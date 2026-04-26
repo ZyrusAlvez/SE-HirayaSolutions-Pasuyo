@@ -5,17 +5,20 @@ import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 
 import { toast } from '@/utils/toast';
+import ReportModal from '@/view/presentation/user/ReportModal';
 
 interface Props {
   isRemote: boolean;
   errandId: string;
+  posterId?: string;
   isGuest?: boolean;
 }
 
-export default function ErrandDetailHeader({ isRemote, errandId, isGuest }: Props) {
+export default function ErrandDetailHeader({ isRemote, errandId, posterId, isGuest }: Props) {
   const router = useRouter();
   const [reportHover, setReportHover] = useState(false);
   const [shareHover, setShareHover] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
   const typeLabel = isRemote ? 'Remote Errand' : 'Onsite Errand';
   const typeIcon = isRemote ? 'cloud-outline' : 'location-outline';
 
@@ -60,7 +63,7 @@ export default function ErrandDetailHeader({ isRemote, errandId, isGuest }: Prop
         </View>
         <View style={{ position: 'relative' }}>
           <Pressable
-            onPress={() => isGuest ? router.push(`/login`) : undefined}
+            onPress={() => isGuest ? router.push('/login') : setReportVisible(true)}
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setReportHover(true)}
             onMouseLeave={() => setReportHover(false)}
@@ -75,6 +78,7 @@ export default function ErrandDetailHeader({ isRemote, errandId, isGuest }: Prop
           )}
         </View>
       </View>
+      <ReportModal visible={reportVisible} type="errand" reportedId={posterId} errandId={errandId} onClose={() => setReportVisible(false)} />
     </View>
   );
 }
