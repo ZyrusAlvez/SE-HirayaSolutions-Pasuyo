@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from '@/utils/toast';
-import { getProfile, getAvatarImage, updateProfile } from '@/controllers/profileController';
-import type { VerificationStatus, ProfileData } from '@/controllers/profileController';
+import { getProfile, getAvatarImage, updateProfile, getUserProfile } from '@/controllers/profileController';
+import type { VerificationStatus, ProfileData, UserProfile } from '@/controllers/profileController';
 import { logout } from '@/controllers/authController';
 import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
 import AvatarPicker from '@/view/presentation/profile/AvatarPicker';
@@ -11,6 +11,7 @@ import VerificationBadge from '@/view/components/VerificationBadge';
 import ProfileInfoCard from '@/view/presentation/profile/ProfileInfoCard';
 import SkeletonLoading from '@/view/presentation/profile/SkeletonLoading';
 import ProfileActions from '@/view/presentation/profile/ProfileActions';
+import ErrandActivityCard from '@/view/presentation/profile/ErrandActivityCard';
 
 import DEFAULT_AVATAR from '../assets/images/default_profile.jpg';
 
@@ -25,6 +26,7 @@ export default function ProfileScreen() {
   const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('not_verified');
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [errandStats, setErrandStats] = useState<UserProfile | null>(null);
 
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
@@ -36,13 +38,16 @@ export default function ProfileScreen() {
       if (!result.success) {
         toast({ title: result.error, preset: 'error' });
       } else if (result.data) {
-        const { displayName: name, email: mail, avatarUrl: url, verificationStatus: status } = result.data;
+        const { id, displayName: name, email: mail, avatarUrl: url, verificationStatus: status } = result.data;
         setDisplayName(name);
         setOriginalName(name);
         setEmail(mail);
         if (url) setAvatarUrl({ uri: url });
         setVerificationStatus(status);
         setProfileData(result.data);
+        getUserProfile(id).then((statsResult) => {
+          if (statsResult.success) setErrandStats(statsResult.data);
+        });
       }
       setLoading(false);
     });
@@ -110,6 +115,16 @@ export default function ProfileScreen() {
           onChangePassword={() => router.push({ pathname: '/reset-password', params: { from: 'profile' } })}
           onVerify={() => router.push('/verify')}
         />
+
+        {errandStats && (
+          <ErrandActivityCard
+            completedErrands={errandStats.completedErrands}
+            postedCompleted={errandStats.postedCompleted}
+            rating={errandStats.rating}
+            contentWidth={contentWidth}
+            isLarge={isLarge}
+          />
+        )}
       </ScrollView>
 
       <ProfileActions
