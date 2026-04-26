@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { getUserProfile } from '@/controllers/profileController';
 import type { UserProfile } from '@/controllers/profileController';
 import VerificationBadge from '@/view/components/VerificationBadge';
+import UserProfileHeader from '@/view/presentation/user/UserProfileHeader';
 import UserInfoCard from '@/view/presentation/user/UserInfoCard';
 import ErrandActivityCard from '@/view/presentation/profile/ErrandActivityCard';
 
@@ -15,7 +16,6 @@ export default function UserProfileScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [reportHover, setReportHover] = useState(false);
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
   const contentWidth = isLarge ? Math.min(width * 0.55, 640) : undefined;
@@ -40,28 +40,7 @@ export default function UserProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB', backgroundColor: '#FFFFFF' }}>
-        <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
-          <Ionicons name="arrow-back" size={24} color="#111827" />
-        </Pressable>
-        <Text style={{ flex: 1, fontSize: 18, fontWeight: '700', color: '#111827' }}>User Profile</Text>
-        <View style={{ position: 'relative' }}>
-          <Pressable
-            onPress={() => {}}
-            // @ts-ignore — web-only hover props
-            onMouseEnter={() => setReportHover(true)}
-            onMouseLeave={() => setReportHover(false)}
-            style={{ padding: 6 }}
-          >
-            <Ionicons name="flag-outline" size={22} color="#EF4444" />
-          </Pressable>
-          {reportHover && (
-            <View style={{ position: 'absolute', bottom: -32, right: 0, backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 11, whiteSpace: 'nowrap' } as any}>Report {profile?.name ?? 'user'}</Text>
-            </View>
-          )}
-        </View>
-      </View>
+      <UserProfileHeader userName={profile?.name} />
 
       <ScrollView contentContainerStyle={{ alignItems: isLarge ? 'center' : undefined, paddingBottom: 48 }}>
         <View style={{ alignItems: 'center', paddingTop: 40, marginBottom: 24 }}>
