@@ -11,6 +11,7 @@ import FileBubble from '@/view/presentation/chat/FileBubble';
 import CancelErrandModal from '@/view/presentation/chat/CancelErrandModal';
 import MarkDoneModal from '@/view/presentation/chat/MarkDoneModal';
 import { toast } from '@/utils/toast';
+import ReportModal from '@/view/presentation/user/ReportModal';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -181,6 +182,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [attachHover, setAttachHover] = useState(false);
   const [reportHover, setReportHover] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
   const [errandsExpanded, setErrandsExpanded] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{ errandId: string; title: string; posterId?: string } | null>(null);
   const [doneTarget, setDoneTarget] = useState<{ errandId: string; title: string; description?: string; budget?: number } | null>(null);
@@ -277,7 +279,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
         </Pressable>
         <View style={{ position: 'relative' }}>
           <Pressable
-            onPress={() => {}}
+            onPress={() => setReportVisible(true)}
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setReportHover(true)}
             onMouseLeave={() => setReportHover(false)}
@@ -292,6 +294,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
           )}
         </View>
       </View>
+      <ReportModal visible={reportVisible} userName={otherUser?.name} onClose={() => setReportVisible(false)} />
       {pinnedErrands.length > 0 && (
         <Pressable
           onPress={() => hasMoreErrands && setErrandsExpanded((v) => !v)}

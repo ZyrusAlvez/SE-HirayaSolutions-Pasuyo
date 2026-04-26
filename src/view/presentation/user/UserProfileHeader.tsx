@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, Image, Pressable, Platform, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import ReportModal from '@/view/presentation/user/ReportModal';
 
 interface Props {
   userName?: string;
@@ -11,6 +12,7 @@ export default function UserProfileHeader({ userName }: Props) {
   const router = useRouter();
   const isWeb = Platform.OS === 'web';
   const [reportHover, setReportHover] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
 
   return (
     <View style={[styles.container, { paddingTop: isWeb ? 8 : 48 }]}>
@@ -34,7 +36,7 @@ export default function UserProfileHeader({ userName }: Props) {
         </View>
         <View style={{ position: 'relative' }}>
           <Pressable
-            onPress={() => {}}
+            onPress={() => setReportVisible(true)}
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setReportHover(true)}
             onMouseLeave={() => setReportHover(false)}
@@ -51,6 +53,7 @@ export default function UserProfileHeader({ userName }: Props) {
           )}
         </View>
       </View>
+      <ReportModal visible={reportVisible} userName={userName} onClose={() => setReportVisible(false)} />
     </View>
   );
 }
