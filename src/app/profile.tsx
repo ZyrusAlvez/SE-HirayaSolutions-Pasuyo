@@ -9,6 +9,7 @@ import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
 import AvatarPicker from '@/view/presentation/profile/AvatarPicker';
 import VerificationBadge from '@/view/components/VerificationBadge';
 import ProfileInfoCard from '@/view/presentation/profile/ProfileInfoCard';
+import SettingsCard from '@/view/presentation/profile/SettingsCard';
 import SkeletonLoading from '@/view/presentation/profile/SkeletonLoading';
 import ProfileActions from '@/view/presentation/profile/ProfileActions';
 import ErrandActivityCard from '@/view/presentation/profile/ErrandActivityCard';
@@ -100,7 +101,6 @@ export default function ProfileScreen() {
         <View style={{ width: contentWidth }} className="items-center -mt-14 mb-6">
           <AvatarPicker avatarUrl={avatarUrl} size={isLarge ? 140 : 112} onPress={handlePickAvatar} />
           <Text className="text-xl font-bold text-gray-800 mt-3">{displayName || 'No name set'}</Text>
-          <Text className="text-sm text-gray-400 mt-0.5">{email}</Text>
           <VerificationBadge status={verificationStatus} />
         </View>
 
@@ -112,8 +112,6 @@ export default function ProfileScreen() {
           displayName={displayName}
           email={email}
           onNameChange={setDisplayName}
-          onChangePassword={() => router.push({ pathname: '/reset-password', params: { from: 'profile' } })}
-          onVerify={() => router.push('/verify')}
         />
 
         {errandStats && (
@@ -125,6 +123,14 @@ export default function ProfileScreen() {
             isLarge={isLarge}
           />
         )}
+
+        <SettingsCard
+          contentWidth={contentWidth}
+          isLarge={isLarge}
+          verificationStatus={verificationStatus}
+          onChangePassword={() => router.push({ pathname: '/reset-password', params: { from: 'profile' } })}
+          onVerify={() => router.push('/verify')}
+        />
       </ScrollView>
 
       <ProfileActions
