@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Pressable, ScrollView, ActivityIndicator, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { submitReport } from '@/controllers/reportController';
+import { submitReport, MAX_REPORT_FILES, MAX_REPORT_FILE_SIZE } from '@/controllers/reportController';
 import type { ReportType, ReportFile } from '@/controllers/reportController';
 import { toast } from '@/utils/toast';
 
@@ -13,9 +13,6 @@ const REPORT_REASONS = [
   'Inappropriate or offensive content',
   'Other',
 ];
-
-const MAX_FILES = 5;
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 interface Props {
   visible: boolean;
@@ -37,8 +34,8 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
   const handleClose = () => { if (!submitting) { reset(); onClose(); } };
 
   const pickFiles = async () => {
-    if (files.length >= MAX_FILES) {
-      toast({ title: `Maximum ${MAX_FILES} files allowed`, preset: 'error' });
+    if (files.length >= MAX_REPORT_FILES) {
+      toast({ title: `Maximum ${MAX_REPORT_FILES} files allowed`, preset: 'error' });
       return;
     }
     if (Platform.OS === 'web') {
@@ -50,7 +47,7 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
       const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
       if (result.canceled || !result.assets?.[0]) return;
       const asset = result.assets[0];
-      if (asset.size && asset.size > MAX_FILE_SIZE) {
+      if (asset.size && asset.size > MAX_REPORT_FILE_SIZE) {
         toast({ title: `"${asset.name}" exceeds 5 MB`, preset: 'error' });
         return;
       }
@@ -64,7 +61,7 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
   const handleWebFile = (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > MAX_REPORT_FILE_SIZE) {
       toast({ title: `"${file.name}" exceeds 5 MB`, preset: 'error' });
       e.target.value = '';
       return;
@@ -145,7 +142,7 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
             />
 
             <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 16, marginBottom: 6 }}>
-              Attachments - optional ({files.length}/{MAX_FILES}, 5 MB each):
+              Attachments - optional ({files.length}/{MAX_REPORT_FILES}, 5 MB each):
             </Text>
             {files.length > 0 && (
               <View style={{ gap: 8, marginBottom: 8 }}>
@@ -166,7 +163,7 @@ export default function ReportModal({ visible, userName, reportedId, type = 'use
                 ))}
               </View>
             )}
-            {files.length < MAX_FILES && (
+            {files.length < MAX_REPORT_FILES && (
               <>
                 {Platform.OS === 'web' && (
                   <input

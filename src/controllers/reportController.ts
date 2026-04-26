@@ -6,8 +6,8 @@ export type ReportType = 'user';
 
 export type ReportFile = { uri: string; name: string; mimeType: string; size?: number };
 
-const MAX_FILES = 5;
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+export const MAX_REPORT_FILES = 5;
+export const MAX_REPORT_FILE_SIZE = 5 * 1024 * 1024;
 
 export const submitReport = async (
   reportedId: string,
@@ -17,8 +17,8 @@ export const submitReport = async (
   files: ReportFile[] = [],
 ): Promise<Result> => {
   if (!reason.trim()) return { success: false, error: 'Please select a reason' };
-  if (files.length > MAX_FILES) return { success: false, error: `You can attach up to ${MAX_FILES} files` };
-  const oversized = files.find(f => f.size && f.size > MAX_FILE_SIZE);
+  if (files.length > MAX_REPORT_FILES) return { success: false, error: `You can attach up to ${MAX_REPORT_FILES} files` };
+  const oversized = files.find(f => f.size && f.size > MAX_REPORT_FILE_SIZE);
   if (oversized) return { success: false, error: `"${oversized.name}" exceeds the 5 MB limit` };
 
   const reporterId = await reportModel.getCurrentUserId();
