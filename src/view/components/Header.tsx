@@ -29,18 +29,13 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
   return (
     <View className={`bg-white border-b border-gray-100 ${!isWeb ? 'pt-12' : 'pt-2'}`}>
       <View style={[styles.inner, isWeb && { paddingBottom: 8 }]}>
-        <TouchableOpacity className="p-2" activeOpacity={0.7}>
-          <Ionicons name="menu" size={28} color="#000" />
+        <TouchableOpacity onPress={() => router.push('/')} activeOpacity={0.7}>
+          <Image
+            source={require('../../assets/logo/Pasuyo_full.png')}
+            style={{ width: isWeb ? 100 : 120, height: isWeb ? 32 : 40 }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
-        <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => router.push('/')} activeOpacity={0.7}>
-            <Image
-              source={require('../../assets/logo/Pasuyo_full.png')}
-              style={{ width: isWeb ? 100 : 120, height: isWeb ? 32 : 40 }}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
           <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} onUnreadChange={setUnreadCount} />
           <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7} style={{ marginRight: 8 }}>

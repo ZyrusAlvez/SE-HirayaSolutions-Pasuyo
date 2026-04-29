@@ -33,19 +33,24 @@ export default function NavBar() {
         <Text className={`text-xs mt-1 ${isActive('/chat') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Chat</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/')}>
-        <Ionicons name="home-outline" size={24} color={isActive('/') ? '#FEA405' : '#9CA3AF'} />
-        <Text className={`text-xs mt-1 ${isActive('/') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Home</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/post-errand')}>
         <Ionicons name="add-circle-outline" size={24} color={isActive('/post-errand') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/post-errand') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Post Errand</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/')}>
+        <Ionicons name="home-outline" size={24} color={isActive('/') ? '#FEA405' : '#9CA3AF'} />
+        <Text className={`text-xs mt-1 ${isActive('/') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Home</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/dashboard')}>
         <Ionicons name="list-outline" size={24} color={isActive('/dashboard') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/dashboard') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Dashboard</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/service-fee')}>
+        <Ionicons name="pricetag-outline" size={24} color={isActive('/service-fee') ? '#FEA405' : '#9CA3AF'} />
+        <Text className={`text-xs mt-1 ${isActive('/service-fee') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Service Fee</Text>
       </TouchableOpacity>
       </View>
     </View>
