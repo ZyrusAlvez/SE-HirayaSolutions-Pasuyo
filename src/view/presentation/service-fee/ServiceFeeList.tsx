@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
 import type { ServiceFeeErrand } from '@/controllers/serviceFeeController';
+import ServiceFeeInfo from './ServiceFeeInfo';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -52,10 +53,13 @@ interface Props {
 export default function ServiceFeeList({ errands, emptyText }: Props) {
   if (errands.length === 0) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
-        <Ionicons name="document-text-outline" size={48} color="#E5E7EB" />
-        <Text style={{ color: '#9CA3AF', marginTop: 8 }}>{emptyText}</Text>
-      </View>
+      <ScrollView showsVerticalScrollIndicator contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
+        <ServiceFeeInfo />
+        <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
+          <Ionicons name="document-text-outline" size={48} color="#E5E7EB" />
+          <Text style={{ color: '#9CA3AF', marginTop: 8 }}>{emptyText}</Text>
+        </View>
+      </ScrollView>
     );
   }
 
@@ -63,6 +67,7 @@ export default function ServiceFeeList({ errands, emptyText }: Props) {
 
   return (
     <ScrollView showsVerticalScrollIndicator contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
+      <ServiceFeeInfo />
       <View style={{
         backgroundColor: '#FFFBEB', borderRadius: 12, padding: 14, marginBottom: 16,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
