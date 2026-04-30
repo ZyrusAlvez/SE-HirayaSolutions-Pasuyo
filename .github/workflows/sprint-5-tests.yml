@@ -1,0 +1,95 @@
+name: Sprint 5 Automated Tests
+
+on:
+  push:
+    branches: [main, develop, test/sprint-5]
+  pull_request:
+    branches: [main, develop, test/sprint-5]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: http://localhost:8081
+      ASSET_IMAGE: assets/valid.jpg
+      ASSET_PDF: assets/valid.pdf
+      ASSET_LARGE: assets/large.jpg
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write test .env
+        run: echo "${{ secrets.ENV_SPRINT5 }}" > tests/automated/sprint-5/.env
+
+      # ── Supabase local setup ──────────────────────────────────────────
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local stack
+        run: supabase start
+        working-directory: ./supabase
+
+      - name: Apply seed data
+        run: |
+          supabase db reset --no-verify-jwt
+        working-directory: ./supabase
+
+      # ── Frontend setup ────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./src
+
+      - name: Write frontend .env
+        run: |
+          cat > src/.env <<EOF
+          EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
+          EXPO_PUBLIC_SUPABASE_ANON_KEY=$(supabase status --output json | jq -r '.anon_key')
+          EXPO_PUBLIC_SERVICE_ROLE_KEY=$(supabase status --output json | jq -r '.service_role_key')
+          EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
+          EOF
+
+      - name: Start Expo web server
+        run: npx expo start --web --port 8081 &
+        working-directory: ./src
+
+      - name: Wait for frontend to be ready
+        run: npx wait-on http://localhost:8081 --timeout 120000
+
+      # ── Python / Selenium setup ───────────────────────────────────────
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install selenium webdriver-manager python-dotenv
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      # ── Run Sprint 5 tests ────────────────────────────────────────────
+      - name: Run Sprint 5 tests
+        run: |
+          python -m pytest tests/automated/sprint-5/ \
+            --ignore=tests/automated/sprint-5/create_errand.py \
+            --ignore=tests/automated/sprint-5/fill_verification.py \
+            -v --tb=short
+        working-directory: .
+
+      # ── Teardown ──────────────────────────────────────────────────────
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+        working-directory: ./supabase
