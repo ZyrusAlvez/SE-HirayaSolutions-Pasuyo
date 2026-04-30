@@ -32,12 +32,9 @@ jobs:
 
       - name: Start Supabase local stack
         run: supabase start
-        working-directory: ./supabase
 
       - name: Apply seed data
-        run: |
-          supabase db reset --no-verify-jwt
-        working-directory: ./supabase
+        run: supabase db reset --no-verify-jwt
 
       # ── Frontend setup ────────────────────────────────────────────────
       - name: Setup Node.js
@@ -53,10 +50,12 @@ jobs:
 
       - name: Write frontend .env
         run: |
+          ANON_KEY=$(supabase status --output json | jq -r '.anon_key')
+          SERVICE_KEY=$(supabase status --output json | jq -r '.service_role_key')
           cat > src/.env <<EOF
           EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
-          EXPO_PUBLIC_SUPABASE_ANON_KEY=$(supabase status --output json | jq -r '.anon_key')
-          EXPO_PUBLIC_SERVICE_ROLE_KEY=$(supabase status --output json | jq -r '.service_role_key')
+          EXPO_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
+          EXPO_PUBLIC_SERVICE_ROLE_KEY=$SERVICE_KEY
           EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
           EOF
 
@@ -92,4 +91,3 @@ jobs:
       - name: Stop Supabase
         if: always()
         run: supabase stop
-        working-directory: ./supabase
