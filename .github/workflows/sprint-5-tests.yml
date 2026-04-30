@@ -33,13 +33,16 @@ jobs:
       - name: Initialize Supabase
         run: supabase init
 
-      - name: Copy seed file
-        run: cp tests/automated/seed.sql supabase/seed.sql
+      - name: Copy migration and seed files
+        run: |
+          mkdir -p supabase/migrations
+          cp tests/automated/20260428133643_remote_schema.sql supabase/migrations/20260428133643_remote_schema.sql
+          cp tests/automated/seed.sql supabase/seed.sql
 
       - name: Start Supabase local stack
         run: supabase start
 
-      - name: Apply seed data
+      - name: Apply migrations and seed
         run: supabase db reset --local --yes
 
       # ── Frontend setup ────────────────────────────────────────────────
