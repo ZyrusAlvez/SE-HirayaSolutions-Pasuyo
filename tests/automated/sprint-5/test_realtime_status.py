@@ -324,24 +324,21 @@ class TestRealtimeStatus(unittest.TestCase):
         driver = make_driver()
         sender_driver = make_driver()
         try:
-            # TEST_EMAIL opens conversation
-            go_to_chat(driver, TEST_EMAIL, TEST_PASSWORD)
-            time.sleep(5)
-            open_conversation(driver, CHAT_CONTACT_WITH_MESSAGES)
-            time.sleep(5)
-
-            # SENDER starts typing
+            # Set up sender first, then driver last so its subscription is live when typing fires
             go_to_chat(sender_driver, SENDER_EMAIL, SENDER_PASSWORD)
-            time.sleep(5)
             open_conversation(sender_driver, SENDER_DISPLAY_NAME)
-            time.sleep(5)
-            tid_type(sender_driver, "chat-message-input", "typing...")
-            time.sleep(3)
 
-            # TEST_EMAIL should see typing indicator
-            typing_visible = driver.execute_script("""
-                return !!document.querySelector("[data-testid='typing-indicator']");
-            """)
+            go_to_chat(driver, TEST_EMAIL, TEST_PASSWORD)
+            open_conversation(driver, CHAT_CONTACT_WITH_MESSAGES)
+            time.sleep(5)  # Let driver's typing subscription settle
+
+            tid_type(sender_driver, "chat-message-input", "typing...")
+
+            typing_visible = WebDriverWait(driver, WAIT).until(
+                lambda d: d.execute_script(
+                    "return !!document.querySelector(\"[data-testid='typing-indicator']\");"
+                )
+            )
             self.assertTrue(typing_visible,
                             "Typing indicator should appear when the other user is typing")
         finally:
@@ -353,29 +350,30 @@ class TestRealtimeStatus(unittest.TestCase):
         driver = make_driver()
         sender_driver = make_driver()
         try:
-            go_to_chat(driver, TEST_EMAIL, TEST_PASSWORD)
-            time.sleep(5)
-            open_conversation(driver, CHAT_CONTACT_WITH_MESSAGES)
-            time.sleep(5)
-
+            # Set up sender first, then driver last so its subscription is live when typing fires
             go_to_chat(sender_driver, SENDER_EMAIL, SENDER_PASSWORD)
-            time.sleep(5)
             open_conversation(sender_driver, SENDER_DISPLAY_NAME)
-            time.sleep(5)
+
+            go_to_chat(driver, TEST_EMAIL, TEST_PASSWORD)
+            open_conversation(driver, CHAT_CONTACT_WITH_MESSAGES)
+            time.sleep(5)  # Let driver's typing subscription settle
+
             tid_type(sender_driver, "chat-message-input", "typing...")
-            time.sleep(3)
 
-            # Verify indicator appeared
-            appeared = driver.execute_script("""
-                return !!document.querySelector("[data-testid='typing-indicator']");
-            """)
+            # Wait for indicator to appear
+            appeared = WebDriverWait(driver, WAIT).until(
+                lambda d: d.execute_script(
+                    "return !!document.querySelector(\"[data-testid='typing-indicator']\");"
+                )
+            )
 
-            # Wait for typing timeout (3 seconds in source) + buffer
-            time.sleep(5)
+            # Wait for it to disappear (frontend timeout is 3s, give extra buffer)
+            disappeared = WebDriverWait(driver, WAIT).until(
+                lambda d: not d.execute_script(
+                    "return !!document.querySelector(\"[data-testid='typing-indicator']\");"
+                )
+            )
 
-            disappeared = driver.execute_script("""
-                return !document.querySelector("[data-testid='typing-indicator']");
-            """)
             self.assertTrue(appeared and disappeared,
                             "Typing indicator should disappear after user stops typing")
         finally:
