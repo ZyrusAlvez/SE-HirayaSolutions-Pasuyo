@@ -30,11 +30,17 @@ jobs:
         with:
           version: latest
 
+      - name: Initialize Supabase
+        run: supabase init
+
+      - name: Copy seed file
+        run: cp tests/automated/seed.sql supabase/seed.sql
+
       - name: Start Supabase local stack
         run: supabase start
 
       - name: Apply seed data
-        run: supabase db reset --no-verify-jwt
+        run: supabase db reset --local --yes
 
       # ── Frontend setup ────────────────────────────────────────────────
       - name: Setup Node.js
