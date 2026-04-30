@@ -67,6 +67,14 @@ jobs:
         run: CI=1 npx expo start --web --port 8081 > /tmp/expo.log 2>&1 &
         working-directory: ./src
 
+      - name: Wait 30s then show Expo logs
+        run: |
+          sleep 30
+          echo "=== EXPO LOGS ==="
+          cat /tmp/expo.log || echo "No log file found"
+          echo "=== PORT CHECK ==="
+          ss -tlnp | grep 8081 || echo "Nothing on port 8081"
+
       - name: Wait for frontend to be ready
         run: npx wait-on http://localhost:8081 --timeout 120000 --interval 3000
 
