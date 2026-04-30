@@ -63,16 +63,12 @@ jobs:
           SERVICE_KEY=$(supabase status --output json | jq -r '.service_role_key')
           printf "EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\nEXPO_PUBLIC_SERVICE_ROLE_KEY=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com\n" "$ANON_KEY" "$SERVICE_KEY" > src/.env
 
-      - name: Start Expo (DEBUG MODE)
-        run: |
-          cd src
-          npx expo start --web --port 8081 --non-interactive
-        
-      - name: Show Expo logs
-        run: cat src/expo.log
-      
+      - name: Start Expo web server
+        run: CI=1 npx expo start --web --port 8081 > /tmp/expo.log 2>&1 &
+        working-directory: ./src
+
       - name: Wait for frontend to be ready
-        run: npx wait-on http://localhost:8081 --timeout 180000 --interval 5000
+        run: npx wait-on http://localhost:8081 --timeout 120000 --interval 3000
 
       # ── Python / Selenium setup ───────────────────────────────────────
       - name: Setup Python
