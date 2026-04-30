@@ -89,7 +89,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r tests/automated/sprint-5/requirements.txt
 
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1
