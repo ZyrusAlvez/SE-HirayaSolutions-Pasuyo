@@ -63,12 +63,10 @@ jobs:
           SERVICE_KEY=$(supabase status --output json | jq -r '.service_role_key')
           printf "EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\nEXPO_PUBLIC_SERVICE_ROLE_KEY=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com\n" "$ANON_KEY" "$SERVICE_KEY" > src/.env
 
-      - name: Start Expo web server
+      - name: Start Expo (DEBUG MODE)
         run: |
-          nohup npx expo start --web --port 8081 --non-interactive > expo.log 2>&1 &
-        working-directory: ./src
-        env:
-          CI: true
+          cd src
+          npx expo start --web --port 8081 --non-interactive
         
       - name: Show Expo logs
         run: cat src/expo.log
