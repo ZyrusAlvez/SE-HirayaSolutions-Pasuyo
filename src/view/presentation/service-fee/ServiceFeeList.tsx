@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { View, Text, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
 import type { ServiceFeeErrand } from '@/controllers/serviceFeeController';
 import ServiceFeeInfo from './ServiceFeeInfo';
+import ErrandHistoryModal from './ErrandHistoryModal';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
-function FeeCard({ errand }: { errand: ServiceFeeErrand }) {
+function FeeCard({ errand, onHistory }: { errand: ServiceFeeErrand; onHistory: (id: string, title: string) => void }) {
   const router = useRouter();
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
     ? { uri: errand.poster_avatar }
@@ -49,6 +51,7 @@ function FeeCard({ errand }: { errand: ServiceFeeErrand }) {
         </TouchableOpacity>
         <TouchableOpacity
           activeOpacity={0.7}
+          onPress={() => onHistory(errand.id, errand.title)}
           style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB' }}
         >
           <Ionicons name="time-outline" size={14} color="#6B7280" />
@@ -68,6 +71,7 @@ export default function ServiceFeeList({ errands, emptyText }: Props) {
   const { width } = useWindowDimensions();
   const columns = width >= 1024 ? 3 : width >= 768 ? 2 : 1;
   const totalFees = errands.reduce((sum, e) => sum + e.serviceFee, 0);
+  const [historyTarget, setHistoryTarget] = useState<{ id: string; title: string } | null>(null);
 
   return (
     <ScrollView showsVerticalScrollIndicator contentContainerStyle={{ padding: 20, paddingBottom: 32, maxWidth: 960, width: '100%', alignSelf: 'center' as const }}>
@@ -90,11 +94,17 @@ export default function ServiceFeeList({ errands, emptyText }: Props) {
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
           {errands.map((e) => (
             <View key={e.id} style={{ width: columns === 1 ? '100%' : `${Math.floor(100 / columns) - 1}%` as any }}>
-              <FeeCard errand={e} />
+              <FeeCard errand={e} onHistory={(id, title) => setHistoryTarget({ id, title })} />
             </View>
           ))}
         </View>
       )}
+      <ErrandHistoryModal
+        visible={!!historyTarget}
+        errandId={historyTarget?.id ?? null}
+        errandTitle={historyTarget?.title ?? ''}
+        onClose={() => setHistoryTarget(null)}
+      />
     </ScrollView>
   );
 }

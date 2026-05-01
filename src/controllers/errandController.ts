@@ -5,6 +5,7 @@ import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
 import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDoneEmail } from '@/models/emailModel';
 import { getDisplayProfile } from '@/models/profileModel';
+import { insertErrandEvent } from '@/models/errandEventModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -234,6 +235,8 @@ export const acceptErrand = async (
     await postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
     sendErrandAcceptedEmail(posterId, errandInfo, user.id);
 
+    await insertErrandEvent(errandId, user.id, 'accepted', { title: errandInfo.title });
+
     return { success: true, error: '' };
   } catch {
     return { success: false, error: 'Something went wrong' };
@@ -290,6 +293,8 @@ export const cancelAcceptedErrand = async (
       errandId,
     );
 
+    await insertErrandEvent(errandId, user.id, 'cancelled', { title: errandTitle, reason, details });
+
     return { success: true, error: '' };
   } catch {
     return { success: false, error: 'Something went wrong' };
@@ -342,6 +347,8 @@ export const markErrandAsDone = async (
       user.id,
     );
 
+    await insertErrandEvent(errandId, user.id, 'marked_done', { title: errandTitle });
+
     return { success: true, error: '' };
   } catch {
     return { success: false, error: 'Something went wrong' };
@@ -363,6 +370,8 @@ export const submitErrandReview = async (
       errandModel.getErrandById(errandId),
     ]);
     if (error) return { success: false, error: error.message.includes('duplicate') ? 'You have already reviewed this errand' : 'Failed to submit review' };
+
+    await insertErrandEvent(errandId, user.id, 'reviewed', { rating, feedback, reviewed_id: reviewedId });
 
     const { data: convo } = await chatModel.getOrCreateConversation(user.id, reviewedId);
     if (convo) {
