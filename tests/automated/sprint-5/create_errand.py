@@ -24,10 +24,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 #  CONFIGURE THESE BEFORE RUNNING                                     #
 # ------------------------------------------------------------------ #
 BASE_URL    = "http://localhost:8081"
-EMAIL       = "sampleemail6@gmail.com"
-PASSWORD    = "SampleEmail@6"
-TITLE       = "Sample Errand 6"
-DESCRIPTION = "Just a simple errand"
+EMAIL       = "sampleemail@gmail.com"
+# Password Format Sample (SampleEmail@3)
+PASSWORD    = "sampleemail"
+TITLE       = "Sample Errand Title"
+DESCRIPTION = "Just a simple errand for Testing"
 BUDGET      = "600"
 # ------------------------------------------------------------------ #
 

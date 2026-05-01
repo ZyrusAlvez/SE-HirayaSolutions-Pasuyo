@@ -78,7 +78,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
   };
 
   return (
-    <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
+    <View testID="edit-errand-sheet" style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>Edit Errand</Text>
         <TouchableOpacity onPress={onCancel}>
