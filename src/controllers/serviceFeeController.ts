@@ -1,7 +1,9 @@
 import * as model from '@/models/serviceFeeModel';
 import type { ServiceFeeErrand } from '@/models/serviceFeeModel';
+import { getErrandEventsByActor } from '@/models/errandEventModel';
+import type { ErrandEvent } from '@/models/errandEventModel';
 
-export type { ServiceFeeErrand };
+export type { ServiceFeeErrand, ErrandEvent };
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
 
@@ -20,6 +22,19 @@ const mapErrands = (rows: any[]): ServiceFeeErrand[] =>
       poster_name: e.poster_name,
       poster_avatar: e.poster_avatar,
     }));
+
+export const getErrandHistory = async (errandId: string): Promise<Result<ErrandEvent[]>> => {
+  try {
+    const { data: { user } } = await model.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data, error } = await getErrandEventsByActor(errandId, user.id);
+    if (error) return { success: false, error: 'Failed to load history' };
+    return { success: true, data: data ?? [] };
+  } catch {
+    return { success: false, error: 'Failed to load history' };
+  }
+};
 
 export const getServiceFeeErrands = async (): Promise<Result<ServiceFeeErrand[]>> => {
   try {
