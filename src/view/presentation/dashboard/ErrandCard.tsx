@@ -31,30 +31,33 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
     ? { uri: errand.poster_avatar }
     : DEFAULT_AVATAR;
 
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+
   const handleShare = async () => {
     const url = Platform.OS === 'web'
       ? `${window.location.origin}/errand/${errand.id}`
       : `https://pasuyo.app/errand/${errand.id}`;
     await Clipboard.setStringAsync(url);
+    setShareUrl(url);
     toast({ title: 'Link copied to clipboard', preset: 'done' });
   };
 
   const postedActions: KebabAction[] = [
-    { label: 'Edit', icon: 'create-outline', onPress: () => {
+    { label: 'Edit', icon: 'create-outline', testID: 'kebab-edit', onPress: () => {
       if (errand.status === 'In Progress') { toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' }); return; }
       router.push(`/errand/${errand.id}?edit=true`);
     }},
-    { label: 'Delete', icon: 'trash-outline', onPress: () => setShowDeleteConfirm(true) },
-    { label: 'Share', icon: 'share-outline', onPress: handleShare },
+    { label: 'Delete', icon: 'trash-outline', testID: 'kebab-delete', onPress: () => setShowDeleteConfirm(true) },
+    { label: 'Share', icon: 'share-outline', testID: 'kebab-share', onPress: handleShare },
   ];
 
   const canActOnAccepted = errand.status !== 'Cancelled' && errand.status !== 'Completed';
 
   const acceptedActions: KebabAction[] = [
-    ...(canActOnAccepted ? [{ label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => setShowMarkDoneConfirm(true) }] : []),
-    { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', onPress: () => router.push(`/chat?userId=${errand.user_id}`) },
-    ...(canActOnAccepted ? [{ label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => setShowCancelModal(true) }] : []),
-    { label: 'Share', icon: 'share-outline', onPress: handleShare },
+    ...(canActOnAccepted ? [{ label: 'Mark as Done', icon: 'checkmark-circle-outline', testID: 'kebab-mark-done', onPress: () => setShowMarkDoneConfirm(true) }] : []),
+    { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', testID: 'kebab-chat', onPress: () => router.push(`/chat?userId=${errand.user_id}`) },
+    ...(canActOnAccepted ? [{ label: 'Cancel Errand', icon: 'close-circle-outline', testID: 'kebab-cancel', onPress: () => setShowCancelModal(true) }] : []),
+    { label: 'Share', icon: 'share-outline', testID: 'kebab-share', onPress: handleShare },
   ];
 
   const actions = tab === 'posted' ? postedActions : acceptedActions;
@@ -101,6 +104,9 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
 
       <ConfirmModal
         visible={showDeleteConfirm}
+        testID="delete-confirm-modal"
+        confirmTestID="delete-confirm-btn"
+        cancelTestID="delete-cancel-btn"
         title="Delete Errand"
         message="Are you sure you want to delete this errand? This action cannot be undone."
         confirmLabel="Delete"
@@ -140,6 +146,11 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
           onDelete?.();
         }}
       />
+      {shareUrl && (
+        <View testID="share-modal" style={{ display: 'none' }}>
+          <Text testID="share-link" accessibilityLabel={shareUrl}>{shareUrl}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
