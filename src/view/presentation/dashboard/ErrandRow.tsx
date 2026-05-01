@@ -61,6 +61,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
 
   return (
     <TouchableOpacity
+      testID={`errand-card-${errand.id}`}
       activeOpacity={0.7}
       onPress={() => router.push(`/errand/${errand.id}`)}
       style={{ flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10 }}
@@ -70,7 +71,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
 
       {/* Content */}
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={{ fontSize: 13, fontWeight: '700', color: '#111827' }} numberOfLines={1}>{errand.title}</Text>
+        <Text testID="errand-card-title" style={{ fontSize: 13, fontWeight: '700', color: '#111827' }} numberOfLines={1}>{errand.title}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text style={{ fontSize: 11, color: '#6B7280' }} numberOfLines={1}>{errand.poster_name ?? 'Unknown'}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, height: 14, justifyContent: 'center' }}>

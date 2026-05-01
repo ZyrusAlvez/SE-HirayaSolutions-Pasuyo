@@ -85,8 +85,8 @@ export const getAvailableErrands = () =>
 export const deleteErrand = (id: string) =>
   supabase.from('errands').delete().eq('id', id);
 
-export const cancelErrand = (id: string) =>
-  supabase.from('errands').update({ status: 'Cancelled' }).eq('id', id);
+// export const cancelErrand = (id: string) =>
+//   supabase.from('errands').update({ status: 'Cancelled' }).eq('id', id);
 
 export const getErrandRunner = (id: string) =>
   supabase.from('errands').select('runner_id').eq('id', id).single();

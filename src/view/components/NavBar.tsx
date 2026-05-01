@@ -43,7 +43,7 @@ export default function NavBar() {
         <Text className={`text-xs mt-1 ${isActive('/') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Home</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/dashboard')}>
+      <TouchableOpacity testID="nav-dashboard" className="items-center" activeOpacity={0.7} onPress={() => handleNavigation('/dashboard')}>
         <Ionicons name="list-outline" size={24} color={isActive('/dashboard') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/dashboard') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Dashboard</Text>
       </TouchableOpacity>
