@@ -122,6 +122,9 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
       />
       <ConfirmModal
         visible={showMarkDoneConfirm}
+        testID="mark-done-modal"
+        confirmTestID="mark-done-confirm-btn"
+        cancelTestID="mark-done-back-btn"
         title="Mark as Done"
         message={`Mark "${errand.title}" as completed?`}
         confirmLabel="Mark Done"
