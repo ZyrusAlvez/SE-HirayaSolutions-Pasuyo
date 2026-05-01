@@ -152,6 +152,7 @@ export default function ErrandDetailScreen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID="accept-errand-btn"
                 activeOpacity={0.85}
                 disabled={accepting}
                 onPress={async () => {

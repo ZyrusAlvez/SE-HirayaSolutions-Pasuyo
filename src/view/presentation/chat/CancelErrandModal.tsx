@@ -61,6 +61,7 @@ export default function CancelErrandModal({ visible, errandTitle, onClose, onCon
                 return (
                   <TouchableOpacity
                     key={reason}
+                    testID={`cancel-reason-${reason.toLowerCase().replace(/ /g, '-')}`}
                     onPress={() => setSelected(active ? null : reason)}
                     activeOpacity={0.7}
                     style={{
@@ -101,13 +102,14 @@ export default function CancelErrandModal({ visible, errandTitle, onClose, onCon
 
             {/* Actions */}
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
-              <TouchableOpacity onPress={handleClose} activeOpacity={0.8} style={{ flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', alignItems: 'center' }}>
+              <TouchableOpacity onPress={handleClose} activeOpacity={0.8} testID="cancel-modal-back-btn" style={{ flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', alignItems: 'center' }}>
                 <Text style={{ fontSize: 14, fontWeight: '600', color: '#6B7280' }}>Go Back</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleConfirm}
                 disabled={!selected || submitting}
                 activeOpacity={0.8}
+                testID="cancel-modal-confirm-btn"
                 style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: !selected ? '#FCA5A5' : '#EF4444', alignItems: 'center' }}
               >
                 {submitting
