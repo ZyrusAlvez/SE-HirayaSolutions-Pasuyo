@@ -44,6 +44,7 @@ export default function SortFilterBar({ statusOptions, statusFilter, onStatusCha
     <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 8, zIndex: 10, flexWrap: 'wrap', rowGap: 8 }}>
       <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
       <Dropdown
+        testID="filter-status"
         value={statusFilter ?? 'All'}
         options={allStatusOptions}
         labels={statusLabels}
@@ -55,6 +56,7 @@ export default function SortFilterBar({ statusOptions, statusFilter, onStatusCha
         onChange={(v) => onStatusChange(v === 'All' ? null : v)}
       />
       <Dropdown
+        testID="filter-type"
         value={typeFilter ?? 'All'}
         options={TYPE_OPTIONS}
         labels={TYPE_LABELS}
@@ -67,6 +69,7 @@ export default function SortFilterBar({ statusOptions, statusFilter, onStatusCha
       <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
       <Ionicons name="swap-vertical-outline" size={14} color="#9CA3AF" />
       <Dropdown
+        testID="sort-key"
         value={sort.key}
         options={sortKeys}
         labels={SORT_LABELS}
@@ -77,6 +80,7 @@ export default function SortFilterBar({ statusOptions, statusFilter, onStatusCha
         onChange={(key) => onSortChange({ ...sort, key })}
       />
       <TouchableOpacity
+        testID="sort-dir"
         onPress={() => onSortChange({ ...sort, dir: sort.dir === 'asc' ? 'desc' : 'asc' })}
         activeOpacity={0.7}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}
@@ -87,7 +91,7 @@ export default function SortFilterBar({ statusOptions, statusFilter, onStatusCha
       {(statusFilter || typeFilter) && (
         <>
           <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
-          <TouchableOpacity onPress={() => { onStatusChange(null); onTypeChange(null); setOpenId(null); }} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+          <TouchableOpacity testID="sort-clear" onPress={() => { onStatusChange(null); onTypeChange(null); setOpenId(null); }} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
             <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '600' }}>Clear</Text>
           </TouchableOpacity>
         </>

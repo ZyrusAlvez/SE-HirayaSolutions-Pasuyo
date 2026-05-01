@@ -89,7 +89,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
       {/* Status + kebab */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
-          <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
+          <Text testID="errand-card-status" style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
         </View>
         <KebabMenu actions={actions} />
       </View>

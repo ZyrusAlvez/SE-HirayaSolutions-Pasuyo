@@ -71,7 +71,7 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
       {/* Header: status + kebab */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-          <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
+          <Text testID="errand-card-status" style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
         </View>
         <KebabMenu actions={actions} />
       </View>
