@@ -101,16 +101,37 @@ export const getUser = () => supabase.auth.getUser();
 
 export type DisplayProfile = {
   name: string;
+  email: string | null;
   avatarUrl: string | null;
   verified: boolean;
   verificationStatus: VerificationStatus;
+  gender?: string;
+  date_of_birth?: string;
+  address_province?: string;
+  address_city?: string;
+  address_barangay?: string;
 };
+
+export type UserProfile = DisplayProfile & {
+  completedErrands: number;
+  postedCompleted: number;
+  rating: number | null;
+};
+
+export const getCompletedErrandsCount = (userId: string) =>
+  supabase.from('errands').select('id', { count: 'exact', head: true }).eq('accepted_by', userId).eq('status', 'Completed');
+
+export const getPostedCompletedCount = (userId: string) =>
+  supabase.from('errands').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'Completed');
+
+export const getUserReviewRatings = (userId: string) =>
+  supabase.from('errand_reviews').select('rating').eq('reviewed_id', userId);
 
 export const getDisplayProfile = async (userId: string): Promise<DisplayProfile> => {
   const client = supabaseAdmin ?? supabase;
   const { data: profile } = await client
     .from('profiles')
-    .select('verified, pending_verification, first_name, last_name, avatar_url')
+    .select('verified, pending_verification, first_name, last_name, avatar_url, gender, date_of_birth, address_province, address_city, address_barangay')
     .eq('id', userId)
     .single();
 
@@ -124,12 +145,28 @@ export const getDisplayProfile = async (userId: string): Promise<DisplayProfile>
       ? 'pending'
       : 'not_verified';
 
+  const verifiedFields = profile?.verified ? {
+    gender: profile.gender,
+    date_of_birth: profile.date_of_birth,
+    address_province: profile.address_province,
+    address_city: profile.address_city,
+    address_barangay: profile.address_barangay,
+  } : {};
+
+  let email: string | null = null;
+  if (supabaseAdmin) {
+    const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
+    email = data?.user?.email ?? null;
+  }
+
   if (profileName) {
     return {
       name: profileName,
+      email,
       avatarUrl: profile?.avatar_url ?? null,
       verified: profile?.verified ?? false,
       verificationStatus,
+      ...verifiedFields,
     };
   }
 
@@ -139,13 +176,14 @@ export const getDisplayProfile = async (userId: string): Promise<DisplayProfile>
     const rawUrl = meta?.custom_avatar_url || meta?.avatar_url;
     return {
       name: meta?.name || meta?.full_name || 'Unknown',
+      email: data?.user?.email ?? null,
       avatarUrl: rawUrl && rawUrl !== 'default' ? rawUrl : null,
       verified: false,
       verificationStatus,
     };
   }
 
-  return { name: 'Unknown', avatarUrl: null, verified: false, verificationStatus: 'not_verified' };
+  return { name: 'Unknown', email: null, avatarUrl: null, verified: false, verificationStatus: 'not_verified' };
 };
 
 export const getProfile = (userId: string) =>

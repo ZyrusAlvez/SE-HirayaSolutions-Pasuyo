@@ -2,28 +2,30 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Modal, Pressable } fro
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { deleteErrand, cancelErrand } from '@/controllers/errandController';
+import { deleteErrand } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
 
 const ACCENT = '#FEA405';
 
 interface Props {
   errandId: string;
+  status: string;
   isEditing: boolean;
   onEditToggle: () => void;
 }
 
-export default function OwnerActions({ errandId, isEditing, onEditToggle }: Props) {
+export default function OwnerActions({ errandId, status, isEditing, onEditToggle }: Props) {
   const router = useRouter();
-  const [cancelling, setCancelling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
-  const handleCancel = async () => {
-    setCancelling(true);
-    const result = await cancelErrand(errandId);
+  const handleDelete = async () => {
+    setDeleting(true);
+    const result = await deleteErrand(errandId, status);
     if (!result.success) {
+      setConfirmVisible(false);
       toast({ title: result.error, preset: 'error' });
-      setCancelling(false);
+      setDeleting(false);
     } else {
       setConfirmVisible(false);
       toast({ title: 'Errand cancelled', preset: 'done' });
@@ -52,7 +54,7 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
             <TouchableOpacity
               testID="cancel-errand-dismiss-btn"
               onPress={() => setConfirmVisible(false)}
-              disabled={cancelling}
+              disabled={deleting}
               style={{ flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center' }}
               activeOpacity={0.8}
             >
@@ -60,12 +62,12 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
             </TouchableOpacity>
             <TouchableOpacity
               testID="cancel-errand-confirm-btn"
-              onPress={handleCancel}
-              disabled={cancelling}
+              onPress={handleDelete}
+              disabled={deleting}
               style={{ flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#EF4444', alignItems: 'center' }}
               activeOpacity={0.8}
             >
-              {cancelling
+              {deleting
                 ? <ActivityIndicator size="small" color="white" />
                 : <Text style={{ fontSize: 13, fontWeight: '600', color: 'white' }}>Confirm</Text>
               }
@@ -77,7 +79,13 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
     <View style={{ flexDirection: 'row', gap: 8 }}>
       <TouchableOpacity
         testID="edit-errand-btn"
-        onPress={onEditToggle}
+        onPress={() => {
+          if (!isEditing && status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' });
+            return;
+          }
+          onEditToggle();
+        }}
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
           gap: 6, paddingVertical: 12, borderRadius: 14,
@@ -94,8 +102,14 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
 
       <TouchableOpacity
         testID="cancel-errand-btn"
-        onPress={() => setConfirmVisible(true)}
-        disabled={cancelling}
+        onPress={() => {
+          if (status === 'In Progress') {
+            toast({ title: 'This errand has already been accepted and cannot be deleted.', preset: 'error' });
+            return;
+          }
+          setConfirmVisible(true);
+        }}
+        disabled={deleting}
         style={{
           flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
           gap: 6, paddingVertical: 12, borderRadius: 14,
@@ -103,7 +117,7 @@ export default function OwnerActions({ errandId, isEditing, onEditToggle }: Prop
         }}
         activeOpacity={0.8}
       >
-        {cancelling
+        {deleting
           ? <ActivityIndicator size="small" color="#EF4444" />
           : <>
               <Ionicons name="close-circle-outline" size={16} color="#EF4444" />

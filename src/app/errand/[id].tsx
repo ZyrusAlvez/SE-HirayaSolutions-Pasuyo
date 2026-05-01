@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getErrand } from '@/controllers/errandController';
+import { getErrand, acceptErrand } from '@/controllers/errandController';
 import type { Errand } from '@/controllers/errandController';
 import { getProfile } from '@/controllers/profileController';
 import Header from '@/view/components/Header';
@@ -15,12 +15,13 @@ import OwnerActions from '@/view/presentation/errand/OwnerActions';
 import EditErrandSheet from '@/view/presentation/errand/EditErrandSheet';
 import SkeletonLoading from '@/view/presentation/errand/SkeletonLoading';
 import ImageViewer from '@/view/components/ImageViewer';
+import { toast } from '@/utils/toast';
 
 const ACCENT = '#FEA405';
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
 
 export default function ErrandDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, edit } = useLocalSearchParams<{ id: string; edit?: string }>();
   const { width } = useWindowDimensions();
   const router = useRouter();
 
@@ -29,9 +30,11 @@ export default function ErrandDetailScreen() {
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<any>(DEFAULT_AVATAR);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(edit === 'true');
   const [isGuest, setIsGuest] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const acceptingRef = useRef(false);
 
   useEffect(() => {
     getProfile().then((result) => {
@@ -89,21 +92,22 @@ export default function ErrandDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         <View style={{ alignSelf: 'center', width: '100%', maxWidth: width >= 768 ? 680 : undefined, padding: 20, gap: 16 }}>
 
-          <DetailHeader isRemote={errand.is_remote} errandId={errand.id} />
+          <DetailHeader isRemote={errand.is_remote} errandId={errand.id} posterId={errand.user_id} isGuest={isGuest} />
 
           {isOwner && (
             <OwnerActions
               errandId={errand.id}
+              status={errand.status}
               isEditing={isEditing}
               onEditToggle={() => setIsEditing(e => !e)}
             />
           )}
 
-          {isEditing ? (
+          {isEditing && isOwner ? (
             <EditErrandSheet
               errand={errand}
               onSaved={(updated) => {
-                setErrand(prev => prev ? { ...prev, ...updated } : prev);
+                setErrand(prev => prev ? { ...prev, ...updated } as Errand : prev);
                 setIsEditing(false);
               }}
               onCancel={() => setIsEditing(false)}
@@ -125,14 +129,15 @@ export default function ErrandDetailScreen() {
           )}
 
           <PosterCard
+            userId={errand.user_id}
             name={errand.poster_name}
             avatar={errand.poster_avatar}
-            rating={errand.poster_rating}
+            rating={undefined}
             isVerified={errand.poster_is_verified}
             postedOn={new Date(errand.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
           />
 
-          {errand.status === 'Available' && !isOwner && (
+          {!isOwner && (
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
               <TouchableOpacity
                 activeOpacity={0.85}
@@ -148,13 +153,25 @@ export default function ErrandDetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={() => {
-                  if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`);
-                  else router.push(`/chat?userId=${errand.user_id}`);
+                disabled={accepting}
+                onPress={async () => {
+                  if (isGuest) { router.push(`/signup?redirect=/errand/${errand.id}`); return; }
+                  if (acceptingRef.current) return;
+                  acceptingRef.current = true;
+                  setAccepting(true);
+                  const result = await acceptErrand(errand.id, errand.status, errand.user_id, {
+                    title: errand.title,
+                    description: errand.description,
+                    budget: errand.budget,
+                  });
+                  if (!result.success) { toast({ title: result.error, preset: 'error' }); setAccepting(false); return; }
+                  toast({ title: 'Errand accepted!', preset: 'done' });
+                  setErrand(prev => prev ? { ...prev, status: 'In Progress' as const, accepted_by: currentUserId } : prev);
+                  router.push(`/chat?userId=${errand.user_id}`);
                 }}
-                style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center' }}
+                style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center', opacity: accepting ? 0.6 : 1 }}
               >
-                <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>Accept Errand</Text>
+                <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>{accepting ? 'Accepting...' : 'Accept Errand'}</Text>
               </TouchableOpacity>
             </View>
           )}

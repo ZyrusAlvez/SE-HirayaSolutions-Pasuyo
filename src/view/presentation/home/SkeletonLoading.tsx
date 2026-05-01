@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { View, Animated, Dimensions, StyleProp, ViewStyle } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Animated, Dimensions, Platform, Linking, StyleProp, ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 function SkeletonBox({ style }: { style?: StyleProp<ViewStyle> }) {
   const opacity = useRef(new Animated.Value(0.4)).current;
@@ -44,13 +45,37 @@ function PanelSkeleton() {
   );
 }
 
-const isTablet = Dimensions.get('window').width >= 600;
+export default function SkeletonLoading({ locationDenied, onRetryLocation }: { locationDenied?: boolean; onRetryLocation?: () => void } = {}) {
+  const [isTablet, setIsTablet] = useState(Dimensions.get('window').width >= 600);
 
-export default function SkeletonLoading() {
+  useEffect(() => {
+    const sub = Dimensions.addEventListener('change', ({ window }) => setIsTablet(window.width >= 600));
+    return () => sub.remove();
+  }, []);
   return (
     <View style={{ flex: 1, flexDirection: isTablet ? 'row' : 'column', gap: isTablet ? 12 : 0, padding: isTablet ? 12 : 0 }}>
       {/* Map placeholder */}
-      <SkeletonBox style={{ flex: 1, borderRadius: 16, minHeight: isTablet ? undefined : 260 }} />
+      <View style={{ flex: 1, borderRadius: 16, minHeight: isTablet ? undefined : 260, overflow: 'hidden' }}>
+        <SkeletonBox style={{ position: 'absolute', inset: 0, borderRadius: 16 }} />
+        {locationDenied && (
+          <View style={{ position: 'absolute', inset: 0, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32, zIndex: 10 }}>
+            <Ionicons name="location-outline" size={48} color="#6B7280" />
+            <Text style={{ color: '#374151', fontSize: 16, fontWeight: '600', marginTop: 12, textAlign: 'center' }}>Location Permission Required</Text>
+            <Text style={{ color: '#6B7280', fontSize: 13, marginTop: 6, textAlign: 'center' }}>
+              {Platform.OS === 'web'
+                ? 'Allow location access in your browser. If blocked, click the lock icon in your address bar to reset.'
+                : 'Enable location access to view nearby errands on the map.'}
+            </Text>
+            <TouchableOpacity
+              onPress={() => Platform.OS === 'web' ? onRetryLocation?.() : Linking.openSettings()}
+              style={{ marginTop: 16, backgroundColor: '#F59E0B', borderRadius: 12, paddingHorizontal: 20, paddingVertical: 10 }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>{Platform.OS === 'web' ? 'Try Again' : 'Open Settings'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
 
       {/* Tablet: static side panel skeleton */}
       {isTablet && (

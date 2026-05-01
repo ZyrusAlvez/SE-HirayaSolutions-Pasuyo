@@ -1,29 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { toast } from '../utils/toast';
-import { sendResetCode, verifyResetCode, updatePassword } from '@/controllers/authController';
+import { sendResetCode, verifyResetCode, updatePassword, getSession } from '@/controllers/authController';
 import PasswordInput from '@/view/components/PasswordInput';
 import PasswordStrength from '@/view/components/PasswordStrength';
+import CircleCountdown from '@/view/components/CircleCountdown';
 
 type Step = 'email' | 'code' | 'password';
 
 export default function ResetPasswordScreen() {
-  const { from, email: paramEmail } = useLocalSearchParams<{ from?: string; email?: string }>();
+  const { from } = useLocalSearchParams<{ from?: string }>();
   const fromProfile = from === 'profile';
-  const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState(paramEmail || '');
+  const [step, setStep] = useState<Step>(fromProfile ? 'code' : 'email');
+  const [email, setEmail] = useState('');
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [autoSent, setAutoSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval>>();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
+  const startCooldown = useCallback(() => {
+    setCooldown(30);
+    clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => setCooldown(c => {
+      if (c <= 1) { clearInterval(cooldownRef.current); return 0; }
+      return c - 1;
+    }), 1000);
+  }, []);
+
   useEffect(() => {
-    if (fromProfile && paramEmail) sendCode(paramEmail);
+    if (fromProfile) {
+      getSession().then(({ data }) => {
+        const mail = data?.session?.user?.email;
+        if (mail) { setEmail(mail); sendCode(mail); }
+      });
+    }
+    return () => clearInterval(cooldownRef.current);
   }, []);
 
   const sendCode = async (target: string) => {
@@ -34,6 +51,7 @@ export default function ResetPasswordScreen() {
       toast({ title: result.error, preset: 'error' });
     } else {
       toast({ title: 'Code sent! Check your inbox.', preset: 'done' });
+      startCooldown();
       setStep('code');
     }
   };
@@ -63,7 +81,7 @@ export default function ResetPasswordScreen() {
 
   const stepConfig = {
     email:    { title: 'Forgot Password',  subtitle: 'Enter your email to receive a reset code.' },
-    code:     { title: 'Enter Code',       subtitle: `We sent a code to ${email}` },
+    code:     { title: 'Enter Code',       subtitle: 'Send a verification code to your email.' },
     password: { title: 'New Password',     subtitle: 'Choose a strong new password.' },
   };
 
@@ -103,15 +121,33 @@ export default function ResetPasswordScreen() {
           )}
 
           {step === 'code' && (
-            <TextInput
-              className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base mb-6 tracking-widest"
-              placeholder="Paste code from email"
-              placeholderTextColor="#9CA3AF"
-              value={token}
-              onChangeText={setToken}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <View className="flex-row mb-6 gap-2">
+              <TextInput
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base tracking-widest"
+                placeholder="Paste code from email"
+                placeholderTextColor="#9CA3AF"
+                value={token}
+                onChangeText={setToken}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              {cooldown > 0 ? (
+                <View className="justify-center">
+                  <CircleCountdown seconds={cooldown} total={30} />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  className="bg-gray-100 border border-gray-200 px-4 rounded-2xl justify-center"
+                  onPress={() => sendCode(email)}
+                  disabled={loading || !email}
+                  activeOpacity={0.8}
+                >
+                  <Text className="text-gray-700 text-sm font-semibold">
+                    {loading ? 'Sending...' : 'Send Code'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
 
           {step === 'password' && (
@@ -135,7 +171,7 @@ export default function ResetPasswordScreen() {
           <TouchableOpacity
             className="bg-[#FEA405] py-4 rounded-2xl"
             onPress={step === 'email' ? handleSendEmail : step === 'code' ? handleVerifyCode : handleUpdatePassword}
-            disabled={loading || (fromProfile && step === 'email' && !autoSent)}
+            disabled={loading}
             activeOpacity={0.8}
           >
             <Text className="text-white text-base font-semibold text-center">

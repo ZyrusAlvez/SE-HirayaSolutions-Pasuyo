@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { toast } from '@/utils/toast';
-import { getProfile, getAvatarImage, updateProfile } from '@/controllers/profileController';
-import type { VerificationStatus, ProfileData } from '@/controllers/profileController';
+import { getProfile, getAvatarImage, updateProfile, getUserProfile } from '@/controllers/profileController';
+import type { VerificationStatus, ProfileData, UserProfile } from '@/controllers/profileController';
 import { logout } from '@/controllers/authController';
 import ProfileHeader from '@/view/presentation/profile/ProfileHeader';
 import AvatarPicker from '@/view/presentation/profile/AvatarPicker';
 import VerificationBadge from '@/view/components/VerificationBadge';
 import ProfileInfoCard from '@/view/presentation/profile/ProfileInfoCard';
+import SettingsCard from '@/view/presentation/profile/SettingsCard';
 import SkeletonLoading from '@/view/presentation/profile/SkeletonLoading';
 import ProfileActions from '@/view/presentation/profile/ProfileActions';
+import ErrandActivityCard from '@/view/presentation/profile/ErrandActivityCard';
 
 import DEFAULT_AVATAR from '../assets/images/default_profile.jpg';
 
@@ -25,6 +27,7 @@ export default function ProfileScreen() {
   const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('not_verified');
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [errandStats, setErrandStats] = useState<UserProfile | null>(null);
 
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
@@ -36,13 +39,16 @@ export default function ProfileScreen() {
       if (!result.success) {
         toast({ title: result.error, preset: 'error' });
       } else if (result.data) {
-        const { displayName: name, email: mail, avatarUrl: url, verificationStatus: status } = result.data;
+        const { id, displayName: name, email: mail, avatarUrl: url, verificationStatus: status } = result.data;
         setDisplayName(name);
         setOriginalName(name);
         setEmail(mail);
         if (url) setAvatarUrl({ uri: url });
         setVerificationStatus(status);
         setProfileData(result.data);
+        getUserProfile(id).then((statsResult) => {
+          if (statsResult.success) setErrandStats(statsResult.data);
+        });
       }
       setLoading(false);
     });
@@ -95,7 +101,6 @@ export default function ProfileScreen() {
         <View style={{ width: contentWidth }} className="items-center -mt-14 mb-6">
           <AvatarPicker avatarUrl={avatarUrl} size={isLarge ? 140 : 112} onPress={handlePickAvatar} />
           <Text className="text-xl font-bold text-gray-800 mt-3">{displayName || 'No name set'}</Text>
-          <Text className="text-sm text-gray-400 mt-0.5">{email}</Text>
           <VerificationBadge status={verificationStatus} />
         </View>
 
@@ -107,7 +112,23 @@ export default function ProfileScreen() {
           displayName={displayName}
           email={email}
           onNameChange={setDisplayName}
-          onChangePassword={() => router.push({ pathname: '/reset-password', params: { from: 'profile', email } })}
+        />
+
+        {errandStats && (
+          <ErrandActivityCard
+            completedErrands={errandStats.completedErrands}
+            postedCompleted={errandStats.postedCompleted}
+            rating={errandStats.rating}
+            contentWidth={contentWidth}
+            isLarge={isLarge}
+          />
+        )}
+
+        <SettingsCard
+          contentWidth={contentWidth}
+          isLarge={isLarge}
+          verificationStatus={verificationStatus}
+          onChangePassword={() => router.push({ pathname: '/reset-password', params: { from: 'profile' } })}
           onVerify={() => router.push('/verify')}
         />
       </ScrollView>

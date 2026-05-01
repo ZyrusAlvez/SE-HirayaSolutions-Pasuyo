@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, FlatList, Image, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Message, MessageStatus } from '@/controllers/chatController';
 import ImageViewer from '@/view/components/ImageViewer';
+import SystemMessage from '@/view/presentation/chat/SystemMessage';
+import ErrandInfoCard from '@/view/presentation/chat/ErrandInfoCard';
+import ChatSkeleton from '@/view/presentation/chat/ChatSkeleton';
 import FileBubble from '@/view/presentation/chat/FileBubble';
+import CancelErrandModal from '@/view/presentation/chat/CancelErrandModal';
+import MarkDoneModal from '@/view/presentation/chat/MarkDoneModal';
+import { toast } from '@/utils/toast';
+import ReportModal from '@/view/presentation/user/ReportModal';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -13,11 +21,14 @@ const getAvatarSource = (avatar: string | null | undefined) =>
 type Props = {
   messages: Message[];
   currentUserId: string;
+  otherUserId?: string | null;
   otherUser: { name: string; avatar: string | null } | null;
   loading: boolean;
   selected: boolean;
   onSend: (content: string) => void;
   onSendFile?: (uri: string, fileName: string, mimeType: string, fileSize?: number) => void;
+  onCancelErrand?: (errandId: string, title: string, reason: string, details: string | null) => Promise<boolean>;
+  onMarkDone?: (errandId: string, title: string) => Promise<boolean>;
   onBack?: () => void;
   onLoadMore?: () => void;
   loadingMore?: boolean;
@@ -166,14 +177,52 @@ function TypingIndicator() {
   );
 }
 
-export default function ChatThread({ messages, currentUserId, otherUser, loading, selected, onSend, onSendFile, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+export default function ChatThread({ messages, currentUserId, otherUserId, otherUser, loading, selected, onSend, onSendFile, onCancelErrand, onMarkDone, onBack, onLoadMore, loadingMore, hasMore, otherTyping, onTyping, otherIsOnline, otherLastSeen }: Props) {
+  const router = useRouter();
   const [input, setInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [attachHover, setAttachHover] = useState(false);
+  const [reportHover, setReportHover] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
+  const [errandsExpanded, setErrandsExpanded] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<{ errandId: string; title: string; posterId?: string } | null>(null);
+  const [doneTarget, setDoneTarget] = useState<{ errandId: string; title: string; description?: string; budget?: number } | null>(null);
 
   const imageMessages = messages.filter((m) => m.file_url && m.file_type?.startsWith('image/'));
   const imageItems = imageMessages.map((m) => ({ uri: m.file_url!, fileName: m.file_name ?? undefined }));
+
+  const parsedMessages = messages.map((m) => {
+    try { return { ...JSON.parse(m.content), _created: m.created_at }; } catch { return null; }
+  }).filter(Boolean);
+
+  const lastAcceptTime: Record<string, string> = {};
+  for (const p of parsedMessages) {
+    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId) {
+      lastAcceptTime[p.errandId] = p._created;
+    }
+  }
+
+  const cancelledErrandIds = new Set(
+    parsedMessages
+      .filter((p) => p.type === 'errand_cancelled' && (!lastAcceptTime[p.errandId] || p._created > lastAcceptTime[p.errandId]))
+      .map((p) => p.errandId)
+  );
+
+  const doneErrandIds = new Set(
+    parsedMessages
+      .filter((p) => p.type === 'errand_marked_done')
+      .map((p) => p.errandId)
+  );
+
+  const pinnedErrandsMap = new Map<string, any>();
+  for (const p of parsedMessages) {
+    if (p.type === 'errand_accepted' && p.acceptedBy === currentUserId && !cancelledErrandIds.has(p.errandId) && !doneErrandIds.has(p.errandId)) {
+      pinnedErrandsMap.set(p.errandId, p);
+    }
+  }
+  const pinnedErrands = [...pinnedErrandsMap.values()].reverse();
+  const hasMoreErrands = pinnedErrands.length > 1;
 
   const pickAttachment = async () => {
     try {
@@ -211,26 +260,124 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
         )}
+        <Pressable onPress={() => otherUserId && router.push(`/user/${otherUserId}`)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ position: 'relative' }}>
+            <Image
+              source={getAvatarSource(otherUser?.avatar)}
+              style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
+            />
+            {otherIsOnline ? (
+              <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
+            ) : (
+              <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#9CA3AF', borderWidth: 2, borderColor: '#FFFFFF' }} />
+            )}
+          </View>
+          <View>
+            <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
+            <Text style={{ fontSize: 11, color: otherIsOnline ? '#22C55E' : '#9CA3AF', marginTop: 1 }}>
+              {otherIsOnline ? 'Active now' : formatLastSeen(otherLastSeen)}
+            </Text>
+          </View>
+        </Pressable>
         <View style={{ position: 'relative' }}>
-          <Image
-            source={getAvatarSource(otherUser?.avatar)}
-            style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
-          />
-          {otherIsOnline ? (
-            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
-          ) : (
-            <View style={{ position: 'absolute', bottom: 0, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: '#9CA3AF', borderWidth: 2, borderColor: '#FFFFFF' }} />
+          <Pressable
+            onPress={() => setReportVisible(true)}
+            // @ts-ignore — web-only hover props
+            onMouseEnter={() => setReportHover(true)}
+            onMouseLeave={() => setReportHover(false)}
+            style={{ padding: 6 }}
+          >
+            <Ionicons name="flag-outline" size={22} color="#EF4444" />
+          </Pressable>
+          {reportHover && (
+            <View style={{ position: 'absolute', bottom: -32, right: 0, backgroundColor: '#1F2937', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 11, whiteSpace: 'nowrap' } as any}>Report {otherUser?.name ?? 'user'}</Text>
+            </View>
           )}
         </View>
-        <View>
-          <Text style={{ fontWeight: '700', fontSize: 16, color: '#111827' }}>{otherUser?.name ?? 'Unknown'}</Text>
-          <Text style={{ fontSize: 11, color: otherIsOnline ? '#22C55E' : '#9CA3AF', marginTop: 1 }}>
-            {otherIsOnline ? 'Active now' : formatLastSeen(otherLastSeen)}
-          </Text>
-        </View>
       </View>
+      <ReportModal visible={reportVisible} userName={otherUser?.name} reportedId={otherUserId ?? undefined} onClose={() => setReportVisible(false)} />
+      {pinnedErrands.length > 0 && (
+        <Pressable
+          onPress={() => hasMoreErrands && setErrandsExpanded((v) => !v)}
+          disabled={!hasMoreErrands}
+          style={{ zIndex: 10, elevation: 10 }}
+        >
+          {errandsExpanded ? (
+            <View>
+              {pinnedErrands.map((errand: any, i: number) => (
+                <ErrandInfoCard
+                  key={errand.errandId ?? i}
+                  title={errand.title}
+                  description={errand.description}
+                  budget={errand.budget}
+                  onMoreInfo={() => errand.errandId && router.push(`/errand/${errand.errandId}`)}
+                  onMarkDone={() => setDoneTarget({ errandId: errand.errandId, title: errand.title, description: errand.description, budget: errand.budget })}
+                  onCancel={() => setCancelTarget({ errandId: errand.errandId, title: errand.title, posterId: errand.posterId })}
+                />
+              ))}
+              <Pressable
+                onPress={() => setErrandsExpanded(false)}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 6, backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', gap: 4 }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#6B7280' }}>Show less</Text>
+                <Ionicons name="chevron-up" size={12} color="#6B7280" />
+              </Pressable>
+            </View>
+          ) : (
+            <View style={{ position: 'relative', zIndex: 10, marginBottom: pinnedErrands.length >= 3 ? 6 : pinnedErrands.length >= 2 ? 3 : 0 }}>
+              {pinnedErrands.length >= 3 && (
+                <View style={{ position: 'absolute', top: 6, left: 6, right: 6, bottom: -6, backgroundColor: '#FEF3C7', borderBottomWidth: 1, borderBottomColor: '#FDE68A', opacity: 0.5 }} />
+              )}
+              {pinnedErrands.length >= 2 && (
+                <View style={{ position: 'absolute', top: 3, left: 3, right: 3, bottom: -3, backgroundColor: '#FEF9C3', borderBottomWidth: 1, borderBottomColor: '#FDE68A', opacity: 0.7 }} />
+              )}
+              <ErrandInfoCard
+                title={pinnedErrands[0].title}
+                description={pinnedErrands[0].description}
+                budget={pinnedErrands[0].budget}
+                onMoreInfo={() => pinnedErrands[0].errandId && router.push(`/errand/${pinnedErrands[0].errandId}`)}
+                onMarkDone={() => setDoneTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, description: pinnedErrands[0].description, budget: pinnedErrands[0].budget })}
+                onCancel={() => setCancelTarget({ errandId: pinnedErrands[0].errandId, title: pinnedErrands[0].title, posterId: pinnedErrands[0].posterId })}
+              />
+            </View>
+          )}
+        </Pressable>
+      )}
+      <CancelErrandModal
+        visible={!!cancelTarget}
+        errandTitle={cancelTarget?.title}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={async (reason, details) => {
+          if (!cancelTarget?.errandId) return;
+          const success = await onCancelErrand?.(cancelTarget.errandId, cancelTarget.title, reason, details);
+          if (success) {
+            toast({ title: 'Errand cancelled', preset: 'done' });
+          } else {
+            toast({ title: 'Failed to cancel errand', preset: 'error' });
+          }
+          setCancelTarget(null);
+        }}
+      />
+      <MarkDoneModal
+        visible={!!doneTarget}
+        errandTitle={doneTarget?.title}
+        description={doneTarget?.description}
+        budget={doneTarget?.budget}
+        onClose={() => setDoneTarget(null)}
+        onConfirm={async () => {
+          if (!doneTarget?.errandId) return;
+          const success = await onMarkDone?.(doneTarget.errandId, doneTarget.title);
+          if (success) {
+            toast({ title: 'Errand marked as done', preset: 'done' });
+          } else {
+            toast({ title: 'Failed to mark errand as done', preset: 'error' });
+          }
+          setDoneTarget(null);
+        }}
+      />
       {loading ? (
-        <ActivityIndicator testID="chat-thread-loading" style={{ flex: 1 }} color="#6B7280" />
+        <ChatSkeleton testID="chat-thread-loading"/>
       ) : messages.length === 0 ? (
         <View testID="chat-thread-empty" style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#9CA3AF', fontSize: 14 }}>No messages yet. Say hello!</Text>
@@ -248,9 +395,25 @@ export default function ChatThread({ messages, currentUserId, otherUser, loading
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 12 }} color="#6B7280" /> : null}
           renderItem={({ item, index }) => {
             const actualIndex = messages.length - 1 - index;
-            const isMe = item.sender_id === currentUserId;
             const prev = actualIndex > 0 ? messages[actualIndex - 1] : undefined;
             const showSeparator = shouldShowTimeSeparator(item, prev);
+
+            const isSystemMsg = (() => { try { const t = JSON.parse(item.content)?.type; return t === 'errand_accepted' || t === 'errand_cancelled' || t === 'errand_marked_done' || t === 'errand_reviewed'; } catch { return false; } })();
+
+            if (isSystemMsg) {
+              return (
+                <>
+                  <SystemMessage content={item.content} currentUserId={currentUserId} />
+                  {showSeparator && (
+                    <Text style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', marginVertical: 12 }}>
+                      {formatSeparatorTime(item.created_at)}
+                    </Text>
+                  )}
+                </>
+              );
+            }
+
+            const isMe = item.sender_id === currentUserId;
             return (
               <>
                 <MessageBubble
