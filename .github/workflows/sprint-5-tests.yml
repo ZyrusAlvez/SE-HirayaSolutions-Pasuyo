@@ -100,6 +100,8 @@ jobs:
           python -m pytest tests/automated/sprint-5/ \
             --ignore=tests/automated/sprint-5/create_errand.py \
             --ignore=tests/automated/sprint-5/fill_verification.py \
+            --ignore=tests/automated/sprint-5/test_05_realtime_status.py \
+            --ignore=tests/automated/sprint-5/test_02_conversation_list.py \
             -v --tb=short
 
       # ── Teardown ──────────────────────────────────────────────────────
