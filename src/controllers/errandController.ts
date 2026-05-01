@@ -5,7 +5,8 @@ import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
 import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDoneEmail } from '@/models/emailModel';
 import { getDisplayProfile } from '@/models/profileModel';
-import { insertErrandEvent } from '@/models/errandEventModel';
+import { insertErrandEvent, getErrandEvents } from '@/models/errandEventModel';
+import type { ErrandEvent } from '@/models/errandEventModel';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -48,6 +49,16 @@ export const selectErrandImages = async (
   if (result.assets.length > remaining)
     errors.push(`Only ${remaining} more image${remaining === 1 ? '' : 's'} allowed. Extra selections were ignored.`);
   return { uris, errors };
+};
+
+export const getErrandFullHistory = async (errandId: string): Promise<Result<ErrandEvent[]>> => {
+  try {
+    const { data, error } = await getErrandEvents(errandId);
+    if (error) return { success: false, error: 'Failed to load history' };
+    return { success: true, data: data ?? [] };
+  } catch {
+    return { success: false, error: 'Failed to load history' };
+  }
 };
 
 export const getErrand = async (id: string): Promise<Result<Errand>> => {

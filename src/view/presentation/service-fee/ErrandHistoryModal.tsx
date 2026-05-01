@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getErrandHistory } from '@/controllers/serviceFeeController';
+import { getErrandFullHistory } from '@/controllers/errandController';
 import type { ErrandEvent } from '@/controllers/serviceFeeController';
 
 const EVENT_CONFIG: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string; label: string }> = {
@@ -62,16 +63,18 @@ interface Props {
   errandId: string | null;
   errandTitle: string;
   onClose: () => void;
+  mode?: 'actor' | 'full';
 }
 
-export default function ErrandHistoryModal({ visible, errandId, errandTitle, onClose }: Props) {
+export default function ErrandHistoryModal({ visible, errandId, errandTitle, onClose, mode = 'actor' }: Props) {
   const [events, setEvents] = useState<ErrandEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!visible || !errandId) return;
     setLoading(true);
-    getErrandHistory(errandId).then(result => {
+    const fetcher = mode === 'full' ? getErrandFullHistory : getErrandHistory;
+    fetcher(errandId).then(result => {
       if (result.success) setEvents(result.data);
       setLoading(false);
     });
