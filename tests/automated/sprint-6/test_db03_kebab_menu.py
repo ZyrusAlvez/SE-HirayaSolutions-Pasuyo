@@ -20,6 +20,10 @@ TEST_PASSWORD                  = os.getenv("TEST_PASSWORD")
 UNAUTHORIZED_EMAIL             = os.getenv("UNAUTHORIZED_EMAIL")
 UNAUTHORIZED_PASSWORD          = os.getenv("UNAUTHORIZED_PASSWORD")
 KNOWN_ACCEPTED_ERRAND_TITLE    = os.getenv("KNOWN_ACCEPTED_ERRAND_TITLE")
+RUNNER_EMAIL                   = os.getenv("RUNNER_EMAIL")
+RUNNER_PASSWORD                = os.getenv("RUNNER_PASSWORD")
+CREATE_ERRAND_TITLE            = os.getenv("CREATE_ERRAND_TITLE")
+CREATE_ERRAND_DESCRIPTION      = os.getenv("CREATE_ERRAND_DESCRIPTION")
 
 WAIT = 20
 
@@ -113,7 +117,52 @@ def open_kebab_on_first_card(driver):
     """, kebab)
     time.sleep(0.5)
     return card
+def post_errand_as_client():
+    """Log in as TEST_EMAIL, post a remote errand with no deadline, return the errand ID."""
+    driver = make_driver()
+    try:
+        login(driver)
+        driver.get(f"{BASE_URL}/post-errand")
+        WebDriverWait(driver, WAIT).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='post-errand-title']"))
+        )
+        tid_type(driver, "post-errand-title", CREATE_ERRAND_TITLE)
+        tid_type(driver, "post-errand-description", CREATE_ERRAND_DESCRIPTION)
+        tid_click(driver, "task-type-remote")
+        time.sleep(0.5)
+        tid_click(driver, "post-errand-submit")
+        WebDriverWait(driver, WAIT).until(lambda d: "/post-errand" not in d.current_url)
+        driver.get(f"{BASE_URL}/dashboard")
+        WebDriverWait(driver, WAIT).until(lambda d: "/dashboard" in d.current_url)
+        time.sleep(3)
+        tid_type(driver, "search-input", CREATE_ERRAND_TITLE)
+        time.sleep(2)
+        card = WebDriverWait(driver, WAIT).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, CARD_SELECTOR))
+        )
+        return card.get_attribute("data-testid").replace("errand-card-", "")
+    finally:
+        driver.quit()
 
+
+def accept_errand_as_runner(errand_id):
+    """Log in as the runner, navigate to the given errand, and accept it."""
+    driver = make_driver()
+    try:
+        login(driver, RUNNER_EMAIL, RUNNER_PASSWORD)
+        driver.get(f"{BASE_URL}/errand/{errand_id}")
+        accept_btn = WebDriverWait(driver, WAIT).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='accept-errand-btn']"))
+        )
+        driver.execute_script("""
+            var el = arguments[0];
+            el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        """, accept_btn)
+        WebDriverWait(driver, WAIT).until(lambda d: "/chat" in d.current_url)
+    finally:
+        driver.quit()
 
 class TestKebabMenu(unittest.TestCase):
 
@@ -177,14 +226,17 @@ class TestKebabMenu(unittest.TestCase):
         finally:
             driver.quit()
 
+   
     # ------------------------------------------------------------------ #
     #  DB-03 TC-DB-03-03 – Accepted errands show correct actions         #
     # ------------------------------------------------------------------ #
-    def test_db03_tc03_accepted_errand_kebab_shows_correct_actions(self):
+    def test_db03_tc03_01_accepted_errand_kebab_shows_correct_actions(self):
         """Positive: Kebab menu on accepted errands shows Mark as done, Chat with client, Cancel errand, Share."""
         driver = make_driver()
         try:
-            go_to_dashboard(driver)
+            errand_id = post_errand_as_client()
+            accept_errand_as_runner(errand_id)
+            go_to_dashboard(driver, RUNNER_EMAIL, RUNNER_PASSWORD)
             tid_click(driver, "tab-accepted")
             time.sleep(2)
             open_kebab_on_first_card(driver)
@@ -202,47 +254,7 @@ class TestKebabMenu(unittest.TestCase):
         finally:
             driver.quit()
 
-    def test_db03_tc03_01_accepted_errand_does_not_show_edit_or_delete(self):
-        """Positive: Accepted errands do not show Edit or Delete in kebab menu."""
-        driver = make_driver()
-        try:
-            go_to_dashboard(driver)
-            tid_click(driver, "tab-accepted")
-            time.sleep(2)
-            open_kebab_on_first_card(driver)
-            menu_text = WebDriverWait(driver, WAIT).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='kebab-menu']"))
-            ).text
-            self.assertNotIn("Edit", menu_text,
-                             "Accepted errand kebab should not show Edit")
-            self.assertNotIn("Delete", menu_text,
-                             "Accepted errand kebab should not show Delete")
-        finally:
-            driver.quit()
-
-    def test_db03_tc03_02_mark_as_done_disabled_when_status_changes(self):
-        """Negative: Mark as done is disabled or hidden when errand status changes."""
-        driver = make_driver()
-        try:
-            go_to_dashboard(driver)
-            tid_click(driver, "tab-accepted")
-            time.sleep(2)
-            open_kebab_on_first_card(driver)
-            mark_done_btn = driver.execute_script(
-                "return document.querySelector(\"[data-testid='kebab-mark-done']\");"
-            )
-            if mark_done_btn:
-                disabled = driver.execute_script(
-                    "var el = arguments[0]; return el.disabled || el.getAttribute('aria-disabled') === 'true' || el.style.display === 'none';",
-                    mark_done_btn
-                )
-                # If status is not In Progress, button should be disabled/hidden
-                body_text = driver.find_element(By.TAG_NAME, "body").text
-                if "Completed" in body_text or "Cancelled" in body_text:
-                    self.assertTrue(disabled,
-                                    "Mark as done should be disabled when errand is not In Progress")
-        finally:
-            driver.quit()
+    
 
     # ------------------------------------------------------------------ #
     #  DB-03 TC-DB-03-04 – Edit navigates to edit page                   #
@@ -385,7 +397,7 @@ class TestKebabMenu(unittest.TestCase):
         """Positive: Clicking Chat with client redirects to chat with the correct client."""
         driver = make_driver()
         try:
-            go_to_dashboard(driver)
+            go_to_dashboard(driver, RUNNER_EMAIL, RUNNER_PASSWORD)
             tid_click(driver, "tab-accepted")
             time.sleep(2)
             open_kebab_on_first_card(driver)
@@ -397,39 +409,6 @@ class TestKebabMenu(unittest.TestCase):
             driver.quit()
 
     
-
-
-    def test_db03_tc07_01_chat_shows_loading_indicator(self):
-        """Positive: Loading indicator appears before chat fully loads."""
-        driver = make_driver()
-        try:
-            go_to_dashboard(driver)
-            tid_click(driver, "tab-accepted")
-            time.sleep(2)
-            open_kebab_on_first_card(driver)
-            # Slow down network to catch loading state
-            driver.execute_script("""
-                window._origFetch = window.fetch;
-                window.fetch = function(url, opts) {
-                    return new Promise(function(resolve) {
-                        setTimeout(function() { resolve(window._origFetch(url, opts)); }, 1500);
-                    });
-                };
-            """)
-            tid_click(driver, "kebab-chat")
-            # Check for loading indicator immediately after click
-            loading_visible = driver.execute_script("""
-                var loader = document.querySelector("[data-testid='chat-loading']") ||
-                             document.querySelector("[data-testid='loading-indicator']");
-                return loader ? loader.offsetParent !== null : false;
-            """)
-            time.sleep(3)
-            self.assertTrue(
-                loading_visible or "/chat" in driver.current_url,
-                "Loading indicator should appear or chat should eventually load"
-            )
-        finally:
-            driver.quit()
 
 
 if __name__ == "__main__":

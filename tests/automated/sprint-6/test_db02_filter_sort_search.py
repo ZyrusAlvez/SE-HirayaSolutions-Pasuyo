@@ -23,11 +23,12 @@ KNOWN_POSTED_ERRAND_TITLE = os.getenv("KNOWN_POSTED_ERRAND_TITLE")
 
 WAIT = 20
 
-# Matches only root card elements, excludes inner errand-card-* testIDs
+# Matches only root card elements (UUID testIDs), excludes all inner errand-card-* testIDs
 CARD_SELECTOR = (
     "[data-testid^='errand-card-']:not([data-testid='errand-card-status'])"
     ":not([data-testid='errand-card-title'])"
     ":not([data-testid='errand-card-description'])"
+    ":not([data-testid='errand-card-kebab'])"
 )
 
 
@@ -107,10 +108,10 @@ def card_query(driver, card, test_id):
 
 
 def card_text(driver, card, test_id):
-    """Return innerText of a data-testid element inside a card, or None if not found."""
+    """Return textContent of a data-testid element inside a card, or None if not found."""
     return driver.execute_script(
         "var el = arguments[0].querySelector(\"[data-testid='" + test_id + "']\"); "
-        "return el ? el.innerText : null;",
+        "return el ? el.textContent.trim() : null;",
         card
     )
 
@@ -197,7 +198,7 @@ class TestFilterSortSearch(unittest.TestCase):
             select_filter_option(driver, "filter-type", "Remote")
             cards = driver.find_elements(By.CSS_SELECTOR, CARD_SELECTOR)
             for card in cards:
-                type_text   = driver.execute_script("return arguments[0].innerText", card)
+                type_text   = driver.execute_script("return arguments[0].textContent", card)
                 status_text = card_text(driver, card, "errand-card-status")
                 title_text  = card_text(driver, card, "errand-card-title")
                 desc_el     = card_query(driver, card, "errand-card-description")
@@ -219,7 +220,7 @@ class TestFilterSortSearch(unittest.TestCase):
             select_filter_option(driver, "filter-type", "Onsite")
             cards = driver.find_elements(By.CSS_SELECTOR, CARD_SELECTOR)
             for card in cards:
-                type_text   = driver.execute_script("return arguments[0].innerText", card)
+                type_text   = driver.execute_script("return arguments[0].textContent", card)
                 status_text = card_text(driver, card, "errand-card-status")
                 title_text  = card_text(driver, card, "errand-card-title")
                 desc_el     = card_query(driver, card, "errand-card-description")
@@ -244,7 +245,7 @@ class TestFilterSortSearch(unittest.TestCase):
             time.sleep(1)
             cards = driver.find_elements(By.CSS_SELECTOR, CARD_SELECTOR)
             for card in cards:
-                type_text   = driver.execute_script("return arguments[0].innerText", card)
+                type_text   = driver.execute_script("return arguments[0].textContent", card)
                 title_text  = card_text(driver, card, "errand-card-title")
                 status_text = card_text(driver, card, "errand-card-status")
 
