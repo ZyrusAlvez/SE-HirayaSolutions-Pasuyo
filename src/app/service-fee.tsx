@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { View, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { getUnpaidServiceFeeTotal } from '@/controllers/serviceFeeController';
+import { getUnpaidServiceFeeTotal, getUserPaymentHistory } from '@/controllers/serviceFeeController';
+import type { ServiceFeePayment } from '@/controllers/serviceFeeController';
 import { useProfile } from '@/context/ProfileContext';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
@@ -12,11 +13,16 @@ export default function ServiceFeeScreen() {
   const { avatarUrl, verificationStatus } = useProfile();
   const [loading, setLoading] = useState(true);
   const [unpaidTotal, setUnpaidTotal] = useState(0);
+  const [payments, setPayments] = useState<ServiceFeePayment[]>([]);
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
-    getUnpaidServiceFeeTotal().then((result) => {
-      if (result.success) setUnpaidTotal(result.data);
+    Promise.all([
+      getUnpaidServiceFeeTotal(),
+      getUserPaymentHistory(),
+    ]).then(([totalResult, paymentsResult]) => {
+      if (totalResult.success) setUnpaidTotal(totalResult.data);
+      if (paymentsResult.success) setPayments(paymentsResult.data);
       setLoading(false);
     });
   }, []));
@@ -28,7 +34,7 @@ export default function ServiceFeeScreen() {
         {loading ? (
           <LoadingSpinner />
         ) : (
-          <ServiceFeeList isVerified={verificationStatus === 'verified'} unpaidTotal={unpaidTotal} />
+          <ServiceFeeList isVerified={verificationStatus === 'verified'} unpaidTotal={unpaidTotal} payments={payments} />
         )}
       </View>
       <NavBar />
