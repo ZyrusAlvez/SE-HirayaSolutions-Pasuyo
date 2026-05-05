@@ -7,6 +7,7 @@ import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDone
 import { getDisplayProfile } from '@/models/profileModel';
 import { insertErrandEvent, getErrandEvents } from '@/models/errandEventModel';
 import type { ErrandEvent } from '@/models/errandEventModel';
+import { checkServiceFeeLimit } from '@/controllers/serviceFeeController';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -218,6 +219,9 @@ export const acceptErrand = async (
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
   if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
   if (status === 'Completed') return { success: false, error: 'This errand has already been completed.' };
+
+  const limitCheck = await checkServiceFeeLimit();
+  if (!limitCheck.allowed) return { success: false, error: limitCheck.error! };
 
   try {
     const { data: { user } } = await errandModel.getUser();
