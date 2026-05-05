@@ -29,7 +29,7 @@ export default function ServiceFeeScreen() {
         {loading ? (
           <LoadingSpinner />
         ) : (
-          <ServiceFeeList errands={errands} emptyText="No unpaid service fees." />
+          <ServiceFeeList errands={errands} emptyText="No unpaid service fees." isVerified={verificationStatus === 'verified'} />
         )}
       </View>
       <NavBar />

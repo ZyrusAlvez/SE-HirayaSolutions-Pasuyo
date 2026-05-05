@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
 import type { ServiceFeeErrand } from '@/controllers/serviceFeeController';
 import ServiceFeeInfo from './ServiceFeeInfo';
+import ServiceFeeLimitBar from './ServiceFeeLimitBar';
 import ErrandHistoryModal from './ErrandHistoryModal';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
@@ -65,9 +66,10 @@ function FeeCard({ errand, onHistory }: { errand: ServiceFeeErrand; onHistory: (
 interface Props {
   errands: ServiceFeeErrand[];
   emptyText: string;
+  isVerified: boolean;
 }
 
-export default function ServiceFeeList({ errands, emptyText }: Props) {
+export default function ServiceFeeList({ errands, emptyText, isVerified }: Props) {
   const { width } = useWindowDimensions();
   const columns = width >= 1024 ? 3 : width >= 768 ? 2 : 1;
   const totalFees = errands.reduce((sum, e) => sum + e.serviceFee, 0);
@@ -77,13 +79,7 @@ export default function ServiceFeeList({ errands, emptyText }: Props) {
     <ScrollView showsVerticalScrollIndicator contentContainerStyle={{ padding: 20, paddingBottom: 32, maxWidth: 960, width: '100%', alignSelf: 'center' as const }}>
       <ServiceFeeInfo />
 
-      <View style={{
-        backgroundColor: '#FFFBEB', borderRadius: 12, padding: 14, marginBottom: 16,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#92400E' }}>Total Unpaid Fees</Text>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: '#D97706' }}>₱{totalFees.toLocaleString()}</Text>
-      </View>
+      <ServiceFeeLimitBar totalFees={totalFees} isVerified={isVerified} />
 
       {errands.length === 0 ? (
         <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
