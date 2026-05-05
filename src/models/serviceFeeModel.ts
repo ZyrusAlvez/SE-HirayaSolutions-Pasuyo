@@ -1,15 +1,5 @@
 import { supabase } from '@/utils/supabase';
 
-export type ServiceFeeErrand = {
-  id: string;
-  title: string;
-  budget: number;
-  serviceFee: number;
-  created_at: string;
-  poster_name?: string;
-  poster_avatar?: string;
-};
-
 export const getUser = () => supabase.auth.getUser();
 
 export const getCompletedAcceptedErrands = (userId: string) =>

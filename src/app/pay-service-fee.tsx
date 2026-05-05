@@ -5,14 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useProfile } from '@/context/ProfileContext';
 import Header from '@/view/components/Header';
-import { getServiceFeeErrands, submitServiceFeePayment, getUnpaidServiceFeeTotal } from '@/controllers/serviceFeeController';
-import type { ServiceFeeErrand } from '@/controllers/serviceFeeController';
+import { submitServiceFeePayment, getUnpaidServiceFeeTotal } from '@/controllers/serviceFeeController';
 import { toast } from '@/utils/toast';
 
 export default function PayServiceFeeScreen() {
   const router = useRouter();
   const { avatarUrl, verificationStatus } = useProfile();
-  const [errands, setErrands] = useState<ServiceFeeErrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [unpaidTotal, setUnpaidTotal] = useState(0);
   const [referenceNo, setReferenceNo] = useState('');
@@ -24,12 +22,8 @@ export default function PayServiceFeeScreen() {
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
-    Promise.all([
-      getServiceFeeErrands(),
-      getUnpaidServiceFeeTotal(),
-    ]).then(([errandsResult, totalResult]) => {
-      if (errandsResult.success) setErrands(errandsResult.data);
-      if (totalResult.success) setUnpaidTotal(totalResult.data);
+    getUnpaidServiceFeeTotal().then((result) => {
+      if (result.success) setUnpaidTotal(result.data);
       setLoading(false);
     });
   }, []));

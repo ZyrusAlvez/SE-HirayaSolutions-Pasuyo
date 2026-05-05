@@ -14,8 +14,6 @@ export type ServiceFeePayment = {
   reviewed_by: string | null;
 };
 
-export const getUser = () => supabase.auth.getUser();
-
 export const uploadReceipt = async (userId: string, uri: string): Promise<string> => {
   const fileName = `${userId}/${Date.now()}.jpg`;
 
@@ -55,12 +53,3 @@ export const getUserPayments = (userId: string) =>
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
-
-export const getApprovedPaymentsTotal = async (userId: string): Promise<number> => {
-  const { data } = await supabase
-    .from('service_fee_payments')
-    .select('amount')
-    .eq('user_id', userId)
-    .eq('status', 'approved');
-  return (data ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
-};
