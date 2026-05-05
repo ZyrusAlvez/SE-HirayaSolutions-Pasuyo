@@ -21,3 +21,10 @@ export const getUnpaidAcceptedErrands = (userId: string) =>
     .eq('status', 'Completed')
     .eq('service_fee_paid', false)
     .order('created_at', { ascending: false });
+
+export const getProfileVerification = (userId: string) =>
+  supabase
+    .from('profiles')
+    .select('verified')
+    .eq('id', userId)
+    .single();
