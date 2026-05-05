@@ -1,5 +1,5 @@
-import { View, Text, Image, TouchableOpacity, Animated } from 'react-native';
-import { useState, useRef, useCallback } from 'react';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import type { ServiceFeePayment } from '@/controllers/serviceFeeController';
 import ImageViewer from '@/view/components/ImageViewer';
@@ -12,30 +12,15 @@ const STATUS_CONFIG = {
 
 function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
   const [expanded, setExpanded] = useState(false);
-  const [contentHeight, setContentHeight] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
-  const anim = useRef(new Animated.Value(0)).current;
   const config = STATUS_CONFIG[payment.status];
   const date = new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const time = new Date(payment.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
-  const toggle = () => {
-    const toValue = expanded ? 0 : 1;
-    setExpanded(!expanded);
-    Animated.timing(anim, { toValue, duration: 250, useNativeDriver: false }).start();
-  };
-
-  const onLayout = useCallback((e: any) => {
-    const h = e.nativeEvent.layout.height;
-    if (h > 0) setContentHeight(h);
-  }, []);
-
-  const animatedHeight = anim.interpolate({ inputRange: [0, 1], outputRange: [0, contentHeight || 200] });
-  const animatedOpacity = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
-
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={toggle} style={{ backgroundColor: 'white', borderRadius: 12, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 3, elevation: 1 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+    <View style={{ backgroundColor: 'white', borderRadius: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 3, elevation: 1 }}>
+      {/* Header */}
+      <TouchableOpacity activeOpacity={0.7} onPress={() => setExpanded(v => !v)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 }}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>₱{Number(payment.amount).toLocaleString()}</Text>
           <Text style={{ fontSize: 11, color: '#9CA3AF' }}>{date} · {time}</Text>
@@ -46,10 +31,11 @@ function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
           </View>
           <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#9CA3AF" />
         </View>
-      </View>
+      </TouchableOpacity>
 
-      <Animated.View style={{ height: animatedHeight, opacity: animatedOpacity }}>
-        <View onLayout={onLayout} style={{ paddingTop: 12, marginTop: 12, paddingBottom: 4, borderTopWidth: 1, borderTopColor: '#F3F4F6', gap: 8 }}>
+      {/* Details */}
+      {expanded && (
+        <View style={{ paddingHorizontal: 14, paddingBottom: 14, gap: 10, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text style={{ fontSize: 11, color: '#6B7280' }}>Amount</Text>
             <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827' }}>₱{Number(payment.amount).toLocaleString()}</Text>
@@ -65,14 +51,14 @@ function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
             <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827' }}>{date} · {time}</Text>
           </View>
 
-          {payment.reviewed_at && (
+          {payment.reviewed_at ? (
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ fontSize: 11, color: '#6B7280' }}>Reviewed</Text>
               <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827' }}>
                 {new Date(payment.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · {new Date(payment.reviewed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
               </Text>
             </View>
-          )}
+          ) : null}
 
           {payment.admin_note ? (
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -90,7 +76,7 @@ function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
             </View>
           ) : null}
         </View>
-      </Animated.View>
+      )}
 
       {payment.screenshot_url ? (
         <ImageViewer
@@ -100,7 +86,7 @@ function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
           onIndexChange={() => {}}
         />
       ) : null}
-    </TouchableOpacity>
+    </View>
   );
 }
 
