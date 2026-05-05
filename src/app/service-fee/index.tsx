@@ -6,7 +6,6 @@ import type { ServiceFeePayment } from '@/controllers/serviceFeeController';
 import { useProfile } from '@/context/ProfileContext';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
-import LoadingSpinner from '@/view/components/LoadingSpinner';
 import ServiceFeeList from '@/view/presentation/service-fee/ServiceFeeList';
 
 export default function ServiceFeeScreen() {
@@ -31,11 +30,7 @@ export default function ServiceFeeScreen() {
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       <Header avatarUrl={avatarUrl} verificationStatus={verificationStatus} />
       <View style={[{ flex: 1 }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
-          <ServiceFeeList isVerified={verificationStatus === 'verified'} unpaidTotal={unpaidTotal} payments={payments} />
-        )}
+        <ServiceFeeList isVerified={verificationStatus === 'verified'} unpaidTotal={unpaidTotal} payments={payments} loading={loading} />
       </View>
       <NavBar />
     </View>

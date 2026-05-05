@@ -3,14 +3,16 @@ import { useRouter } from 'expo-router';
 import type { ServiceFeePayment } from '@/controllers/serviceFeeController';
 import ServiceFeeLimitBar from './ServiceFeeLimitBar';
 import PaymentHistory from './PaymentHistory';
+import { LimitBarSkeleton, PaymentHistorySkeleton } from './SkeletonLoading';
 
 interface Props {
   isVerified: boolean;
   unpaidTotal: number;
   payments: ServiceFeePayment[];
+  loading: boolean;
 }
 
-export default function ServiceFeeList({ isVerified, unpaidTotal, payments }: Props) {
+export default function ServiceFeeList({ isVerified, unpaidTotal, payments, loading }: Props) {
   const router = useRouter();
 
   return (
@@ -23,15 +25,15 @@ export default function ServiceFeeList({ isVerified, unpaidTotal, payments }: Pr
           </TouchableOpacity>
         </View>
 
-        <ServiceFeeLimitBar totalFees={unpaidTotal} isVerified={isVerified} />
+        {loading ? <LimitBarSkeleton /> : <ServiceFeeLimitBar totalFees={unpaidTotal} isVerified={isVerified} />}
 
         <View style={{ marginTop: 16 }}>
-          <PaymentHistory payments={payments} />
+          {loading ? <PaymentHistorySkeleton /> : <PaymentHistory payments={payments} />}
         </View>
       </ScrollView>
 
-      {/* Floating pay button */}
-      {unpaidTotal > 0 && (
+      {/* Floating pay button — only show when loaded and has fees */}
+      {!loading && unpaidTotal > 0 && (
         <View style={{ position: 'absolute', bottom: 20, left: 20, right: 20, alignItems: 'center' }}>
           <TouchableOpacity
             activeOpacity={0.7}
