@@ -20,7 +20,7 @@ export default function ServiceFeeLimitBar({ totalFees, isVerified }: Props) {
   const textColor = ratio >= 1 ? '#991B1B' : ratio >= 0.75 ? '#92400E' : '#065F46';
 
   return (
-    <View style={{ backgroundColor: 'white', borderRadius: 14, padding: 14, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 }}>
+    <View style={{ backgroundColor: 'white', borderRadius: 14, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 }}>
       {/* Header */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
