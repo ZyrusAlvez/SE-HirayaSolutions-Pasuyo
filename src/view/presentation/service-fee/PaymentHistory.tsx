@@ -2,6 +2,7 @@ import { View, Text, Image, TouchableOpacity, Animated } from 'react-native';
 import { useState, useRef, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import type { ServiceFeePayment } from '@/controllers/serviceFeeController';
+import ImageViewer from '@/view/components/ImageViewer';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#F59E0B', bg: '#FFFBEB' },
@@ -12,6 +13,7 @@ const STATUS_CONFIG = {
 function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
   const [expanded, setExpanded] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const anim = useRef(new Animated.Value(0)).current;
   const config = STATUS_CONFIG[payment.status];
   const date = new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -25,8 +27,8 @@ function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
 
   const onLayout = useCallback((e: any) => {
     const h = e.nativeEvent.layout.height;
-    if (h > 0 && h !== contentHeight) setContentHeight(h);
-  }, [contentHeight]);
+    if (h > 0) setContentHeight(h);
+  }, []);
 
   const animatedHeight = anim.interpolate({ inputRange: [0, 1], outputRange: [0, contentHeight || 200] });
   const animatedOpacity = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
@@ -46,30 +48,58 @@ function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
         </View>
       </View>
 
-      <Animated.View style={{ height: animatedHeight, opacity: animatedOpacity, overflow: 'hidden' }}>
-        <View onLayout={onLayout} style={{ paddingTop: 12, marginTop: 12, borderTopWidth: 1, borderTopColor: '#F3F4F6', gap: 8 }}>
+      <Animated.View style={{ height: animatedHeight, opacity: animatedOpacity }}>
+        <View onLayout={onLayout} style={{ paddingTop: 12, marginTop: 12, paddingBottom: 4, borderTopWidth: 1, borderTopColor: '#F3F4F6', gap: 8 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 11, color: '#6B7280' }}>Amount</Text>
+            <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827' }}>₱{Number(payment.amount).toLocaleString()}</Text>
+          </View>
+
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text style={{ fontSize: 11, color: '#6B7280' }}>Reference No.</Text>
             <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827' }}>{payment.reference_no}</Text>
           </View>
 
-          {payment.screenshot_url && (
-            <Image source={{ uri: payment.screenshot_url }} style={{ width: '100%', height: 160, borderRadius: 8, marginTop: 4 }} resizeMode="cover" />
-          )}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 11, color: '#6B7280' }}>Submitted</Text>
+            <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827' }}>{date} · {time}</Text>
+          </View>
 
-          {payment.status === 'rejected' && payment.admin_note && (
-            <View style={{ backgroundColor: '#FEF2F2', borderRadius: 8, padding: 10, marginTop: 4 }}>
-              <Text style={{ fontSize: 11, color: '#991B1B' }}>Reason: {payment.admin_note}</Text>
+          {payment.reviewed_at && (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 11, color: '#6B7280' }}>Reviewed</Text>
+              <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827' }}>
+                {new Date(payment.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · {new Date(payment.reviewed_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              </Text>
             </View>
           )}
 
-          {payment.reviewed_at && (
-            <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>
-              Reviewed {new Date(payment.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </Text>
-          )}
+          {payment.admin_note ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 11, color: '#6B7280' }}>Note</Text>
+              <Text style={{ fontSize: 12, fontWeight: '500', color: '#111827', flex: 1, textAlign: 'right', marginLeft: 12 }}>{payment.admin_note}</Text>
+            </View>
+          ) : null}
+
+          {payment.screenshot_url ? (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, color: '#6B7280' }}>Receipt</Text>
+              <TouchableOpacity activeOpacity={0.8} onPress={() => setViewerOpen(true)}>
+                <Image source={{ uri: payment.screenshot_url }} style={{ width: 48, height: 48, borderRadius: 6 }} resizeMode="cover" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
       </Animated.View>
+
+      {payment.screenshot_url ? (
+        <ImageViewer
+          images={[payment.screenshot_url]}
+          activeIndex={viewerOpen ? 0 : null}
+          onClose={() => setViewerOpen(false)}
+          onIndexChange={() => {}}
+        />
+      ) : null}
     </TouchableOpacity>
   );
 }
