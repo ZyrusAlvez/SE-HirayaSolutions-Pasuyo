@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { View, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { getServiceFeeErrands } from '@/controllers/serviceFeeController';
+import { getServiceFeeErrands, getUnpaidServiceFeeTotal } from '@/controllers/serviceFeeController';
 import type { ServiceFeeErrand } from '@/controllers/serviceFeeController';
 import { useProfile } from '@/context/ProfileContext';
 import Header from '@/view/components/Header';
@@ -13,11 +13,16 @@ export default function ServiceFeeScreen() {
   const { avatarUrl, verificationStatus } = useProfile();
   const [errands, setErrands] = useState<ServiceFeeErrand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unpaidTotal, setUnpaidTotal] = useState(0);
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
-    getServiceFeeErrands().then((result) => {
-      if (result.success) setErrands(result.data);
+    Promise.all([
+      getServiceFeeErrands(),
+      getUnpaidServiceFeeTotal(),
+    ]).then(([errandsResult, totalResult]) => {
+      if (errandsResult.success) setErrands(errandsResult.data);
+      if (totalResult.success) setUnpaidTotal(totalResult.data);
       setLoading(false);
     });
   }, []));
@@ -29,7 +34,7 @@ export default function ServiceFeeScreen() {
         {loading ? (
           <LoadingSpinner />
         ) : (
-          <ServiceFeeList errands={errands} emptyText="No unpaid service fees." isVerified={verificationStatus === 'verified'} />
+          <ServiceFeeList errands={errands} emptyText="No unpaid service fees." isVerified={verificationStatus === 'verified'} unpaidTotal={unpaidTotal} />
         )}
       </View>
       <NavBar />

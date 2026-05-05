@@ -9,17 +9,17 @@ interface Props {
   errands: ServiceFeeErrand[];
   emptyText: string;
   isVerified: boolean;
+  unpaidTotal: number;
 }
 
-export default function ServiceFeeList({ errands, emptyText, isVerified }: Props) {
+export default function ServiceFeeList({ errands, emptyText, isVerified, unpaidTotal }: Props) {
   const router = useRouter();
-  const totalFees = errands.reduce((sum, e) => sum + e.serviceFee, 0);
 
   return (
     <ScrollView showsVerticalScrollIndicator contentContainerStyle={{ padding: 20, paddingBottom: 32, maxWidth: 960, width: '100%', alignSelf: 'center' as const }}>
       <ServiceFeeInfo />
 
-      <ServiceFeeLimitBar totalFees={totalFees} isVerified={isVerified} onPay={() => router.push('/pay-service-fee')} />
+      <ServiceFeeLimitBar totalFees={unpaidTotal} isVerified={isVerified} onPay={() => router.push('/pay-service-fee')} />
 
       {errands.length === 0 ? (
         <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
