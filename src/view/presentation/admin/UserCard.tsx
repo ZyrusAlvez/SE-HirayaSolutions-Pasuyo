@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
 import VerificationBadge from '../../components/VerificationBadge';
+import KebabMenu from '../../components/KebabMenu';
 
 export interface UserProfile {
   id: string;
@@ -56,7 +56,11 @@ export default function UserCard({ user }: Props) {
           </View>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
+      <KebabMenu actions={[
+        { label: 'More info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/user/${user.id}`) },
+        { label: 'Suspend', icon: 'ban-outline', onPress: () => {} },
+        { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => {} },
+      ]} />
     </TouchableOpacity>
   );
 }
