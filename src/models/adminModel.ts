@@ -150,6 +150,13 @@ export const getUserMessages = (userId: string) =>
     .eq('sender_id', userId)
     .order('created_at', { ascending: false });
 
+export const getUserReports = (userId: string) =>
+  getAdmin()
+    .from('reports')
+    .select('id, reason, created_at')
+    .eq('reporter_id', userId)
+    .order('created_at', { ascending: false });
+
 export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
 

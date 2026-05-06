@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, Platform } from 'react
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getUserDetail, UserDetail } from '../../../controllers/adminController';
-import { getUserErrands, getUserAcceptedErrands, getUserErrandEvents, getUserMessages } from '../../../models/adminModel';
+import { getUserErrands, getUserAcceptedErrands, getUserErrandEvents, getUserMessages, getUserReports } from '../../../models/adminModel';
 import VerificationBadge from '../../../view/components/VerificationBadge';
 
 const DEFAULT_AVATAR = require('../../../assets/images/default_profile.jpg');
@@ -30,6 +30,7 @@ const EVENT_CONFIG: Record<string, { label: string; icon: string; color: string 
   marked_done: { label: 'Marked errand as done', icon: 'checkmark-done-outline', color: '#8B5CF6' },
   reviewed: { label: 'Left a review', icon: 'star-outline', color: '#F59E0B' },
   message_sent: { label: 'Sent a message', icon: 'chatbubble-outline', color: '#8B5CF6' },
+  reported: { label: 'Reported a user', icon: 'flag-outline', color: '#DC2626' },
 };
 
 export default function UserDetailScreen() {
@@ -51,12 +52,13 @@ export default function UserDetailScreen() {
       getUserAcceptedErrands(id),
       getUserErrandEvents(id),
       getUserMessages(id),
-    ]).then(([userResult, postedResult, acceptedResult, eventsResult, msgResult]) => {
+      getUserReports(id),
+    ]).then(([userResult, postedResult, acceptedResult, eventsResult, msgResult, reportsResult]) => {
       if (userResult.success && userResult.data) setUser(userResult.data);
       if (postedResult.data) setPostedErrands(postedResult.data as UserErrand[]);
       if (acceptedResult.data) setAcceptedErrands(acceptedResult.data as UserErrand[]);
 
-      // Merge errand events + messages into a single timeline
+      // Merge errand events + messages + reports into a single timeline
       const errandItems: ActivityItem[] = (eventsResult.data ?? []).map((e: any) => ({
         id: e.id,
         type: e.event_type,
@@ -68,7 +70,13 @@ export default function UserDetailScreen() {
         type: 'message_sent',
         created_at: m.created_at,
       }));
-      const merged = [...errandItems, ...msgItems].sort(
+      const reportItems: ActivityItem[] = (reportsResult.data ?? []).map((r: any) => ({
+        id: r.id,
+        type: 'reported',
+        metadata: { reason: r.reason },
+        created_at: r.created_at,
+      }));
+      const merged = [...errandItems, ...msgItems, ...reportItems].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       setEvents(merged);
@@ -141,6 +149,7 @@ export default function UserDetailScreen() {
             <StatCard label="Cancelled" count={cancelledCount} icon="close-circle-outline" color="#EF4444" />
             <StatCard label="Done" count={events.filter(e => e.type === 'marked_done').length} icon="checkmark-done-outline" color="#8B5CF6" />
             <StatCard label="Reviews" count={events.filter(e => e.type === 'reviewed').length} icon="star-outline" color="#F59E0B" />
+            <StatCard label="Reports" count={events.filter(e => e.type === 'reported').length} icon="flag-outline" color="#DC2626" />
             <StatCard label="Messages" count={messageCount} icon="chatbubble-outline" color="#8B5CF6" />
           </View>
         </View>
@@ -154,7 +163,7 @@ export default function UserDetailScreen() {
             events.map((event, i) => {
               const config = EVENT_CONFIG[event.type] ?? { label: event.type, icon: 'ellipse-outline', color: '#6B7280' };
               const date = new Date(event.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-              const title = event.metadata?.title;
+              const title = event.metadata?.title || event.metadata?.reason;
               return (
                 <View key={event.id} style={{ flexDirection: 'row', gap: 10, paddingVertical: 10, borderBottomWidth: i < events.length - 1 ? 1 : 0, borderBottomColor: '#F9FAFB' }}>
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: config.color + '1A', alignItems: 'center', justifyContent: 'center' }}>
