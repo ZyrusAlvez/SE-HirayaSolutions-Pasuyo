@@ -138,16 +138,17 @@ export const getUserAcceptedErrands = (userId: string) =>
 
 export const getUserErrandEvents = (userId: string) =>
   getAdmin()
-    .from('errand_events')
+    .from('activity_log')
     .select('id, errand_id, event_type, metadata, created_at')
     .eq('actor_id', userId)
     .order('created_at', { ascending: false });
 
-export const getUserMessageCount = (userId: string) =>
+export const getUserMessages = (userId: string) =>
   getAdmin()
     .from('messages')
-    .select('id', { count: 'exact', head: true })
-    .eq('sender_id', userId);
+    .select('id, created_at', { count: 'exact' })
+    .eq('sender_id', userId)
+    .order('created_at', { ascending: false });
 
 export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
