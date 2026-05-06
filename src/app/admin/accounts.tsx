@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getUsers, FullUserProfile } from '../../controllers/adminController';
-import { logout } from '../../controllers/authController';
-import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 import UserCard from '../../view/presentation/admin/UserCard';
 import VerificationCard, { PendingUser } from '../../view/presentation/admin/VerificationCard';
 
@@ -71,15 +69,6 @@ export default function AdminAccountsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6 flex-row items-center justify-between`}>
-        <View>
-          <Text className="text-xl font-bold text-gray-900">User Accounts</Text>
-          <Text className="text-xs text-gray-400 mt-0.5">{users.length} total users</Text>
-        </View>
-        <TouchableOpacity onPress={() => logout()} activeOpacity={0.7} style={{ padding: 8 }}>
-          <Ionicons name="log-out-outline" size={24} color="#9CA3AF" />
-        </TouchableOpacity>
-      </View>
 
       <View style={{ flex: 1, padding: 16, gap: 12 }}>
         <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-3 gap-2">
@@ -137,7 +126,6 @@ export default function AdminAccountsScreen() {
         )}
       </View>
 
-      <AdminNavBar />
     </View>
   );
 }

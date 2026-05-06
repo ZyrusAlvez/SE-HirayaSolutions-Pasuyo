@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Platform, RefreshControl } from 'react-native';
+import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getLogs, getLogsSubscription, removeLogsSubscription, LogEntry } from '../../controllers/adminController';
-import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 
 const ACCENT = '#FEA405';
 
@@ -55,12 +54,6 @@ export default function AdminLogsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6 flex-row items-center justify-between`}>
-        <View>
-          <Text className="text-xl font-bold text-gray-900">Action Logs</Text>
-          <Text className="text-xs text-gray-400 mt-0.5">{logs.length} total entries</Text>
-        </View>
-      </View>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -83,7 +76,6 @@ export default function AdminLogsScreen() {
         />
       )}
 
-      <AdminNavBar />
     </View>
   );
 }

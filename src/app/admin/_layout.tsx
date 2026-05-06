@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { supabase } from '../../utils/supabase';
+import AdminHeader from '../../view/presentation/admin/AdminHeader';
 
 export default function AdminLayout() {
   const router = useRouter();
@@ -24,5 +26,10 @@ export default function AdminLayout() {
 
   if (checking) return null;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      <AdminHeader />
+      <Stack screenOptions={{ headerShown: false }} />
+    </View>
+  );
 }

@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl, ScrollView } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getErrands, Errand } from '../../controllers/adminController';
-import { logout } from '../../controllers/authController';
-import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 import ErrandCard from '../../view/presentation/admin/ErrandCard';
 
 const ACCENT = '#FEA405';
@@ -51,15 +49,6 @@ export default function AdminErrandsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6 flex-row items-center justify-between`}>
-        <View>
-          <Text className="text-xl font-bold text-gray-900">Errands</Text>
-          <Text className="text-xs text-gray-400 mt-0.5">{errands.length} total errands</Text>
-        </View>
-        <TouchableOpacity onPress={() => logout()} activeOpacity={0.7} style={{ padding: 8 }}>
-          <Ionicons name="log-out-outline" size={24} color="#9CA3AF" />
-        </TouchableOpacity>
-      </View>
 
       <View style={{ flex: 1, padding: 16 }}>
         {loading ? (
@@ -115,7 +104,6 @@ export default function AdminErrandsScreen() {
         )}
       </View>
 
-      <AdminNavBar />
     </View>
   );
 }
