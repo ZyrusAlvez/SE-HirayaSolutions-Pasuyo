@@ -1,6 +1,6 @@
 import { supabase } from '@/utils/supabase';
 
-export type ErrandEventType = 'posted' | 'accepted' | 'cancelled' | 'marked_done' | 'reviewed';
+export type ErrandEventType = 'posted' | 'accepted' | 'cancelled' | 'marked_done' | 'reviewed' | 'edited_errand' | 'deleted_errand';
 
 export type ErrandEvent = {
   id: string;
@@ -12,7 +12,7 @@ export type ErrandEvent = {
 };
 
 export const insertErrandEvent = (
-  errandId: string,
+  errandId: string | null,
   actorId: string,
   eventType: ErrandEventType,
   metadata: Record<string, any> = {},

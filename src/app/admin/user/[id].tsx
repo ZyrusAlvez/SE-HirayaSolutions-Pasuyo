@@ -31,6 +31,8 @@ const EVENT_CONFIG: Record<string, { label: string; icon: string; color: string 
   reviewed: { label: 'Left a review', icon: 'star-outline', color: '#F59E0B' },
   message_sent: { label: 'Sent a message', icon: 'chatbubble-outline', color: '#8B5CF6' },
   reported: { label: 'Reported a user', icon: 'flag-outline', color: '#DC2626' },
+  edited_errand: { label: 'Edited an errand', icon: 'create-outline', color: '#F59E0B' },
+  deleted_errand: { label: 'Deleted an errand', icon: 'trash-outline', color: '#EF4444' },
 };
 
 export default function UserDetailScreen() {
@@ -164,6 +166,7 @@ export default function UserDetailScreen() {
               const config = EVENT_CONFIG[event.type] ?? { label: event.type, icon: 'ellipse-outline', color: '#6B7280' };
               const date = new Date(event.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
               const title = event.metadata?.title || event.metadata?.reason;
+              const changes = event.metadata?.changes as Record<string, { from: any; to: any }> | undefined;
               return (
                 <View key={event.id} style={{ flexDirection: 'row', gap: 10, paddingVertical: 10, borderBottomWidth: i < events.length - 1 ? 1 : 0, borderBottomColor: '#F9FAFB' }}>
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: config.color + '1A', alignItems: 'center', justifyContent: 'center' }}>
@@ -172,6 +175,11 @@ export default function UserDetailScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 12, fontWeight: '500', color: '#1F2937' }}>{config.label}</Text>
                     {title && <Text style={{ fontSize: 11, color: '#6B7280' }} numberOfLines={1}>{title}</Text>}
+                    {changes && Object.entries(changes).map(([key, { from, to }]) => (
+                      <Text key={key} style={{ fontSize: 10, color: '#9CA3AF' }}>
+                        {key}: "{from ?? '—'}" → "{to ?? '—'}"
+                      </Text>
+                    ))}
                     <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{date}</Text>
                   </View>
                 </View>
