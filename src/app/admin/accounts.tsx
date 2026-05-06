@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
 import { getUsers, FullUserProfile } from '../../controllers/adminController';
@@ -8,6 +8,7 @@ import VerificationCard, { PendingUser } from '../../view/presentation/admin/Ver
 import Dropdown from '../../view/components/Dropdown';
 
 const ACCENT = '#FEA405';
+const WIDE_BREAKPOINT = 900;
 
 type FilterKey = 'All' | 'Verified' | 'Unverified' | 'Pending' | 'Suspended';
 type SortKey = 'newest' | 'oldest';
@@ -23,6 +24,7 @@ const SORT_ICONS: Record<string, string> = { newest: 'arrow-down-outline', oldes
 
 export default function AdminAccountsScreen() {
   const { width } = useWindowDimensions();
+  const wide = width >= WIDE_BREAKPOINT;
   const [users, setUsers] = useState<FullUserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -78,7 +80,7 @@ export default function AdminAccountsScreen() {
     return list;
   }, [users, search, filter, sort]);
 
-  const chartWidth = Math.min(width - 48, 360);
+  const chartWidth = wide ? 280 : Math.min(width - 48, 360);
 
   const pieData = [
     { name: 'Verified', count: verifiedCount, color: '#22C55E', legendFontColor: '#374151', legendFontSize: 12 },
@@ -92,9 +94,29 @@ export default function AdminAccountsScreen() {
 
   const toggle = (id: string) => setOpenDropdown(prev => prev === id ? null : id);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      {/* Search & Filter bar - outside FlatList so dropdowns aren't clipped */}
+  const chartsPanel = users.length > 0 ? (
+    <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#F3F4F6', alignItems: 'center' }}>
+      <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
+        Accounts Overview
+      </Text>
+      <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 8 }}>
+        {verifiedCount} verified · {unverifiedCount} unverified · {users.length} total
+      </Text>
+      <PieChart
+        data={pieData}
+        width={chartWidth}
+        height={180}
+        chartConfig={chartConfig}
+        accessor="count"
+        backgroundColor="transparent"
+        paddingLeft="16"
+      />
+    </View>
+  ) : null;
+
+  const listPanel = (
+    <View style={{ flex: 1 }}>
+      {/* Search & Filter */}
       <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 12, zIndex: 100 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
           <Ionicons name="search-outline" size={18} color="#9CA3AF" />
@@ -148,7 +170,7 @@ export default function AdminAccountsScreen() {
         </View>
       </View>
 
-      {/* List */}
+      {/* User list */}
       <FlatList
         data={filtered}
         keyExtractor={item => item.id}
@@ -159,27 +181,7 @@ export default function AdminAccountsScreen() {
         contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
-        ListHeaderComponent={
-          users.length > 0 ? (
-            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#F3F4F6', alignItems: 'center', marginBottom: 8 }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
-                Accounts Overview
-              </Text>
-              <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 8 }}>
-                {verifiedCount} verified · {unverifiedCount} unverified · {users.length} total
-              </Text>
-              <PieChart
-                data={pieData}
-                width={chartWidth}
-                height={180}
-                chartConfig={chartConfig}
-                accessor="count"
-                backgroundColor="transparent"
-                paddingLeft="16"
-              />
-            </View>
-          ) : null
-        }
+        ListHeaderComponent={!wide ? chartsPanel : null}
         ListEmptyComponent={
           loading ? (
             <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
@@ -193,6 +195,23 @@ export default function AdminAccountsScreen() {
           )
         }
       />
+    </View>
+  );
+
+  return (
+    <View style={[{ flex: 1, backgroundColor: '#F9FAFB' }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
+      {wide ? (
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          {/* Left - List */}
+          {listPanel}
+          {/* Right - Charts */}
+          <View style={{ width: 340, padding: 16, gap: 16 }}>
+            {chartsPanel}
+          </View>
+        </View>
+      ) : (
+        listPanel
+      )}
     </View>
   );
 }
