@@ -74,7 +74,10 @@ export interface AnalyticsData {
 }
 
 const getAdmin = () => {
-  if (!supabaseAdmin) throw new Error('Admin client not available');
+  if (!supabaseAdmin) {
+    console.error('[adminModel] supabaseAdmin is null — EXPO_PUBLIC_SERVICE_ROLE_KEY missing');
+    throw new Error('Admin client not available');
+  }
   return supabaseAdmin;
 };
 
