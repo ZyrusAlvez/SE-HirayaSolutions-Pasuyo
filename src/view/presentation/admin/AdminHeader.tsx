@@ -1,5 +1,7 @@
-import { View, TouchableOpacity, Image, Text, Platform, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, TouchableOpacity, Image, Text, Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { logout } from '@/controllers/authController';
 
 const NAV_ITEMS = [
@@ -12,11 +14,38 @@ const NAV_ITEMS = [
 ] as const;
 
 const ACCENT = '#FEA405';
+const BREAKPOINT = 900;
 
 export default function AdminHeader() {
   const router = useRouter();
   const segments = useSegments();
   const currentRoute = '/' + segments.join('/');
+  const { width } = useWindowDimensions();
+  const compact = width < BREAKPOINT;
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navItems = (
+    <>
+      {NAV_ITEMS.map(item => {
+        const active = currentRoute === item.route;
+        return (
+          <TouchableOpacity
+            key={item.route}
+            onPress={() => { router.push(item.route as any); setMenuOpen(false); }}
+            activeOpacity={0.7}
+            style={compact && styles.menuItem}
+          >
+            <Text style={[styles.navText, active && styles.navTextActive]}>
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+      <TouchableOpacity onPress={() => logout()} activeOpacity={0.7} style={compact && styles.menuItem}>
+        <Text style={[styles.navText, { color: '#EF4444' }]}>Sign out</Text>
+      </TouchableOpacity>
+    </>
+  );
 
   return (
     <View style={[styles.container, Platform.OS !== 'web' && { paddingTop: 48 }]}>
@@ -29,26 +58,17 @@ export default function AdminHeader() {
           />
           <Text style={styles.title}>Admin Dashboard</Text>
         </View>
-        <View style={styles.nav}>
-          {NAV_ITEMS.map(item => {
-            const active = currentRoute === item.route;
-            return (
-              <TouchableOpacity
-                key={item.route}
-                onPress={() => router.push(item.route as any)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.navText, active && styles.navTextActive]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-          <TouchableOpacity onPress={() => logout()} activeOpacity={0.7}>
-            <Text style={[styles.navText, { color: '#EF4444' }]}>Sign out</Text>
+        {compact ? (
+          <TouchableOpacity onPress={() => setMenuOpen(v => !v)} activeOpacity={0.7}>
+            <Ionicons name={menuOpen ? 'close' : 'menu'} size={24} color="#374151" />
           </TouchableOpacity>
-        </View>
+        ) : (
+          <View style={styles.nav}>{navItems}</View>
+        )}
       </View>
+      {compact && menuOpen && (
+        <View style={styles.dropdown}>{navItems}</View>
+      )}
     </View>
   );
 }
@@ -60,6 +80,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F3F4F6',
     paddingTop: 8,
     paddingBottom: 12,
+    zIndex: 50,
   },
   inner: {
     flexDirection: 'row',
@@ -76,9 +97,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '400',
     color: '#111827',
+    marginTop: 14,
   },
   nav: {
     flexDirection: 'row',
@@ -93,5 +115,15 @@ const styles = StyleSheet.create({
   navTextActive: {
     color: ACCENT,
     fontWeight: '700',
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  menuItem: {
+    paddingVertical: 10,
   },
 });
