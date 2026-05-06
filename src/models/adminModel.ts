@@ -122,6 +122,33 @@ export const getAdminLogsSubscription = (callback: () => void) =>
 export const removeLogsSubscription = (channel: ReturnType<typeof getAdminLogsSubscription>) =>
   getAdmin().removeChannel(channel);
 
+export const getUserErrands = (userId: string) =>
+  getAdmin()
+    .from('errands')
+    .select('id, title, status, created_at, budget')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+export const getUserAcceptedErrands = (userId: string) =>
+  getAdmin()
+    .from('errands')
+    .select('id, title, status, created_at, budget')
+    .eq('accepted_by', userId)
+    .order('created_at', { ascending: false });
+
+export const getUserErrandEvents = (userId: string) =>
+  getAdmin()
+    .from('errand_events')
+    .select('id, errand_id, event_type, metadata, created_at')
+    .eq('actor_id', userId)
+    .order('created_at', { ascending: false });
+
+export const getUserMessageCount = (userId: string) =>
+  getAdmin()
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('sender_id', userId);
+
 export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
 

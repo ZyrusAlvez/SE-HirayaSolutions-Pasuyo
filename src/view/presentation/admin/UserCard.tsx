@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
 import VerificationBadge from '../../components/VerificationBadge';
@@ -29,9 +29,7 @@ export default function UserCard({ user }: Props) {
   });
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => router.push(`/admin/user/${user.id}`)}
+    <View
       className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-3 border border-gray-100"
     >
       <Image
@@ -60,6 +58,6 @@ export default function UserCard({ user }: Props) {
         { label: 'Suspend', icon: 'ban-outline', onPress: () => {}, disabled: user.status === 'suspended' },
         { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => {}, disabled: user.status !== 'suspended' },
       ]} />
-    </TouchableOpacity>
+    </View>
   );
 }
