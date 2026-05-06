@@ -1,8 +1,8 @@
 import * as adminModel from '../models/adminModel';
-import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData } from '../models/adminModel';
+import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus } from '../models/adminModel';
 import { postNotification } from './notificationController';
 
-export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData };
+export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
 
 type Result<T = undefined> = { success: boolean; error: string; data?: T };
 
@@ -10,14 +10,7 @@ export const getUsers = async (): Promise<Result<FullUserProfile[]>> => {
   try {
     const { data, error } = await adminModel.getAdminUsers();
     if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch users' };
-
-    const users = await Promise.all(
-      data.map(async (user) => {
-        const { data: profileData } = await adminModel.getUserIsActive(user.id);
-        return { ...user, is_active: profileData?.is_active ?? true } as FullUserProfile;
-      })
-    );
-    return { success: true, error: '', data: users };
+    return { success: true, error: '', data: data as FullUserProfile[] };
   } catch {
     return { success: false, error: 'Failed to fetch users' };
   }
@@ -27,9 +20,7 @@ export const getUserDetail = async (id: string): Promise<Result<UserDetail>> => 
   try {
     const { data, error } = await adminModel.getUserDetail(id);
     if (error || !data) return { success: false, error: error?.message ?? 'User not found' };
-
-    const { data: profileData } = await adminModel.getUserIsActive(id);
-    return { success: true, error: '', data: { ...data, is_active: profileData?.is_active ?? true } as UserDetail };
+    return { success: true, error: '', data: data as UserDetail };
   } catch {
     return { success: false, error: 'Failed to fetch user' };
   }
@@ -47,8 +38,16 @@ export const getVerificationProfile = async (id: string): Promise<Result<Verific
 
 export const updateUserActiveStatus = async (id: string, suspend: boolean): Promise<Result> => {
   try {
-    const { error } = await adminModel.updateUserActiveStatus(id, !suspend);
-    if (error) return { success: false, error: error.message };
+    if (suspend) {
+      const { error } = await adminModel.updateUserStatus(id, 'suspended');
+      if (error) return { success: false, error: error.message };
+    } else {
+      // Restore: check if user has verification docs to determine status
+      const { data: profile } = await adminModel.getVerificationProfile(id);
+      const hasVerificationDocs = !!(profile?.id_front_url && profile?.id_back_url);
+      const { error } = await adminModel.updateUserStatus(id, hasVerificationDocs ? 'verified' : 'unverified');
+      if (error) return { success: false, error: error.message };
+    }
 
     await postNotification(
       id,

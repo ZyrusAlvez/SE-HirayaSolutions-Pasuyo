@@ -1,18 +1,18 @@
 import { supabase, supabaseAdmin } from '../utils/supabase';
 
+export type AccountStatus = 'verified' | 'unverified' | 'pending' | 'suspended';
+
 export interface FullUserProfile {
   id: string;
   display_name: string | null;
   email: string | null;
-  verified: boolean;
+  status: AccountStatus;
   role: string | null;
   created_at: string;
   rating: number | null;
-  pending_verification: boolean;
   avatar_url: string | null;
   verification_submitted_at: string | null;
   id_type: string | null;
-  is_active: boolean;
 }
 
 export interface UserDetail {
@@ -20,11 +20,10 @@ export interface UserDetail {
   display_name: string | null;
   email: string | null;
   avatar_url: string | null;
-  verified: boolean;
+  status: AccountStatus;
   role: string | null;
   rating: number | null;
   created_at: string;
-  is_active: boolean;
 }
 
 export interface VerificationProfile {
@@ -81,15 +80,12 @@ const getAdmin = () => {
 export const getAdminUsers = () =>
   getAdmin()
     .from('admin_user_profiles')
-    .select('id, display_name, email, verified, role, created_at, rating, pending_verification, avatar_url, verification_submitted_at, id_type');
-
-export const getUserIsActive = (id: string) =>
-  getAdmin().from('profiles').select('is_active').eq('id', id).maybeSingle();
+    .select('id, display_name, email, status, role, created_at, rating, avatar_url, verification_submitted_at, id_type');
 
 export const getUserDetail = (id: string) =>
   getAdmin()
     .from('admin_user_profiles')
-    .select('id, display_name, email, avatar_url, verified, role, rating, created_at')
+    .select('id, display_name, email, avatar_url, status, role, rating, created_at')
     .eq('id', id)
     .single();
 
@@ -100,11 +96,11 @@ export const getVerificationProfile = (id: string) =>
     .eq('id', id)
     .single();
 
-export const updateUserActiveStatus = (id: string, is_active: boolean) =>
-  getAdmin().from('profiles').update({ is_active }).eq('id', id);
+export const updateUserStatus = (id: string, status: AccountStatus) =>
+  getAdmin().from('profiles').update({ status }).eq('id', id);
 
-export const updateVerificationStatus = (id: string, verified: boolean) =>
-  getAdmin().from('profiles').update({ verified, pending_verification: false }).eq('id', id);
+export const updateVerificationStatus = (id: string, approve: boolean) =>
+  getAdmin().from('profiles').update({ status: approve ? 'verified' : 'unverified' }).eq('id', id);
 
 export const getAdminErrands = () =>
   getAdmin()

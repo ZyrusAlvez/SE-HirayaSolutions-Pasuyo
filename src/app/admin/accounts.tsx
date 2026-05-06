@@ -51,8 +51,8 @@ export default function AdminAccountsScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  const verifiedCount = useMemo(() => users.filter(u => u.verified).length, [users]);
-  const unverifiedCount = useMemo(() => users.filter(u => !u.verified).length, [users]);
+  const verifiedCount = useMemo(() => users.filter(u => u.status === 'verified').length, [users]);
+  const unverifiedCount = useMemo(() => users.filter(u => u.status !== 'verified').length, [users]);
 
   const filtered = useMemo(() => {
     let list = [...users];
@@ -66,10 +66,10 @@ export default function AdminAccountsScreen() {
     }
 
     switch (filter) {
-      case 'Verified': list = list.filter(u => u.verified); break;
-      case 'Unverified': list = list.filter(u => !u.verified); break;
-      case 'Pending': list = list.filter(u => u.pending_verification); break;
-      case 'Suspended': list = list.filter(u => u.is_active === false); break;
+      case 'Verified': list = list.filter(u => u.status === 'verified'); break;
+      case 'Unverified': list = list.filter(u => u.status === 'unverified'); break;
+      case 'Pending': list = list.filter(u => u.status === 'pending'); break;
+      case 'Suspended': list = list.filter(u => u.status === 'suspended'); break;
     }
 
     list.sort((a, b) => sort === 'newest'

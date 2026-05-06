@@ -9,12 +9,11 @@ export interface UserProfile {
   id: string;
   display_name: string | null;
   email: string | null;
-  verified: boolean;
+  status: string;
   role: string | null;
   created_at: string;
   rating: number | null;
   avatar_url?: string | null;
-  is_active?: boolean;
 }
 
 interface Props {
@@ -49,8 +48,8 @@ export default function UserCard({ user }: Props) {
         <Text className="text-xs text-gray-400 mt-0.5">Joined {joinedDate}</Text>
       </View>
       <View style={{ gap: 4, alignItems: 'flex-end' }}>
-        <VerificationBadge status={user.verified ? 'verified' : 'not_verified'} />
-        {user.is_active === false && (
+        <VerificationBadge status={user.status === 'verified' ? 'verified' : user.status === 'pending' ? 'pending' : 'not_verified'} />
+        {user.status === 'suspended' && (
           <View className="px-2 py-1 rounded-full bg-red-100">
             <Text className="text-xs font-medium text-red-500">Suspended</Text>
           </View>
@@ -58,8 +57,8 @@ export default function UserCard({ user }: Props) {
       </View>
       <KebabMenu actions={[
         { label: 'More info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/user/${user.id}`) },
-        { label: 'Suspend', icon: 'ban-outline', onPress: () => {}, disabled: user.is_active === false },
-        { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => {}, disabled: user.is_active !== false },
+        { label: 'Suspend', icon: 'ban-outline', onPress: () => {}, disabled: user.status === 'suspended' },
+        { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => {}, disabled: user.status !== 'suspended' },
       ]} />
     </TouchableOpacity>
   );
