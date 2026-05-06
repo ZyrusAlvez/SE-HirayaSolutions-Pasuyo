@@ -165,26 +165,35 @@ export const getUserAcceptedErrands = (userId: string) =>
     .eq('accepted_by', userId)
     .order('created_at', { ascending: false });
 
-export const getUserErrandEvents = (userId: string) =>
-  getAdmin()
+export const getUserErrandEvents = (userId: string, limit?: number, offset?: number) => {
+  let q = getAdmin()
     .from('activity_log')
-    .select('id, errand_id, event_type, metadata, created_at')
+    .select('id, errand_id, event_type, metadata, created_at', { count: 'exact' })
     .eq('actor_id', userId)
     .order('created_at', { ascending: false });
+  if (limit != null && offset != null) q = q.range(offset, offset + limit - 1);
+  return q;
+};
 
-export const getUserMessages = (userId: string) =>
-  getAdmin()
+export const getUserMessages = (userId: string, limit?: number, offset?: number) => {
+  let q = getAdmin()
     .from('messages')
     .select('id, created_at', { count: 'exact' })
     .eq('sender_id', userId)
     .order('created_at', { ascending: false });
+  if (limit != null && offset != null) q = q.range(offset, offset + limit - 1);
+  return q;
+};
 
-export const getUserReports = (userId: string) =>
-  getAdmin()
+export const getUserReports = (userId: string, limit?: number, offset?: number) => {
+  let q = getAdmin()
     .from('reports')
-    .select('id, reason, created_at')
+    .select('id, reason, created_at', { count: 'exact' })
     .eq('reporter_id', userId)
     .order('created_at', { ascending: false });
+  if (limit != null && offset != null) q = q.range(offset, offset + limit - 1);
+  return q;
+};
 
 export const getAllActivity = () =>
   getAdmin()

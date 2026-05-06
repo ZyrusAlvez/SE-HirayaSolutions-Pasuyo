@@ -1,21 +1,15 @@
-import { useEffect, useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, Platform, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getUserDetail } from '../../../controllers/adminController';
-import { getUserErrandEvents, getUserMessages, getUserReports } from '../../../models/adminModel';
+import { getUserDetail, getUserActivity } from '../../../controllers/adminController';
+import type { ActivityItem } from '../../../controllers/adminController';
 import VerificationBadge from '../../../view/components/VerificationBadge';
 import ImageViewer from '../../../view/components/ImageViewer';
 import Dropdown from '../../../view/components/Dropdown';
 
 const DEFAULT_AVATAR = require('../../../assets/images/default_profile.jpg');
-
-interface ActivityItem {
-  id: string;
-  type: string;
-  metadata?: Record<string, any>;
-  created_at: string;
-}
+const ACCENT = '#FEA405';
 
 const EVENT_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
   posted: { label: 'Posted an errand', icon: 'paper-plane-outline', color: '#3B82F6' },
@@ -41,8 +35,6 @@ const SORT_OPTIONS: SortKey[] = ['newest', 'oldest'];
 const SORT_LABELS: Record<string, string> = { newest: 'Newest', oldest: 'Oldest' };
 const SORT_ICONS: Record<string, string> = { newest: 'arrow-down-outline', oldest: 'arrow-up-outline' };
 
-const ACTIVITY_TYPES = ['posted', 'accepted', 'cancelled', 'marked_done', 'reviewed', 'edited_errand', 'deleted_errand'];
-
 export default function UserDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -50,48 +42,44 @@ export default function UserDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [avatarError, setAvatarError] = useState(false);
   const [events, setEvents] = useState<ActivityItem[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('All');
   const [sort, setSort] = useState<SortKey>('newest');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
+  const loadActivity = useCallback(async (pageNum: number, reset: boolean) => {
+    if (!id) return;
+    if (!reset) setLoadingMore(true);
+    const result = await getUserActivity(id, pageNum, filter);
+    if (result.success && result.data) {
+      let items = result.data.items;
+      if (sort === 'oldest') items = [...items].reverse();
+      setEvents(prev => reset ? items : [...prev, ...items]);
+      setHasMore(result.data.hasMore);
+      setPage(pageNum);
+    }
+    setLoadingMore(false);
+  }, [id, filter, sort]);
+
   useEffect(() => {
     if (!id) { setLoading(false); return; }
-    Promise.all([
-      getUserDetail(id),
-      getUserErrandEvents(id),
-      getUserMessages(id),
-      getUserReports(id),
-    ]).then(([userResult, eventsResult, msgResult, reportsResult]) => {
-      if (userResult.success && userResult.data) setUser(userResult.data);
-
-      const errandItems: ActivityItem[] = (eventsResult.data ?? []).map((e: any) => ({
-        id: e.id, type: e.event_type, metadata: e.metadata, created_at: e.created_at,
-      }));
-      const msgItems: ActivityItem[] = (msgResult.data ?? []).map((m: any) => ({
-        id: m.id, type: 'message_sent', created_at: m.created_at,
-      }));
-      const reportItems: ActivityItem[] = (reportsResult.data ?? []).map((r: any) => ({
-        id: r.id, type: 'reported', metadata: { reason: r.reason }, created_at: r.created_at,
-      }));
-      setEvents([...errandItems, ...msgItems, ...reportItems]);
+    getUserDetail(id).then(result => {
+      if (result.success && result.data) setUser(result.data);
       setLoading(false);
     });
   }, [id]);
 
-  const filtered = useMemo(() => {
-    let list = [...events];
-    switch (filter) {
-      case 'Activity': list = list.filter(e => ACTIVITY_TYPES.includes(e.type)); break;
-      case 'Messages': list = list.filter(e => e.type === 'message_sent'); break;
-      case 'Reports': list = list.filter(e => e.type === 'reported'); break;
-    }
-    list.sort((a, b) => sort === 'newest'
-      ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-    return list;
-  }, [events, filter, sort]);
+  // Load activity when filter/sort changes
+  useEffect(() => {
+    loadActivity(0, true);
+  }, [filter, sort]);
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore) loadActivity(page + 1, false);
+  };
 
   const toggle = (dropdownId: string) => setOpenDropdown(prev => prev === dropdownId ? null : dropdownId);
 
@@ -112,7 +100,6 @@ export default function UserDetailScreen() {
   const lastSeen = user.last_seen ? new Date(user.last_seen).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
   const address = [user.address_house_no, user.address_building, user.address_unit && `Unit ${user.address_unit}`, user.address_floor && `Floor ${user.address_floor}`, user.address_street, user.address_barangay, user.address_city, user.address_province].filter(Boolean).join(', ') || '—';
 
-  // Collect document images for viewer
   const docImages: { uri: string; fileName: string }[] = [];
   if (user.id_front_url) docImages.push({ uri: user.id_front_url, fileName: 'ID Front' });
   if (user.id_back_url) docImages.push({ uri: user.id_back_url, fileName: 'ID Back' });
@@ -129,8 +116,18 @@ export default function UserDetailScreen() {
         <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>User Detail</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        {/* Section 1: Full User Information */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 100 && hasMore && !loadingMore) {
+            loadMore();
+          }
+        }}
+        scrollEventThrottle={400}
+      >
+        {/* Section 1: User Information */}
         <View style={{ backgroundColor: 'white', margin: 16, marginBottom: 0, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#F3F4F6' }}>
           <View style={{ flexDirection: 'row', gap: 16, alignItems: 'flex-start' }}>
             <Image
@@ -178,7 +175,6 @@ export default function UserDetailScreen() {
 
         {/* Section 2: Activity Log */}
         <View style={{ marginTop: 16, paddingHorizontal: 16 }}>
-          {/* Filter & Sort */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8, marginBottom: 12, zIndex: 100 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151' }}>Activity Log</Text>
             <View style={{ width: 1, height: 16, backgroundColor: '#E5E7EB', marginHorizontal: 4 }} />
@@ -212,21 +208,24 @@ export default function UserDetailScreen() {
             )}
           </View>
 
-          {/* Activity items */}
-          {filtered.length === 0 ? (
+          {events.length === 0 && !loadingMore ? (
             <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48 }}>
               <Ionicons name="pulse-outline" size={36} color="#E5E7EB" />
               <Text style={{ color: '#9CA3AF', fontSize: 13, marginTop: 8 }}>No activity found</Text>
             </View>
           ) : (
             <View style={{ gap: 6 }}>
-              {filtered.map(event => <ActivityRow key={event.id} event={event} />)}
+              {events.map(event => <ActivityRow key={event.id} event={event} />)}
+              {loadingMore && (
+                <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={ACCENT} />
+                </View>
+              )}
             </View>
           )}
         </View>
       </ScrollView>
 
-      {/* Image Viewer */}
       <ImageViewer
         images={docImages}
         activeIndex={viewerIndex}

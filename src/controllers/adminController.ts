@@ -4,6 +4,18 @@ import { postNotification } from './notificationController';
 
 export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
 
+export type ActivityItem = {
+  id: string;
+  type: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+};
+
+export type ActivityPage = {
+  items: ActivityItem[];
+  hasMore: boolean;
+};
+
 type Result<T = undefined> = { success: boolean; error: string; data?: T };
 
 export const getUsers = async (): Promise<Result<FullUserProfile[]>> => {
@@ -101,6 +113,48 @@ export const getErrands = async (): Promise<Result<Errand[]>> => {
     return { success: true, error: '', data: data as Errand[] };
   } catch {
     return { success: false, error: 'Failed to fetch errands' };
+  }
+};
+
+const PAGE_SIZE = 30;
+
+export const getUserActivity = async (
+  userId: string,
+  page: number,
+  filter: 'All' | 'Activity' | 'Messages' | 'Reports' = 'All',
+): Promise<Result<ActivityPage>> => {
+  try {
+    const offset = page * PAGE_SIZE;
+    const activityTypes = ['posted', 'accepted', 'cancelled', 'marked_done', 'reviewed', 'edited_errand', 'deleted_errand'];
+
+    let items: ActivityItem[] = [];
+    let totalAvailable = 0;
+
+    if (filter === 'All' || filter === 'Activity') {
+      const { data, count } = await adminModel.getUserErrandEvents(userId, PAGE_SIZE, offset);
+      items.push(...(data ?? []).map((e: any) => ({ id: e.id, type: e.event_type, metadata: e.metadata, created_at: e.created_at })));
+      totalAvailable += count ?? 0;
+    }
+    if (filter === 'All' || filter === 'Messages') {
+      const { data, count } = await adminModel.getUserMessages(userId, PAGE_SIZE, offset);
+      items.push(...(data ?? []).map((m: any) => ({ id: m.id, type: 'message_sent', created_at: m.created_at })));
+      totalAvailable += count ?? 0;
+    }
+    if (filter === 'All' || filter === 'Reports') {
+      const { data, count } = await adminModel.getUserReports(userId, PAGE_SIZE, offset);
+      items.push(...(data ?? []).map((r: any) => ({ id: r.id, type: 'reported', metadata: { reason: r.reason }, created_at: r.created_at })));
+      totalAvailable += count ?? 0;
+    }
+
+    // Sort merged results newest first
+    items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // Trim to page size
+    items = items.slice(0, PAGE_SIZE);
+
+    return { success: true, error: '', data: { items, hasMore: offset + PAGE_SIZE < totalAvailable } };
+  } catch {
+    return { success: false, error: 'Failed to fetch activity' };
   }
 };
 
