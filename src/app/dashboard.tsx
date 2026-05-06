@@ -9,8 +9,8 @@ import { useProfile } from '@/context/ProfileContext';
 import Header from '@/view/components/Header';
 import NavBar from '@/view/components/NavBar';
 import TabToggle from '@/view/components/TabToggle';
-import LoadingSpinner from '@/view/components/LoadingSpinner';
 import ErrandList from '@/view/presentation/dashboard/ErrandList';
+import DashboardSkeleton from '@/view/presentation/dashboard/DashboardSkeleton';
 import SearchBar from '@/view/components/SearchBar';
 import SortFilterBar from '@/view/presentation/dashboard/SortFilterBar';
 import type { SortState } from '@/view/presentation/dashboard/SortFilterBar';
@@ -139,7 +139,7 @@ export default function DashboardScreen() {
           />
         </View>
         {loading ? (
-          <LoadingSpinner />
+          <DashboardSkeleton viewMode={viewMode} />
         ) : (
           <ErrandList
             errands={filteredErrands}
