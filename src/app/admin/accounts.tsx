@@ -29,7 +29,6 @@ export default function AdminAccountsScreen() {
 
   const loadUsers = async () => {
     const result = await getUsers();
-    console.log('[AdminAccounts] getUsers result:', result.success, result.error, result.data?.length);
     if (result.success && result.data) setUsers(result.data);
     setLoading(false);
   };
