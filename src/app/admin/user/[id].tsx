@@ -7,6 +7,7 @@ import type { ActivityItem } from '../../../controllers/adminController';
 import VerificationBadge from '../../../view/components/VerificationBadge';
 import ImageViewer from '../../../view/components/ImageViewer';
 import Dropdown from '../../../view/components/Dropdown';
+import UserDetailSkeleton from '../../../view/presentation/admin/UserDetailSkeleton';
 
 const DEFAULT_AVATAR = require('../../../assets/images/default_profile.jpg');
 const ACCENT = '#FEA405';
@@ -84,8 +85,14 @@ export default function UserDetailScreen() {
   const toggle = (dropdownId: string) => setOpenDropdown(prev => prev === dropdownId ? null : dropdownId);
 
   if (loading) return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#9CA3AF', fontSize: 14 }}>Loading...</Text>
+    <View style={[{ flex: 1, backgroundColor: '#F9FAFB' }, Platform.OS === 'web' && { maxWidth: 1000, width: '100%', alignSelf: 'center' as const }]}>
+      <View style={{ backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingTop: Platform.OS !== 'web' ? 48 : 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+          <Ionicons name="arrow-back" size={24} color="#111827" />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>User Detail</Text>
+      </View>
+      <UserDetailSkeleton />
     </View>
   );
 
@@ -117,7 +124,7 @@ export default function UserDetailScreen() {
       </View>
 
       <ScrollView
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         contentContainerStyle={{ paddingBottom: 32 }}
         onScroll={({ nativeEvent }) => {
           const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
@@ -175,7 +182,7 @@ export default function UserDetailScreen() {
 
         {/* Section 2: Activity Log */}
         <View style={{ marginTop: 16, paddingHorizontal: 16 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8, marginBottom: 12, zIndex: 100 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8, marginBottom: 16, zIndex: 100 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151' }}>Activity Log</Text>
             <View style={{ width: 1, height: 16, backgroundColor: '#E5E7EB', marginHorizontal: 4 }} />
             <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
@@ -250,10 +257,11 @@ function ActivityRow({ event }: { event: ActivityItem }) {
   const date = new Date(event.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const title = event.metadata?.title || event.metadata?.reason;
   const changes = event.metadata?.changes as Record<string, { from: any; to: any }> | undefined;
+  const hasDetail = !!(title || changes);
 
   return (
-    <View style={{ flexDirection: 'row', gap: 10, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: 'white', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6' }}>
-      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: config.color + '1A', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+    <View style={{ flexDirection: 'row', gap: 10, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: 'white', borderRadius: 12, borderWidth: 1, borderColor: '#F3F4F6', alignItems: hasDetail ? 'flex-start' : 'center' }}>
+      <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: config.color + '1A', alignItems: 'center', justifyContent: 'center' }}>
         <Ionicons name={config.icon as any} size={14} color={config.color} />
       </View>
       <View style={{ flex: 1 }}>
@@ -264,8 +272,8 @@ function ActivityRow({ event }: { event: ActivityItem }) {
             {key}: "{from ?? '—'}" → "{to ?? '—'}"
           </Text>
         ))}
-        <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{date}</Text>
       </View>
+      <Text style={{ fontSize: 10, color: '#9CA3AF', alignSelf: 'center' }}>{date}</Text>
     </View>
   );
 }

@@ -6,6 +6,7 @@ import { getUsers, FullUserProfile } from '../../controllers/adminController';
 import { getAllActivity, getAllMessages, getAllReports } from '../../models/adminModel';
 import UserCard from '../../view/presentation/admin/UserCard';
 import VerificationCard, { PendingUser } from '../../view/presentation/admin/VerificationCard';
+import { AccountsListSkeleton, AccountsChartSkeleton } from '../../view/presentation/admin/AccountsSkeleton';
 import Dropdown from '../../view/components/Dropdown';
 
 const ACCENT = '#FEA405';
@@ -196,7 +197,7 @@ export default function AdminAccountsScreen() {
   const listPanel = (
     <View style={{ flex: 1 }}>
       {/* Search & Filter */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 12, zIndex: 100 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12, zIndex: 100 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
           <Ionicons name="search-outline" size={18} color="#9CA3AF" />
           <TextInput
@@ -258,14 +259,14 @@ export default function AdminAccountsScreen() {
           : <UserCard user={item} />
         }
         contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
-        ListHeaderComponent={!wide ? chartsPanel : null}
+        ListHeaderComponent={!wide ? (
+          <View style={{ marginBottom: 12 }}>{chartsPanel}</View>
+        ) : null}
         ListEmptyComponent={
           loading ? (
-            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
-              <Text style={{ color: '#9CA3AF', fontSize: 14 }}>Loading users...</Text>
-            </View>
+            <AccountsListSkeleton />
           ) : (
             <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
               <Ionicons name="people-outline" size={40} color="#E5E7EB" />
@@ -283,7 +284,7 @@ export default function AdminAccountsScreen() {
         <View style={{ flex: 1, flexDirection: 'row' }}>
           {listPanel}
           <View style={{ width: 340, padding: 16 }}>
-            {chartsPanel}
+            {loading ? <AccountsChartSkeleton /> : chartsPanel}
           </View>
         </View>
       ) : (
