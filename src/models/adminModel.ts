@@ -115,7 +115,8 @@ export const getUserDetail = (id: string) =>
 
 export const getUserEmail = async (id: string) => {
   const { data } = await getAdmin().auth.admin.getUserById(id);
-  return { data: { email: data?.user?.email ?? null } };
+  const meta = data?.user?.user_metadata;
+  return { data: { email: data?.user?.email ?? null, displayName: meta?.name || meta?.full_name || null } };
 };
 
 export const getVerificationProfile = (id: string) =>

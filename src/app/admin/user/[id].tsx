@@ -102,7 +102,9 @@ export default function UserDetailScreen() {
     </View>
   );
 
-  const fullName = [user.first_name, user.middle_name, user.last_name, user.suffix].filter(Boolean).join(' ') || 'No name set';
+  const verifiedName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+  const fullName = user.status === 'verified' && verifiedName ? verifiedName : (user.displayName || verifiedName || 'No name set');
+  const fullLegalName = [user.first_name, user.middle_name, user.last_name, user.suffix].filter(Boolean).join(' ');
   const joinedDate = new Date(user.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
   const lastSeen = user.last_seen ? new Date(user.last_seen).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
   const address = [user.address_house_no, user.address_building, user.address_unit && `Unit ${user.address_unit}`, user.address_floor && `Floor ${user.address_floor}`, user.address_street, user.address_barangay, user.address_city, user.address_province].filter(Boolean).join(', ') || '—';
@@ -154,6 +156,7 @@ export default function UserDetailScreen() {
 
           <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12, gap: 6 }}>
             <InfoRow label="Status" value={user.status.charAt(0).toUpperCase() + user.status.slice(1)} />
+            {fullLegalName && <InfoRow label="Full Name" value={fullLegalName} />}
             <InfoRow label="Rating (runner)" value={user.rating != null ? Number(user.rating).toFixed(1) : '—'} />
             <InfoRow label="Gender" value={user.gender ?? '—'} />
             <InfoRow label="Date of Birth" value={user.date_of_birth ?? '—'} />

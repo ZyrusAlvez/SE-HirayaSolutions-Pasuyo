@@ -28,14 +28,14 @@ export const getUsers = async (): Promise<Result<FullUserProfile[]>> => {
   }
 };
 
-export const getUserDetail = async (id: string): Promise<Result<UserDetail & { email: string | null }>> => {
+export const getUserDetail = async (id: string): Promise<Result<UserDetail & { email: string | null; displayName: string | null }>> => {
   try {
     const { data, error } = await adminModel.getUserDetail(id);
     if (error || !data) return { success: false, error: error?.message ?? 'User not found' };
 
-    // Get email from auth.users
+    // Get email and display name from auth.users
     const { data: authData } = await adminModel.getUserEmail(id);
-    return { success: true, error: '', data: { ...data, email: authData?.email ?? null } as UserDetail & { email: string | null } };
+    return { success: true, error: '', data: { ...data, email: authData?.email ?? null, displayName: authData?.displayName ?? null } as UserDetail & { email: string | null; displayName: string | null } };
   } catch {
     return { success: false, error: 'Failed to fetch user' };
   }
