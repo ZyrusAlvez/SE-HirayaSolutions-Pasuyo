@@ -58,8 +58,8 @@ export default function UserCard({ user }: Props) {
       </View>
       <KebabMenu actions={[
         { label: 'More info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/user/${user.id}`) },
-        { label: 'Suspend', icon: 'ban-outline', onPress: () => {} },
-        { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => {} },
+        { label: 'Suspend', icon: 'ban-outline', onPress: () => {}, disabled: user.is_active === false },
+        { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => {}, disabled: user.is_active !== false },
       ]} />
     </TouchableOpacity>
   );
