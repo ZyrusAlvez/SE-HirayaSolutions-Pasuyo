@@ -186,6 +186,24 @@ export const getUserReports = (userId: string) =>
     .eq('reporter_id', userId)
     .order('created_at', { ascending: false });
 
+export const getAllActivity = () =>
+  getAdmin()
+    .from('activity_log')
+    .select('created_at')
+    .order('created_at', { ascending: true });
+
+export const getAllMessages = () =>
+  getAdmin()
+    .from('messages')
+    .select('created_at')
+    .order('created_at', { ascending: true });
+
+export const getAllReports = () =>
+  getAdmin()
+    .from('reports')
+    .select('created_at')
+    .order('created_at', { ascending: true });
+
 export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
 
