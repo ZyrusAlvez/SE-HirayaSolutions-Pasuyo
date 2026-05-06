@@ -17,9 +17,32 @@ export interface FullUserProfile {
 
 export interface UserDetail {
   id: string;
-  display_name: string | null;
-  email: string | null;
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
+  suffix: string | null;
+  gender: string | null;
+  date_of_birth: string | null;
+  address_province: string | null;
+  address_city: string | null;
+  address_barangay: string | null;
+  address_street: string | null;
+  address_house_no: string | null;
+  address_building: string | null;
+  address_unit: string | null;
+  address_floor: string | null;
+  address_block_lot: string | null;
+  address_phase_subdivision: string | null;
+  address_type: string | null;
+  utility_bill_type: string | null;
+  utility_bill_front_url: string | null;
+  utility_bill_back_url: string | null;
+  id_type: string | null;
+  id_front_url: string | null;
+  id_back_url: string | null;
+  verification_submitted_at: string | null;
   avatar_url: string | null;
+  last_seen: string | null;
   status: AccountStatus;
   role: string | null;
   rating: number | null;
@@ -84,10 +107,15 @@ export const getAdminUsers = () =>
 
 export const getUserDetail = (id: string) =>
   getAdmin()
-    .from('admin_user_profiles')
-    .select('id, display_name, email, avatar_url, status, role, rating, created_at')
+    .from('profiles')
+    .select('id, first_name, middle_name, last_name, suffix, gender, date_of_birth, address_province, address_city, address_barangay, address_street, address_house_no, address_building, address_unit, address_floor, address_block_lot, address_phase_subdivision, address_type, utility_bill_type, utility_bill_front_url, utility_bill_back_url, id_type, id_front_url, id_back_url, verification_submitted_at, avatar_url, last_seen, status, role, rating, created_at')
     .eq('id', id)
     .single();
+
+export const getUserEmail = async (id: string) => {
+  const { data } = await getAdmin().auth.admin.getUserById(id);
+  return { data: { email: data?.user?.email ?? null } };
+};
 
 export const getVerificationProfile = (id: string) =>
   getAdmin()
