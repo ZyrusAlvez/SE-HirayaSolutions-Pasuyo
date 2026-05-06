@@ -150,7 +150,6 @@ export default function UserDetailScreen() {
 
           <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12, gap: 6 }}>
             <InfoRow label="Status" value={user.status.charAt(0).toUpperCase() + user.status.slice(1)} />
-            <InfoRow label="Role" value={user.role ?? '—'} />
             <InfoRow label="Rating (runner)" value={user.rating != null ? Number(user.rating).toFixed(1) : '—'} />
             <InfoRow label="Gender" value={user.gender ?? '—'} />
             <InfoRow label="Date of Birth" value={user.date_of_birth ?? '—'} />

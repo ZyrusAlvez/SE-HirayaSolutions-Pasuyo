@@ -103,7 +103,8 @@ const getAdmin = () => {
 export const getAdminUsers = () =>
   getAdmin()
     .from('admin_user_profiles')
-    .select('id, display_name, email, status, role, created_at, rating, avatar_url, verification_submitted_at, id_type');
+    .select('id, display_name, email, status, role, created_at, rating, avatar_url, verification_submitted_at, id_type')
+    .eq('role', 'user');
 
 export const getUserDetail = (id: string) =>
   getAdmin()
