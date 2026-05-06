@@ -201,7 +201,9 @@ export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardE
     return {
       success: true,
       data: {
-        posted: (posted.data ?? []) as DashboardErrand[],
+        posted: ((posted.data ?? []) as DashboardErrand[]).map(e =>
+          e.status === 'Available' && e.deadline && new Date(e.deadline) < new Date() ? { ...e, status: 'Expired' } : e
+        ),
         accepted: allAccepted,
       },
     };
