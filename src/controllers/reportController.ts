@@ -31,6 +31,16 @@ export const ERRAND_REASONS = [
   'Other',
 ];
 
+export const VERIFICATION_REJECTION_REASONS = [
+  'Blurry or unreadable documents',
+  'Documents do not match provided information',
+  'Expired identification document',
+  'Invalid or unsupported document type',
+  'Incomplete submission',
+  'Suspected fraudulent documents',
+  'Other',
+];
+
 export const checkExistingReport = async (
   reportedId: string,
   type: ReportType,

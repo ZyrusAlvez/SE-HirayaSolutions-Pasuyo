@@ -347,6 +347,10 @@ const TEMPLATES: Record<string, string> = {
         <div class="icon">&#10007;</div>
         <div class="label">Verification Rejected</div>
       </div>
+      <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+        <p style="font-size: 12px; font-weight: 600; color: #991B1B; margin: 0 0 4px;">Reason</p>
+        <p style="font-size: 14px; font-weight: 700; color: #DC2626; margin: 0;">{{reject_reason}}</p>
+      </div>
       <div class="cta-wrap">
         <a href="https://pasuyo.xyz/profile" class="cta-button">Resubmit Documents</a>
       </div>

@@ -124,14 +124,14 @@ export const sendErrandDeletedEmail = async (
   }
 };
 
-export const sendVerificationEmail = async (userId: string, approved: boolean) => {
+export const sendVerificationEmail = async (userId: string, approved: boolean, reason?: string) => {
   try {
     const { error } = await supabase.functions.invoke('send-email', {
       body: {
         userId,
         template: approved ? 'verification-approved' : 'verification-rejected',
         subject: approved ? 'Your verification has been approved' : 'Your verification has been rejected',
-        data: {},
+        data: { reject_reason: reason ?? '' },
       },
     });
     if (error) console.warn('Verification email failed:', error.message);
