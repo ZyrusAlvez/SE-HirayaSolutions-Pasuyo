@@ -437,6 +437,7 @@ export const postErrand = async (
 
   if (!title.trim()) return { success: false, error: 'Please enter a title.' };
   if (!description.trim()) return { success: false, error: 'Please enter a description.' };
+  if (!budget || !budget.trim()) return { success: false, error: 'Please enter a budget.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
 
   try {
