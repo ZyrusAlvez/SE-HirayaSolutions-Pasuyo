@@ -8,13 +8,13 @@ import Dropdown from '../../view/components/Dropdown';
 const ACCENT = '#FEA405';
 const WIDE_BREAKPOINT = 900;
 
-type FilterKey = 'All' | 'Available' | 'In Progress' | 'Expired';
+type FilterKey = 'All' | 'Available' | 'In Progress' | 'Completed' | 'Expired';
 type SortKey = 'newest' | 'oldest';
 
-const FILTER_OPTIONS: FilterKey[] = ['All', 'Available', 'In Progress', 'Expired'];
-const FILTER_LABELS: Record<string, string> = { All: 'All', Available: 'Available', 'In Progress': 'In Progress', Expired: 'Expired' };
-const FILTER_ICONS: Record<string, string> = { All: 'list-outline', Available: 'checkmark-circle-outline', 'In Progress': 'time-outline', Expired: 'alert-circle-outline' };
-const FILTER_COLORS: Record<string, string> = { All: '#6B7280', Available: '#22C55E', 'In Progress': '#F59E0B', Expired: '#EF4444' };
+const FILTER_OPTIONS: FilterKey[] = ['All', 'Available', 'In Progress', 'Completed', 'Expired'];
+const FILTER_LABELS: Record<string, string> = { All: 'All', Available: 'Available', 'In Progress': 'In Progress', Completed: 'Completed', Expired: 'Expired' };
+const FILTER_ICONS: Record<string, string> = { All: 'list-outline', Available: 'checkmark-circle-outline', 'In Progress': 'time-outline', Completed: 'checkmark-done-circle-outline', Expired: 'alert-circle-outline' };
+const FILTER_COLORS: Record<string, string> = { All: '#6B7280', Available: '#22C55E', 'In Progress': '#F59E0B', Completed: '#22C55E', Expired: '#EF4444' };
 
 const SORT_OPTIONS: SortKey[] = ['newest', 'oldest'];
 const SORT_LABELS: Record<string, string> = { newest: 'Newest', oldest: 'Oldest' };
