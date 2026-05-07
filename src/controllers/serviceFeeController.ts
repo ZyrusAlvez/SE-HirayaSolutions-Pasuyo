@@ -100,6 +100,15 @@ export const submitServiceFeePayment = async (
   }
 };
 
+export const getUnpaidServiceFeeTotalForUser = async (userId: string): Promise<Result<number>> => {
+  try {
+    const total = await getUnpaidTotal(userId);
+    return { success: true, data: total };
+  } catch {
+    return { success: false, error: 'Failed to calculate balance' };
+  }
+};
+
 export const getUserPaymentHistory = async (): Promise<Result<ServiceFeePayment[]>> => {
   try {
     const { data: { user } } = await model.getUser();

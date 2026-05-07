@@ -4,10 +4,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getUserDetail, getUserActivity } from '../../../controllers/adminController';
 import type { ActivityItem } from '../../../controllers/adminController';
+import { getUnpaidServiceFeeTotalForUser } from '../../../controllers/serviceFeeController';
 import VerificationBadge from '../../../view/components/VerificationBadge';
 import ImageViewer from '../../../view/components/ImageViewer';
 import Dropdown from '../../../view/components/Dropdown';
 import UserDetailSkeleton from '../../../view/presentation/admin/UserDetailSkeleton';
+import ServiceFeeLimitBar from '../../../view/components/ServiceFeeLimitBar';
 
 const DEFAULT_AVATAR = require('../../../assets/images/default_profile.jpg');
 const ACCENT = '#FEA405';
@@ -50,6 +52,7 @@ export default function UserDetailScreen() {
   const [sort, setSort] = useState<SortKey>('newest');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [unpaidTotal, setUnpaidTotal] = useState<number | null>(null);
 
   const loadActivity = useCallback(async (pageNum: number, reset: boolean) => {
     if (!id) return;
@@ -70,6 +73,9 @@ export default function UserDetailScreen() {
     getUserDetail(id).then(result => {
       if (result.success && result.data) setUser(result.data);
       setLoading(false);
+    });
+    getUnpaidServiceFeeTotalForUser(id).then(result => {
+      if (result.success) setUnpaidTotal(result.data);
     });
   }, [id]);
 
@@ -167,6 +173,13 @@ export default function UserDetailScreen() {
             {user.utility_bill_type && <InfoRow label="Utility Bill" value={user.utility_bill_type} />}
             {user.verification_submitted_at && <InfoRow label="Verification Submitted" value={new Date(user.verification_submitted_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })} />}
           </View>
+
+          {/* Service Fee */}
+          {unpaidTotal != null && (
+            <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12 }}>
+              <ServiceFeeLimitBar totalFees={unpaidTotal} isVerified={user.status === 'verified'} isAdmin />
+            </View>
+          )}
 
           {docImages.length > 0 && (
             <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12 }}>

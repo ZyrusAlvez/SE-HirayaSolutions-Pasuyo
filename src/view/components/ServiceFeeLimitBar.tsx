@@ -7,9 +7,10 @@ const LIMIT_VERIFIED = 5000;
 interface Props {
   totalFees: number;
   isVerified: boolean;
+  isAdmin?: boolean;
 }
 
-export default function ServiceFeeLimitBar({ totalFees, isVerified }: Props) {
+export default function ServiceFeeLimitBar({ totalFees, isVerified, isAdmin }: Props) {
   const limit = isVerified ? LIMIT_VERIFIED : LIMIT_NON_VERIFIED;
   const ratio = Math.min(totalFees / limit, 1);
   const percentage = Math.round(ratio * 100);
@@ -54,8 +55,8 @@ export default function ServiceFeeLimitBar({ totalFees, isVerified }: Props) {
         />
         <Text style={{ fontSize: 11, color: textColor, flex: 1, lineHeight: 16 }}>
           {ratio >= 1
-            ? 'You have reached your limit. Pay your service fees to accept new errands.'
-            : `₱${remaining.toLocaleString()} remaining before you reach your limit.`}
+            ? isAdmin ? 'User has reached their limit.' : 'You have reached your limit. Pay your service fees to accept new errands.'
+            : `₱${remaining.toLocaleString()} remaining before ${isAdmin ? 'user reaches their' : 'you reach your'} limit.`}
         </Text>
       </View>
     </View>
