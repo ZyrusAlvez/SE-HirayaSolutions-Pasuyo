@@ -3,6 +3,7 @@ import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useW
 import { Ionicons } from '@expo/vector-icons';
 import { getErrands, Errand } from '@/controllers/adminController';
 import ErrandCard from '@/view/presentation/admin/ErrandCard';
+import ErrandsChartPanel from '@/view/presentation/admin/ErrandsChartPanel';
 import Dropdown from '@/view/components/Dropdown';
 
 const ACCENT = '#FEA405';
@@ -58,8 +59,22 @@ export default function AdminErrandsScreen() {
 
   const toggle = (id: string) => setOpenDropdown(prev => prev === id ? null : id);
 
+  const errandsWithStatus = useMemo(() =>
+    errands.map(e => ({ ...e, _effectiveStatus: getEffectiveStatus(e) })),
+    [errands]
+  );
+
+  const chartData = useMemo(() => {
+    const total = errandsWithStatus.length;
+    const completed = errandsWithStatus.filter(e => e._effectiveStatus === 'Completed').length;
+    const available = errandsWithStatus.filter(e => e._effectiveStatus === 'Available').length;
+    const inProgress = errandsWithStatus.filter(e => e._effectiveStatus === 'In Progress').length;
+    const expired = errandsWithStatus.filter(e => e._effectiveStatus === 'Expired').length;
+    return { total, completed, available, inProgress, expired };
+  }, [errandsWithStatus]);
+
   const filtered = useMemo(() => {
-    let list = errands.map(e => ({ ...e, _effectiveStatus: getEffectiveStatus(e) }));
+    let list = [...errandsWithStatus];
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(e =>
@@ -73,69 +88,93 @@ export default function AdminErrandsScreen() {
       return sort === 'newest' ? diff : -diff;
     });
     return list;
-  }, [errands, search, filter, sort]);
+  }, [errandsWithStatus, search, filter, sort]);
+
+  const chartWidth = wide ? 280 : Math.min(width - 48, 360);
+
+  const chartsPanel = (
+    <ErrandsChartPanel
+      total={chartData.total}
+      completed={chartData.completed}
+      available={chartData.available}
+      inProgress={chartData.inProgress}
+      expired={chartData.expired}
+      chartWidth={chartWidth}
+    />
+  );
+
+  const listPanel = (
+    <View style={{ flex: 1 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12, zIndex: 100 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
+          <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+          <TextInput
+            placeholder="Search by title or client..."
+            placeholderTextColor="#9CA3AF"
+            value={search}
+            onChangeText={setSearch}
+            style={{ flex: 1, paddingVertical: 10, fontSize: 14, color: '#1F2937', outlineStyle: 'none' } as any}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8 }}>
+          <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
+          <Dropdown value={filter} options={FILTER_OPTIONS} labels={FILTER_LABELS} icon="list-outline" icons={FILTER_ICONS} iconColors={FILTER_COLORS} open={openDropdown === 'filter'} onToggle={() => toggle('filter')} onChange={(v) => setFilter(v as FilterKey)} />
+          <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
+          <Ionicons name="swap-vertical-outline" size={14} color="#9CA3AF" />
+          <Dropdown value={sort} options={SORT_OPTIONS} labels={SORT_LABELS} icon="time-outline" icons={SORT_ICONS} open={openDropdown === 'sort'} onToggle={() => toggle('sort')} onChange={(v) => setSort(v as SortKey)} />
+          {filter !== 'All' && (
+            <>
+              <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
+              <TouchableOpacity onPress={() => setFilter('All')} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '600' }}>Clear</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
+
+      <FlatList
+        data={filtered}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => <ErrandCard errand={item} onDelete={loadErrands} />}
+        contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
+        showsVerticalScrollIndicator={true}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
+        ListHeaderComponent={!wide ? <View style={{ marginBottom: 12 }}>{chartsPanel}</View> : null}
+        ListEmptyComponent={
+          loading ? (
+            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
+              <Text style={{ color: '#9CA3AF', fontSize: 14 }}>Loading errands...</Text>
+            </View>
+          ) : (
+            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
+              <Ionicons name="list-outline" size={40} color="#E5E7EB" />
+              <Text style={{ color: '#9CA3AF', fontSize: 14, marginTop: 8 }}>No errands found</Text>
+            </View>
+          )
+        }
+      />
+    </View>
+  );
 
   return (
     <View style={[{ flex: 1, backgroundColor: '#F9FAFB' }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
-      <View style={{ flex: 1 }}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12, zIndex: 100 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
-            <Ionicons name="search-outline" size={18} color="#9CA3AF" />
-            <TextInput
-              placeholder="Search by title or client..."
-              placeholderTextColor="#9CA3AF"
-              value={search}
-              onChangeText={setSearch}
-              style={{ flex: 1, paddingVertical: 10, fontSize: 14, color: '#1F2937', outlineStyle: 'none' } as any}
-            />
-            {search.length > 0 && (
-              <TouchableOpacity onPress={() => setSearch('')}>
-                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8 }}>
-            <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
-            <Dropdown value={filter} options={FILTER_OPTIONS} labels={FILTER_LABELS} icon="list-outline" icons={FILTER_ICONS} iconColors={FILTER_COLORS} open={openDropdown === 'filter'} onToggle={() => toggle('filter')} onChange={(v) => setFilter(v as FilterKey)} />
-            <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
-            <Ionicons name="swap-vertical-outline" size={14} color="#9CA3AF" />
-            <Dropdown value={sort} options={SORT_OPTIONS} labels={SORT_LABELS} icon="time-outline" icons={SORT_ICONS} open={openDropdown === 'sort'} onToggle={() => toggle('sort')} onChange={(v) => setSort(v as SortKey)} />
-            {filter !== 'All' && (
-              <>
-                <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
-                <TouchableOpacity onPress={() => setFilter('All')} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
-                  <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '600' }}>Clear</Text>
-                </TouchableOpacity>
-              </>
-            )}
+      {wide ? (
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          {listPanel}
+          <View style={{ width: 340, padding: 16 }}>
+            {chartsPanel}
           </View>
         </View>
-
-        <FlatList
-          data={filtered}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => <ErrandCard errand={item} onDelete={loadErrands} />}
-          contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
-          showsVerticalScrollIndicator={true}
-          numColumns={wide ? 2 : 1}
-          key={wide ? 'wide' : 'narrow'}
-          columnWrapperStyle={wide ? { gap: 12 } : undefined}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
-          ListEmptyComponent={
-            loading ? (
-              <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
-                <Text style={{ color: '#9CA3AF', fontSize: 14 }}>Loading errands...</Text>
-              </View>
-            ) : (
-              <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
-                <Ionicons name="list-outline" size={40} color="#E5E7EB" />
-                <Text style={{ color: '#9CA3AF', fontSize: 14, marginTop: 8 }}>No errands found</Text>
-              </View>
-            )
-          }
-        />
-      </View>
+      ) : (
+        listPanel
+      )}
     </View>
   );
 }
