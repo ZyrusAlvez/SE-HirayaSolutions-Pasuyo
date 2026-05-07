@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { TextInput, View, Text, TouchableOpacity, TextInputProps, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -7,7 +7,7 @@ interface PasswordInputProps extends Omit<TextInputProps, 'secureTextEntry'> {
   required?: boolean;
 }
 
-export default function PasswordInput({ label, required, className = '', ...props }: PasswordInputProps) {
+const PasswordInput = forwardRef<TextInput, PasswordInputProps>(({ label, required, className = '', ...props }, ref) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -27,6 +27,7 @@ export default function PasswordInput({ label, required, className = '', ...prop
       )}
       <View className="bg-gray-50 border border-gray-200 rounded-2xl px-4 flex-row items-center">
         <TextInput
+          ref={ref}
           className={`flex-1 py-4 text-base outline-none ${className}`}
           placeholderTextColor="#9CA3AF"
           secureTextEntry={!visible}
@@ -39,4 +40,6 @@ export default function PasswordInput({ label, required, className = '', ...prop
       </View>
     </View>
   );
-}
+});
+
+export default PasswordInput;

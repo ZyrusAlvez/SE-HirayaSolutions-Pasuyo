@@ -69,8 +69,9 @@ export default function SystemMessage({ content, currentUserId }: Props) {
       }
     } else if (parsed?.type === 'errand_reviewed') {
       const isMe = parsed.reviewerId === currentUserId;
+      if (isMe) return null;
       label = '';
-      card = <ReviewCard rating={parsed.rating ?? 0} title={parsed.title} feedback={parsed.feedback} isMe={isMe} />;
+      card = <ReviewCard rating={parsed.rating ?? 0} title={parsed.title} feedback={parsed.feedback} isMe={false} />;
     }
   } catch {}
 

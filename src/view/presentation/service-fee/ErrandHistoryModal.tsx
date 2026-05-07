@@ -6,6 +6,9 @@ import { getErrandFullHistory } from '@/controllers/errandController';
 import type { ErrandEvent } from '@/controllers/serviceFeeController';
 
 const EVENT_CONFIG: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string; label: string }> = {
+  posted: { icon: 'add-circle', color: '#6366F1', label: 'Posted errand' },
+  edited_errand: { icon: 'create', color: '#F59E0B', label: 'Edited errand' },
+  deleted_errand: { icon: 'trash', color: '#EF4444', label: 'Deleted errand' },
   accepted: { icon: 'checkmark-circle', color: '#10B981', label: 'Accepted errand' },
   cancelled: { icon: 'close-circle', color: '#EF4444', label: 'Cancelled errand' },
   marked_done: { icon: 'flag', color: '#3B82F6', label: 'Marked as done' },

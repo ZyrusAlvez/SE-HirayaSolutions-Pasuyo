@@ -110,6 +110,7 @@ export const editErrand = async (
 ): Promise<{ success: boolean; error: string; data?: ErrandUpdates }> => {
   const { title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation } = params;
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be edited.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has been completed and cannot be edited.' };
   if (!title.trim()) return { success: false, error: 'Title cannot be empty.' };
   if (!description.trim()) return { success: false, error: 'Description cannot be empty.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
@@ -161,6 +162,7 @@ export const editErrand = async (
 
 export const deleteErrand = async (id: string, status: string): Promise<{ success: boolean; error: string }> => {
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be deleted.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has been completed and cannot be deleted.' };
   try {
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -437,6 +439,7 @@ export const postErrand = async (
 
   if (!title.trim()) return { success: false, error: 'Please enter a title.' };
   if (!description.trim()) return { success: false, error: 'Please enter a description.' };
+  if (!budget || !budget.trim()) return { success: false, error: 'Please enter a budget.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
 
   try {

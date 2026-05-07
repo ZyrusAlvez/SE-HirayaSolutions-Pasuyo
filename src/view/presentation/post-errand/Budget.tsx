@@ -9,6 +9,7 @@ export default function Budget({ value, onChange }: Props) {
   return (
     <TextInput
       label="Budget (₱)"
+      required
       placeholder="e.g. 500"
       value={value}
       onChangeText={(v) => {
