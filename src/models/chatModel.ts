@@ -144,3 +144,14 @@ export const broadcastTyping = (conversationId: string, userId: string) => {
   const channel = supabase.channel(`typing-${conversationId}`);
   channel.send({ type: 'broadcast', event: 'typing', payload: { userId } });
 };
+
+export const subscribeToConversations = (
+  userId: string,
+  onChange: (payload: any) => void,
+) => {
+  const channel = supabase
+    .channel(`conversations-${userId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `user1_id=eq.${userId}` }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `user2_id=eq.${userId}` }, onChange);
+  return channel.subscribe();
+};
