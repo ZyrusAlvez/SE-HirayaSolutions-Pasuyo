@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import { getAnalytics, AnalyticsData } from '../../controllers/adminController';
-import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 
 const ACCENT = '#FEA405';
 
@@ -39,10 +38,6 @@ export default function AdminAnalyticsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6`}>
-        <Text className="text-xl font-bold text-gray-900">Analytics</Text>
-        <Text className="text-xs text-gray-400 mt-0.5">Last 7 days overview</Text>
-      </View>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -88,7 +83,6 @@ export default function AdminAnalyticsScreen() {
         </ScrollView>
       )}
 
-      <AdminNavBar />
     </View>
   );
 }

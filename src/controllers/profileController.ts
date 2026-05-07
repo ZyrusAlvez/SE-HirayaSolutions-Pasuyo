@@ -47,9 +47,9 @@ export const getProfile = async (): Promise<Result<ProfileData | null>> => {
         ? user.user_metadata.avatar_url
         : null);
 
-  const verificationStatus: VerificationStatus = profile?.verified
+  const verificationStatus: VerificationStatus = profile?.status === 'verified'
     ? 'verified'
-    : profile?.pending_verification ? 'pending' : 'not_verified';
+    : profile?.status === 'pending' ? 'pending' : 'not_verified';
 
   return {
     success: true,
@@ -59,7 +59,7 @@ export const getProfile = async (): Promise<Result<ProfileData | null>> => {
       email: user.email || '',
       avatarUrl,
       verificationStatus,
-      ...(profile?.verified ? {
+      ...(profile?.status === 'verified' ? {
         gender: profile.gender,
         date_of_birth: profile.date_of_birth,
         address_province: profile.address_province,

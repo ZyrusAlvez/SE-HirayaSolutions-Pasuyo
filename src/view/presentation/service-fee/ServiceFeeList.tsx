@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { ServiceFeePayment } from '@/controllers/serviceFeeController';
-import ServiceFeeLimitBar from './ServiceFeeLimitBar';
+import ServiceFeeLimitBar from '@/view/components/ServiceFeeLimitBar';
 import PaymentHistory from './PaymentHistory';
 import { LimitBarSkeleton, PaymentHistorySkeleton } from './SkeletonLoading';
 

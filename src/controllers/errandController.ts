@@ -118,6 +118,8 @@ export const editErrand = async (
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 
+    const { data: original } = await errandModel.getErrandById(errandId);
+
     const existingUrls = images.filter(uri => uri.startsWith('http'));
     const newUris = images.filter(uri => !uri.startsWith('http'));
     const uploadedUrls = newUris.length > 0 ? await errandModel.postImages(user.id, errandId, newUris) : [];
@@ -139,6 +141,18 @@ export const editErrand = async (
     const { error } = await errandModel.updateErrand(errandId, updates);
     if (error) throw error;
 
+    // Build changes metadata
+    const changes: Record<string, { from: any; to: any }> = {};
+    if (original) {
+      if (original.title !== updates.title) changes.title = { from: original.title, to: updates.title };
+      if (original.description !== updates.description) changes.description = { from: original.description, to: updates.description };
+      if (original.is_remote !== updates.is_remote) changes.is_remote = { from: original.is_remote, to: updates.is_remote };
+      if (original.budget !== updates.budget) changes.budget = { from: original.budget, to: updates.budget };
+      if (original.deadline !== updates.deadline) changes.deadline = { from: original.deadline, to: updates.deadline };
+      if (original.location_name !== updates.location_name) changes.location = { from: original.location_name, to: updates.location_name };
+    }
+    await insertErrandEvent(errandId, user.id, 'edited_errand', { title: updates.title, changes });
+
     return { success: true, error: '', data: updates };
   } catch (e: any) {
     return { success: false, error: e.message ?? 'Something went wrong' };
@@ -148,6 +162,12 @@ export const editErrand = async (
 export const deleteErrand = async (id: string, status: string): Promise<{ success: boolean; error: string }> => {
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be deleted.' };
   try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data: errandData } = await errandModel.getErrandById(id);
+    await insertErrandEvent(id, user.id, 'deleted_errand', { title: errandData?.title ?? 'Unknown' });
+
     const { error } = await errandModel.deleteErrand(id);
     if (error) return { success: false, error: 'Failed to delete errand' };
     return { success: true, error: '' };
@@ -430,6 +450,8 @@ export const postErrand = async (
       const imageUrls = await errandModel.postImages(user.id, inserted.id, images);
       await errandModel.updateErrandImages(inserted.id, imageUrls);
     }
+
+    await insertErrandEvent(inserted.id, user.id, 'posted', { title: title.trim() });
 
     return { success: true };
   } catch (e: any) {

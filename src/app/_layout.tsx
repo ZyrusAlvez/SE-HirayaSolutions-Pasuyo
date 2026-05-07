@@ -54,7 +54,7 @@ export default function RootLayout() {
       router.replace('/login');
     } else if (session && inAuthGroup && !isResetPassword) {
       getUserActiveAndRole(session.user.id).then(({ data }) => {
-        if (data?.is_active === false) {
+        if (data?.status === 'suspended') {
           router.replace('/suspended');
         } else {
           router.replace('/');
@@ -62,7 +62,7 @@ export default function RootLayout() {
       });
     } else if (session && !inAuthGroup && !inAdminGroup && !isPublic && !isSuspended) {
       getUserActiveAndRole(session.user.id).then(({ data }) => {
-        if (data?.is_active === false) {
+        if (data?.status === 'suspended') {
           router.replace('/suspended');
         } else if (data?.role === 'admin') {
           router.replace('/admin');

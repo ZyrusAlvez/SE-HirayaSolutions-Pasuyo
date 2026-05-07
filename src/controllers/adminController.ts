@@ -1,8 +1,21 @@
 import * as adminModel from '../models/adminModel';
-import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData } from '../models/adminModel';
+import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus } from '../models/adminModel';
 import { postNotification } from './notificationController';
+import { sendAccountRestoredEmail, sendAccountSuspendedEmail } from '../models/emailModel';
 
-export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData };
+export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
+
+export type ActivityItem = {
+  id: string;
+  type: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+};
+
+export type ActivityPage = {
+  items: ActivityItem[];
+  hasMore: boolean;
+};
 
 type Result<T = undefined> = { success: boolean; error: string; data?: T };
 
@@ -10,26 +23,20 @@ export const getUsers = async (): Promise<Result<FullUserProfile[]>> => {
   try {
     const { data, error } = await adminModel.getAdminUsers();
     if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch users' };
-
-    const users = await Promise.all(
-      data.map(async (user) => {
-        const { data: profileData } = await adminModel.getUserIsActive(user.id);
-        return { ...user, is_active: profileData?.is_active ?? true } as FullUserProfile;
-      })
-    );
-    return { success: true, error: '', data: users };
+    return { success: true, error: '', data: data as FullUserProfile[] };
   } catch {
     return { success: false, error: 'Failed to fetch users' };
   }
 };
 
-export const getUserDetail = async (id: string): Promise<Result<UserDetail>> => {
+export const getUserDetail = async (id: string): Promise<Result<UserDetail & { email: string | null; displayName: string | null }>> => {
   try {
     const { data, error } = await adminModel.getUserDetail(id);
     if (error || !data) return { success: false, error: error?.message ?? 'User not found' };
 
-    const { data: profileData } = await adminModel.getUserIsActive(id);
-    return { success: true, error: '', data: { ...data, is_active: profileData?.is_active ?? true } as UserDetail };
+    // Get email and display name from auth.users
+    const { data: authData } = await adminModel.getUserEmail(id);
+    return { success: true, error: '', data: { ...data, email: authData?.email ?? null, displayName: authData?.displayName ?? null } as UserDetail & { email: string | null; displayName: string | null } };
   } catch {
     return { success: false, error: 'Failed to fetch user' };
   }
@@ -45,18 +52,28 @@ export const getVerificationProfile = async (id: string): Promise<Result<Verific
   }
 };
 
-export const updateUserActiveStatus = async (id: string, suspend: boolean): Promise<Result> => {
+export const updateUserActiveStatus = async (id: string, suspend: boolean, reason?: string): Promise<Result> => {
   try {
-    const { error } = await adminModel.updateUserActiveStatus(id, !suspend);
-    if (error) return { success: false, error: error.message };
+    if (suspend) {
+      const { error } = await adminModel.updateUserStatus(id, 'suspended');
+      if (error) return { success: false, error: error.message };
+    } else {
+      // Restore: check if user has verification docs to determine status
+      const { data: profile } = await adminModel.getVerificationProfile(id);
+      const hasVerificationDocs = !!(profile?.id_front_url && profile?.id_back_url);
+      const { error } = await adminModel.updateUserStatus(id, hasVerificationDocs ? 'verified' : 'unverified');
+      if (error) return { success: false, error: error.message };
+    }
 
     await postNotification(
       id,
       suspend ? 'Account Suspended' : 'Account Restored',
       suspend
-        ? 'Your account has been suspended. Please contact support for more information.'
+        ? `Your account has been suspended. Reason: ${reason || 'Violation of platform rules'}. Please contact support for more information.`
         : 'Your account has been restored. You can now access Pasuyo again.',
     );
+    if (suspend) await sendAccountSuspendedEmail(id, reason || 'Violation of platform rules');
+    if (!suspend) await sendAccountRestoredEmail(id);
     await adminModel.postAdminLog(
       suspend ? 'SUSPENDED_USER' : 'RESTORED_USER',
       id,
@@ -99,6 +116,48 @@ export const getErrands = async (): Promise<Result<Errand[]>> => {
     return { success: true, error: '', data: data as Errand[] };
   } catch {
     return { success: false, error: 'Failed to fetch errands' };
+  }
+};
+
+const PAGE_SIZE = 30;
+
+export const getUserActivity = async (
+  userId: string,
+  page: number,
+  filter: 'All' | 'Activity' | 'Messages' | 'Reports' = 'All',
+): Promise<Result<ActivityPage>> => {
+  try {
+    const offset = page * PAGE_SIZE;
+    const activityTypes = ['posted', 'accepted', 'cancelled', 'marked_done', 'reviewed', 'edited_errand', 'deleted_errand'];
+
+    let items: ActivityItem[] = [];
+    let totalAvailable = 0;
+
+    if (filter === 'All' || filter === 'Activity') {
+      const { data, count } = await adminModel.getUserErrandEvents(userId, PAGE_SIZE, offset);
+      items.push(...(data ?? []).map((e: any) => ({ id: e.id, type: e.event_type, metadata: e.metadata, created_at: e.created_at })));
+      totalAvailable += count ?? 0;
+    }
+    if (filter === 'All' || filter === 'Messages') {
+      const { data, count } = await adminModel.getUserMessages(userId, PAGE_SIZE, offset);
+      items.push(...(data ?? []).map((m: any) => ({ id: m.id, type: 'message_sent', created_at: m.created_at })));
+      totalAvailable += count ?? 0;
+    }
+    if (filter === 'All' || filter === 'Reports') {
+      const { data, count } = await adminModel.getUserReports(userId, PAGE_SIZE, offset);
+      items.push(...(data ?? []).map((r: any) => ({ id: r.id, type: 'reported', metadata: { reason: r.reason }, created_at: r.created_at })));
+      totalAvailable += count ?? 0;
+    }
+
+    // Sort merged results newest first
+    items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // Trim to page size
+    items = items.slice(0, PAGE_SIZE);
+
+    return { success: true, error: '', data: { items, hasMore: offset + PAGE_SIZE < totalAvailable } };
+  } catch {
+    return { success: false, error: 'Failed to fetch activity' };
   }
 };
 

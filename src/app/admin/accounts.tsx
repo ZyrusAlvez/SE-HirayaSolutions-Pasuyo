@@ -1,31 +1,40 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, Platform, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getUsers, FullUserProfile } from '../../controllers/adminController';
-import { logout } from '../../controllers/authController';
-import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
+import { getAllActivity, getAllMessages, getAllReports } from '../../models/adminModel';
 import UserCard from '../../view/presentation/admin/UserCard';
 import VerificationCard, { PendingUser } from '../../view/presentation/admin/VerificationCard';
+import AccountsChartsPanel from '../../view/presentation/admin/AccountsChartsPanel';
+import { AccountsListSkeleton, AccountsChartSkeleton } from '../../view/presentation/admin/AccountsSkeleton';
+import Dropdown from '../../view/components/Dropdown';
 
 const ACCENT = '#FEA405';
+const WIDE_BREAKPOINT = 900;
 
-type SortKey = 'newest' | 'oldest' | 'verified' | 'unverified' | 'pending' | 'suspended';
+type FilterKey = 'All' | 'Verified' | 'Unverified' | 'Pending' | 'Suspended';
+type SortKey = 'newest' | 'oldest';
 
-const SORT_OPTIONS: { label: string; value: SortKey }[] = [
-  { label: 'Newest', value: 'newest' },
-  { label: 'Oldest', value: 'oldest' },
-  { label: 'Verified', value: 'verified' },
-  { label: 'Unverified', value: 'unverified' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Suspended', value: 'suspended' },
-];
+const FILTER_OPTIONS: FilterKey[] = ['All', 'Verified', 'Unverified', 'Pending', 'Suspended'];
+const FILTER_LABELS: Record<string, string> = { All: 'All', Verified: 'Verified', Unverified: 'Unverified', Pending: 'Pending', Suspended: 'Suspended' };
+const FILTER_ICONS: Record<string, string> = { All: 'people-outline', Verified: 'checkmark-circle-outline', Unverified: 'close-circle-outline', Pending: 'time-outline', Suspended: 'ban-outline' };
+const FILTER_COLORS: Record<string, string> = { All: '#6B7280', Verified: '#22C55E', Unverified: '#EF4444', Pending: '#F59E0B', Suspended: '#EF4444' };
+
+const SORT_OPTIONS: SortKey[] = ['newest', 'oldest'];
+const SORT_LABELS: Record<string, string> = { newest: 'Newest', oldest: 'Oldest' };
+const SORT_ICONS: Record<string, string> = { newest: 'arrow-down-outline', oldest: 'arrow-up-outline' };
 
 export default function AdminAccountsScreen() {
+  const { width } = useWindowDimensions();
+  const wide = width >= WIDE_BREAKPOINT;
   const [users, setUsers] = useState<FullUserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<FilterKey>('All');
   const [sort, setSort] = useState<SortKey>('newest');
   const [refreshing, setRefreshing] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [activities, setActivities] = useState<{ created_at: string }[]>([]);
 
   const loadUsers = async () => {
     const result = await getUsers();
@@ -41,55 +50,59 @@ export default function AdminAccountsScreen() {
 
   useEffect(() => {
     loadUsers();
+    Promise.all([getAllActivity(), getAllMessages(), getAllReports()]).then(([act, msg, rep]) => {
+      setActivities([...(act.data ?? []), ...(msg.data ?? []), ...(rep.data ?? [])]);
+    });
     const interval = setInterval(loadUsers, 5000);
     return () => clearInterval(interval);
   }, []);
 
+  const verifiedCount = useMemo(() => users.filter(u => u.status === 'verified').length, [users]);
+  const unverifiedCount = useMemo(() => users.filter(u => u.status !== 'verified').length, [users]);
+
   const filtered = useMemo(() => {
     let list = [...users];
-
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(u =>
-        (u.display_name ?? '').toLowerCase().includes(q) ||
-        (u.email ?? '').toLowerCase().includes(q)
-      );
+      list = list.filter(u => (u.display_name ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q));
     }
-
-    if (sort === 'pending') return list.filter(u => u.pending_verification === true);
-    if (sort === 'suspended') return list.filter(u => u.is_active === false);
-    if (sort === 'verified') return list.filter(u => u.verified === true);
-    if (sort === 'unverified') return list.filter(u => u.verified === false);
-
-    switch (sort) {
-      case 'newest': list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); break;
-      case 'oldest': list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); break;
+    switch (filter) {
+      case 'Verified': list = list.filter(u => u.status === 'verified'); break;
+      case 'Unverified': list = list.filter(u => u.status === 'unverified'); break;
+      case 'Pending': list = list.filter(u => u.status === 'pending'); break;
+      case 'Suspended': list = list.filter(u => u.status === 'suspended'); break;
     }
-
+    list.sort((a, b) => sort === 'newest'
+      ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
     return list;
-  }, [users, search, sort]);
+  }, [users, search, filter, sort]);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6 flex-row items-center justify-between`}>
-        <View>
-          <Text className="text-xl font-bold text-gray-900">User Accounts</Text>
-          <Text className="text-xs text-gray-400 mt-0.5">{users.length} total users</Text>
-        </View>
-        <TouchableOpacity onPress={() => logout()} activeOpacity={0.7} style={{ padding: 8 }}>
-          <Ionicons name="log-out-outline" size={24} color="#9CA3AF" />
-        </TouchableOpacity>
-      </View>
+  const chartWidth = wide ? 280 : Math.min(width - 48, 360);
+  const toggle = (id: string) => setOpenDropdown(prev => prev === id ? null : id);
 
-      <View style={{ flex: 1, padding: 16, gap: 12 }}>
-        <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-3 gap-2">
+  const chartsPanel = (
+    <AccountsChartsPanel
+      verifiedCount={verifiedCount}
+      unverifiedCount={unverifiedCount}
+      totalCount={users.length}
+      activities={activities}
+      chartWidth={chartWidth}
+    />
+  );
+
+  const listPanel = (
+    <View style={{ flex: 1 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12, zIndex: 100 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
           <Ionicons name="search-outline" size={18} color="#9CA3AF" />
           <TextInput
             placeholder="Search by name or email..."
             placeholderTextColor="#9CA3AF"
             value={search}
             onChangeText={setSearch}
-            className="flex-1 py-2.5 text-sm text-gray-800"
+            style={{ flex: 1, paddingVertical: 10, fontSize: 14, color: '#1F2937', outlineStyle: 'none' } as any}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')}>
@@ -98,46 +111,58 @@ export default function AdminAccountsScreen() {
           )}
         </View>
 
-        <View className="flex-row gap-2 flex-wrap">
-          {SORT_OPTIONS.map(opt => (
-            <TouchableOpacity
-              key={opt.value}
-              onPress={() => setSort(opt.value)}
-              className={`px-3 py-1.5 rounded-full border ${sort === opt.value ? 'bg-[#FEA405] border-[#FEA405]' : 'bg-white border-gray-200'}`}
-            >
-              <Text className={`text-xs font-medium ${sort === opt.value ? 'text-white' : 'text-gray-600'}`}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8 }}>
+          <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
+          <Dropdown value={filter} options={FILTER_OPTIONS} labels={FILTER_LABELS} icon="people-outline" icons={FILTER_ICONS} iconColors={FILTER_COLORS} open={openDropdown === 'filter'} onToggle={() => toggle('filter')} onChange={(v) => setFilter(v as FilterKey)} />
+          <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
+          <Ionicons name="swap-vertical-outline" size={14} color="#9CA3AF" />
+          <Dropdown value={sort} options={SORT_OPTIONS} labels={SORT_LABELS} icon="time-outline" icons={SORT_ICONS} open={openDropdown === 'sort'} onToggle={() => toggle('sort')} onChange={(v) => setSort(v as SortKey)} />
+          {filter !== 'All' && (
+            <>
+              <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
+              <TouchableOpacity onPress={() => setFilter('All')} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '600' }}>Clear</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
-
-        {loading ? (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-gray-400 text-sm">Loading users...</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={filtered}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => sort === 'pending'
-              ? <VerificationCard user={item as unknown as PendingUser} />
-              : <UserCard user={item} />
-            }
-            contentContainerStyle={{ gap: 8, paddingBottom: 16 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
-            ListEmptyComponent={
-              <View className="items-center justify-center mt-16">
-                <Ionicons name="people-outline" size={40} color="#E5E7EB" />
-                <Text className="text-gray-400 text-sm mt-2">No users found</Text>
-              </View>
-            }
-          />
-        )}
       </View>
 
-      <AdminNavBar />
+      <FlatList
+        data={filtered}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => filter === 'Pending'
+          ? <VerificationCard user={item as unknown as PendingUser} />
+          : <UserCard user={item} onRefresh={loadUsers} />
+        }
+        contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
+        showsVerticalScrollIndicator={true}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
+        ListHeaderComponent={!wide ? <View style={{ marginBottom: 12 }}>{chartsPanel}</View> : null}
+        ListEmptyComponent={
+          loading ? <AccountsListSkeleton /> : (
+            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
+              <Ionicons name="people-outline" size={40} color="#E5E7EB" />
+              <Text style={{ color: '#9CA3AF', fontSize: 14, marginTop: 8 }}>No users found</Text>
+            </View>
+          )
+        }
+      />
+    </View>
+  );
+
+  return (
+    <View style={[{ flex: 1, backgroundColor: '#F9FAFB' }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
+      {wide ? (
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          {listPanel}
+          <View style={{ width: 340, padding: 16 }}>
+            {loading ? <AccountsChartSkeleton /> : chartsPanel}
+          </View>
+        </View>
+      ) : (
+        listPanel
+      )}
     </View>
   );
 }

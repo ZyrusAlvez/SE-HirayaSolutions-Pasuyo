@@ -131,7 +131,7 @@ export const getDisplayProfile = async (userId: string): Promise<DisplayProfile>
   const client = supabaseAdmin ?? supabase;
   const { data: profile } = await client
     .from('profiles')
-    .select('verified, pending_verification, first_name, last_name, avatar_url, gender, date_of_birth, address_province, address_city, address_barangay')
+    .select('status, first_name, last_name, avatar_url, gender, date_of_birth, address_province, address_city, address_barangay')
     .eq('id', userId)
     .single();
 
@@ -139,13 +139,13 @@ export const getDisplayProfile = async (userId: string): Promise<DisplayProfile>
     ? [profile.first_name, profile.last_name].filter(Boolean).join(' ')
     : null;
 
-  const verificationStatus: VerificationStatus = profile?.verified
+  const verificationStatus: VerificationStatus = profile?.status === 'verified'
     ? 'verified'
-    : profile?.pending_verification
+    : profile?.status === 'pending'
       ? 'pending'
       : 'not_verified';
 
-  const verifiedFields = profile?.verified ? {
+  const verifiedFields = profile?.status === 'verified' ? {
     gender: profile.gender,
     date_of_birth: profile.date_of_birth,
     address_province: profile.address_province,
@@ -164,7 +164,7 @@ export const getDisplayProfile = async (userId: string): Promise<DisplayProfile>
       name: profileName,
       email,
       avatarUrl: profile?.avatar_url ?? null,
-      verified: profile?.verified ?? false,
+      verified: profile?.status === 'verified',
       verificationStatus,
       ...verifiedFields,
     };
@@ -189,14 +189,14 @@ export const getDisplayProfile = async (userId: string): Promise<DisplayProfile>
 export const getProfile = (userId: string) =>
   supabase
     .from('profiles')
-    .select('verified, pending_verification, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name, avatar_url, last_seen')
+    .select('status, gender, date_of_birth, address_province, address_city, address_barangay, first_name, last_name, avatar_url, last_seen')
     .eq('id', userId)
     .single();
 
 export const getHeaderProfile = (userId: string) =>
   supabase
     .from('profiles')
-    .select('avatar_url, verified, pending_verification')
+    .select('avatar_url, status')
     .eq('id', userId)
     .single();
 
@@ -253,7 +253,6 @@ export const postVerificationProfile = (userId: string, s: VerifyFormState, urls
     id_type: s.idType,
     id_front_url: urls.idFrontUrl,
     id_back_url: urls.idBackUrl,
-    pending_verification: true,
-    verified: false,
+    status: 'pending',
     verification_submitted_at: new Date().toISOString(),
   });
