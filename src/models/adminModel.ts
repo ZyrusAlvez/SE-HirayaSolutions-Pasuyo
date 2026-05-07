@@ -258,6 +258,19 @@ export const getAdminReports = () =>
     .select('id, reporter_id, reported_id, type, reason, details, created_at, errand_id, file_urls')
     .order('created_at', { ascending: false });
 
+export const getErrandReports = (errandId: string) =>
+  getAdmin()
+    .from('reports')
+    .select('id, reporter_id, reason, details, created_at, file_urls')
+    .eq('errand_id', errandId)
+    .order('created_at', { ascending: false });
+
+export const getReporterProfiles = (ids: string[]) =>
+  getAdmin()
+    .from('profiles')
+    .select('id, first_name, last_name, avatar_url')
+    .in('id', ids);
+
 export const getPendingPayments = () =>
   getAdmin()
     .from('service_fee_payments')

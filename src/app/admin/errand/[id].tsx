@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getAdminErrandDetail, getAdminErrandHistory } from '@/controllers/adminController';
-import type { AdminErrandEvent } from '@/controllers/adminController';
+import { getAdminErrandDetail, getAdminErrandHistory, getErrandReports } from '@/controllers/adminController';
+import type { AdminErrandEvent, ErrandReport } from '@/controllers/adminController';
 import ImageViewer from '@/view/components/ImageViewer';
 
 const ACCENT = '#FEA405';
@@ -87,6 +87,7 @@ export default function AdminErrandDetailScreen() {
   const [errand, setErrand] = useState<any>(null);
   const [events, setEvents] = useState<AdminErrandEvent[]>([]);
   const [actorNames, setActorNames] = useState<Record<string, string>>({});
+  const [reports, setReports] = useState<ErrandReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
@@ -95,12 +96,14 @@ export default function AdminErrandDetailScreen() {
     Promise.all([
       getAdminErrandDetail(id),
       getAdminErrandHistory(id),
-    ]).then(([errandResult, historyResult]) => {
+      getErrandReports(id),
+    ]).then(([errandResult, historyResult, reportsResult]) => {
       if (errandResult.success) setErrand(errandResult.data);
       if (historyResult.success) {
         setEvents(historyResult.data.events);
         setActorNames(historyResult.data.actorNames);
       }
+      if (reportsResult.success) setReports(reportsResult.data);
       setLoading(false);
     });
   }, [id]);
@@ -272,6 +275,35 @@ export default function AdminErrandDetailScreen() {
               Created {new Date(errand.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
             </Text>
           </View>
+
+          {/* Reports */}
+          {reports.length > 0 && (
+            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, marginTop: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 16 }}>Reports ({reports.length})</Text>
+              {reports.map((report, i) => (
+                <View key={report.id} style={{ flexDirection: 'row', gap: 10, paddingBottom: i < reports.length - 1 ? 14 : 0, marginBottom: i < reports.length - 1 ? 14 : 0, borderBottomWidth: i < reports.length - 1 ? 1 : 0, borderBottomColor: '#F3F4F6' }}>
+                  <TouchableOpacity onPress={() => router.push(`/admin/account/${report.reporter_id}`)} activeOpacity={0.7}>
+                    <Image
+                      source={report.reporter_avatar ? { uri: report.reporter_avatar } : require('@/assets/images/default_profile.jpg')}
+                      style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6' }}
+                    />
+                  </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <TouchableOpacity onPress={() => router.push(`/admin/account/${report.reporter_id}`)} activeOpacity={0.7}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827' }}>{report.reporter_name}</Text>
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 12, color: '#374151', marginTop: 2 }}>{report.reason}</Text>
+                    {report.details && (
+                      <Text style={{ fontSize: 11, color: '#6B7280', fontStyle: 'italic', marginTop: 2 }} numberOfLines={2}>"{report.details}"</Text>
+                    )}
+                    <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 4 }}>
+                      {new Date(report.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* History */}
           <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, marginTop: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
