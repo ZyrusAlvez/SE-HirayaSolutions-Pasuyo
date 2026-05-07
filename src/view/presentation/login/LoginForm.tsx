@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import PasswordInput from '@/view/components/PasswordInput';
 
@@ -24,6 +25,8 @@ export default function LoginForm({
   onForgotPassword,
   onSignup,
 }: Props) {
+  const passwordRef = useRef<TextInput>(null);
+
   return (
     <View>
       <View className="items-center mb-12">
@@ -44,14 +47,19 @@ export default function LoginForm({
           onChangeText={onEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"
+          returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
       </View>
 
       <PasswordInput
+        ref={passwordRef}
         placeholder="Password"
         value={password}
         onChangeText={onPasswordChange}
         autoCapitalize="none"
+        returnKeyType="go"
+        onSubmitEditing={onLogin}
       />
 
       <View className="flex-row items-center my-6">

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import PasswordInput from '@/view/components/PasswordInput';
 import PasswordStrength from '@/view/components/PasswordStrength';
@@ -27,6 +28,9 @@ export default function SignupForm({
   onGoogleSignup,
   onLogin,
 }: Props) {
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+
   return (
     <View>
       <View className="items-center mb-12">
@@ -47,6 +51,8 @@ export default function SignupForm({
           onChangeText={(v) => onNameChange(v.slice(0, 30))}
           maxLength={30}
           autoCapitalize="words"
+          returnKeyType="next"
+          onSubmitEditing={() => emailRef.current?.focus()}
         />
         <Text className={`text-xs mt-1 text-right ${name.length >= 30 ? 'text-red-500' : 'text-gray-400'}`}>
           {name.length}/30
@@ -62,14 +68,20 @@ export default function SignupForm({
           onChangeText={onEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"
+          returnKeyType="next"
+          ref={emailRef}
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
       </View>
 
       <PasswordInput
+        ref={passwordRef}
         placeholder="Password"
         value={password}
         onChangeText={onPasswordChange}
         autoCapitalize="none"
+        returnKeyType="go"
+        onSubmitEditing={onSignup}
       />
 
       {password.length > 0 && <PasswordStrength password={password} />}
