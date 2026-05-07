@@ -191,6 +191,7 @@ export const updatePaymentStatus = async (id: string, approve: boolean, reason?:
       approve
         ? `Your service fee payment of ₱${payment.amount.toLocaleString()} has been approved.`
         : `Your service fee payment of ₱${payment.amount.toLocaleString()} has been rejected. Reason: ${reason || 'Does not meet requirements'}.`,
+      '/service-fee',
     );
     sendPaymentStatusEmail(payment.user_id, approve, payment.amount, reason);
     await adminModel.postAdminLog(
