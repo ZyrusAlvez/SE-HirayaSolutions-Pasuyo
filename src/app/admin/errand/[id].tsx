@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getAdminErrandDetail, getAdminErrandHistory } from '@/controllers/adminController';
@@ -7,6 +7,10 @@ import type { AdminErrandEvent } from '@/controllers/adminController';
 import ImageViewer from '@/view/components/ImageViewer';
 
 const ACCENT = '#FEA405';
+
+function Bone({ width, height, radius = 6 }: { width: number | string; height: number; radius?: number }) {
+  return <View style={{ width: width as any, height, borderRadius: radius, backgroundColor: '#E5E7EB' }} />;
+}
 
 const STATUS_COLORS: Record<string, string> = {
   Available: '#10B981',
@@ -103,8 +107,54 @@ export default function AdminErrandDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={ACCENT} size="large" />
+      <View style={[{ flex: 1, backgroundColor: '#F9FAFB' }, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' as const }]}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+          <View style={{ alignSelf: 'center', width: '100%', maxWidth: width >= 768 ? 680 : undefined }}>
+            <Bone width={140} height={16} radius={8} />
+            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, marginTop: 16, gap: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Bone width="60%" height={20} />
+                <Bone width={70} height={22} radius={11} />
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Bone width={28} height={28} radius={14} />
+                <Bone width={120} height={12} />
+              </View>
+              <Bone width="100%" height={1} />
+              <Bone width={80} height={10} />
+              <Bone width="100%" height={14} />
+              <Bone width="90%" height={14} />
+              <Bone width="70%" height={14} />
+              <Bone width="100%" height={1} />
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Bone width={50} height={10} />
+                  <Bone width={80} height={16} />
+                </View>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Bone width={60} height={10} />
+                  <Bone width={100} height={16} />
+                </View>
+              </View>
+              <Bone width="100%" height={1} />
+              <Bone width={40} height={10} />
+              <Bone width={80} height={14} />
+            </View>
+            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, marginTop: 16, gap: 12 }}>
+              <Bone width={80} height={16} />
+              {[1, 2, 3].map(i => (
+                <View key={i} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+                  <Bone width={24} height={24} radius={12} />
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Bone width="50%" height={13} />
+                    <Bone width="30%" height={11} />
+                    <Bone width="40%" height={11} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
       </View>
     );
   }

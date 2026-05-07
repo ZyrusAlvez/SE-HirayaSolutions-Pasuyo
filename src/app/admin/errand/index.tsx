@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getErrands, Errand } from '@/controllers/adminController';
 import ErrandCard from '@/view/presentation/admin/ErrandCard';
 import ErrandsChartPanel from '@/view/presentation/admin/ErrandsChartPanel';
+import { ErrandsListSkeleton, ErrandsChartSkeleton } from '@/view/presentation/admin/ErrandsSkeleton';
 import Dropdown from '@/view/components/Dropdown';
 
 const ACCENT = '#FEA405';
@@ -147,13 +148,9 @@ export default function AdminErrandsScreen() {
         contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
         showsVerticalScrollIndicator={true}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
-        ListHeaderComponent={!wide ? <View style={{ marginBottom: 12 }}>{chartsPanel}</View> : null}
+        ListHeaderComponent={!wide ? <View style={{ marginBottom: 12 }}>{loading ? <ErrandsChartSkeleton /> : chartsPanel}</View> : null}
         ListEmptyComponent={
-          loading ? (
-            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
-              <Text style={{ color: '#9CA3AF', fontSize: 14 }}>Loading errands...</Text>
-            </View>
-          ) : (
+          loading ? <ErrandsListSkeleton /> : (
             <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 64 }}>
               <Ionicons name="list-outline" size={40} color="#E5E7EB" />
               <Text style={{ color: '#9CA3AF', fontSize: 14, marginTop: 8 }}>No errands found</Text>
@@ -170,7 +167,7 @@ export default function AdminErrandsScreen() {
         <View style={{ flex: 1, flexDirection: 'row' }}>
           {listPanel}
           <View style={{ width: 340, padding: 16 }}>
-            {chartsPanel}
+            {loading ? <ErrandsChartSkeleton /> : chartsPanel}
           </View>
         </View>
       ) : (
