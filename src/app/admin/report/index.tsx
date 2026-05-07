@@ -11,11 +11,11 @@ import KebabMenu from '@/view/components/KebabMenu';
 const ACCENT = '#FEA405';
 
 type Tab = 'errand' | 'user';
-type SortKey = 'newest' | 'oldest';
+type SortKey = 'most' | 'least';
 
-const SORT_OPTIONS: SortKey[] = ['newest', 'oldest'];
-const SORT_LABELS: Record<string, string> = { newest: 'Newest', oldest: 'Oldest' };
-const SORT_ICONS: Record<string, string> = { newest: 'arrow-down-outline', oldest: 'arrow-up-outline' };
+const SORT_OPTIONS: SortKey[] = ['most', 'least'];
+const SORT_LABELS: Record<string, string> = { most: 'Most Reports', least: 'Least Reports' };
+const SORT_ICONS: Record<string, string> = { most: 'arrow-down-outline', least: 'arrow-up-outline' };
 
 const TABS = [
   { key: 'errand', label: 'Errand Reports', icon: 'document-text-outline' },
@@ -28,7 +28,7 @@ export default function ReportsScreen() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('errand');
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<SortKey>('newest');
+  const [sort, setSort] = useState<SortKey>('most');
   const [refreshing, setRefreshing] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -69,8 +69,7 @@ export default function ReportsScreen() {
       entries = entries.filter(e => e.reported_name.toLowerCase().includes(q) || e.reason.toLowerCase().includes(q));
     }
     entries.sort((a, b) => {
-      const diff = new Date(b.latest).getTime() - new Date(a.latest).getTime();
-      return sort === 'newest' ? diff : -diff;
+      return sort === 'most' ? b.count - a.count : a.count - b.count;
     });
     return entries;
   }, [reports, tab, search, sort]);
