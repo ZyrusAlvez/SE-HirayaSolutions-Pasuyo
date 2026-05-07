@@ -38,7 +38,7 @@ export default function VerificationCard({ user }: Props) {
       </View>
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => router.push(`/admin/verification/${user.id}`)}
+        onPress={() => router.push(`/admin/account-verification/${user.id}`)}
         style={{ backgroundColor: '#FEA405', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 }}
       >
         <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}>Verify</Text>

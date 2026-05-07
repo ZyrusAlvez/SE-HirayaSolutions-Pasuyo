@@ -98,7 +98,7 @@ export default function AccountVerificationScreen() {
                     <View style={{ width: '80%', height: 11, borderRadius: 6, backgroundColor: '#E5E7EB' }} />
                     <View style={{ width: '40%', height: 10, borderRadius: 6, backgroundColor: '#E5E7EB' }} />
                   </View>
-                  <View style={{ width: 70, height: 20, borderRadius: 10, backgroundColor: '#E5E7EB' }} />
+                  <View style={{ width: 60, height: 28, borderRadius: 10, backgroundColor: '#E5E7EB' }} />
                 </View>
               ))}
             </View>
