@@ -41,6 +41,15 @@ export const VERIFICATION_REJECTION_REASONS = [
   'Other',
 ];
 
+export const PAYMENT_REJECTION_REASONS = [
+  'Invalid or unreadable receipt',
+  'Amount does not match',
+  'Duplicate submission',
+  'Reference number not found',
+  'Suspected fraudulent payment',
+  'Other',
+];
+
 export const checkExistingReport = async (
   reportedId: string,
   type: ReportType,

@@ -363,6 +363,101 @@ const TEMPLATES: Record<string, string> = {
 </body>
 </html>`,
 
+  "payment-approved": `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Approved</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #F9FAFB; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .wrapper { max-width: 480px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+    .header { padding: 32px 40px 24px; text-align: center; border-bottom: 1px solid #F3F4F6; }
+    .body { padding: 40px; }
+    .body h2 { color: #111827; font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+    .body p { color: #6B7280; font-size: 14px; line-height: 1.7; margin: 0 0 24px; }
+    .status-card { background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; }
+    .status-card .icon { font-size: 32px; margin-bottom: 8px; color: #065F46; }
+    .status-card .label { font-size: 14px; font-weight: 700; color: #065F46; }
+    .cta-wrap { text-align: center; margin-bottom: 24px; }
+    .cta-button { display: inline-block; background-color: #FEA405; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 12px; }
+    .footer { padding: 20px 40px; text-align: center; border-top: 1px solid #F3F4F6; }
+    .footer p { color: #9CA3AF; font-size: 11px; margin: 0; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <img src="https://pasuyo.xyz/assets/assets/logo/Pasuyo_full.fb4e4361aa1f53810293622e25f31490.png" alt="Pasuyo" style="height: 36px;" />
+    </div>
+    <div class="body">
+      <h2>Your Payment Has Been Approved</h2>
+      <p>Your service fee payment of <strong>{{payment_amount}}</strong> has been verified and approved. Thank you!</p>
+      <div class="status-card">
+        <div class="icon">&#10003;</div>
+        <div class="label">Payment Confirmed</div>
+      </div>
+      <div class="cta-wrap">
+        <a href="https://pasuyo.xyz" class="cta-button">Open Pasuyo</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 Pasuyo &middot; Hiraya Solutions<br/>This is an automated message, please do not reply.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+
+  "payment-rejected": `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Rejected</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #F9FAFB; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .wrapper { max-width: 480px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+    .header { padding: 32px 40px 24px; text-align: center; border-bottom: 1px solid #F3F4F6; }
+    .body { padding: 40px; }
+    .body h2 { color: #111827; font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+    .body p { color: #6B7280; font-size: 14px; line-height: 1.7; margin: 0 0 24px; }
+    .status-card { background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; }
+    .status-card .icon { font-size: 32px; margin-bottom: 8px; color: #991B1B; }
+    .status-card .label { font-size: 14px; font-weight: 700; color: #991B1B; }
+    .cta-wrap { text-align: center; margin-bottom: 24px; }
+    .cta-button { display: inline-block; background-color: #FEA405; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 12px; }
+    .footer { padding: 20px 40px; text-align: center; border-top: 1px solid #F3F4F6; }
+    .footer p { color: #9CA3AF; font-size: 11px; margin: 0; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <img src="https://pasuyo.xyz/assets/assets/logo/Pasuyo_full.fb4e4361aa1f53810293622e25f31490.png" alt="Pasuyo" style="height: 36px;" />
+    </div>
+    <div class="body">
+      <h2>Your Payment Has Been Rejected</h2>
+      <p>Your service fee payment of <strong>{{payment_amount}}</strong> could not be verified.</p>
+      <div class="status-card">
+        <div class="icon">&#10007;</div>
+        <div class="label">Payment Rejected</div>
+      </div>
+      <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+        <p style="font-size: 12px; font-weight: 600; color: #991B1B; margin: 0 0 4px;">Reason</p>
+        <p style="font-size: 14px; font-weight: 700; color: #DC2626; margin: 0;">{{reject_reason}}</p>
+      </div>
+      <div class="cta-wrap">
+        <a href="https://pasuyo.xyz/pay-service-fee" class="cta-button">Resubmit Payment</a>
+      </div>
+      <p>If you believe this was a mistake, please contact support for assistance.</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 Pasuyo &middot; Hiraya Solutions<br/>This is an automated message, please do not reply.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+
   "account-suspended": `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -3,7 +3,7 @@ import { supabase } from '@/utils/supabase';
 interface SendEmailParams {
   to: string;
   subject: string;
-  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done' | 'account-restored' | 'account-suspended' | 'errand-deleted' | 'verification-approved' | 'verification-rejected';
+  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done' | 'account-restored' | 'account-suspended' | 'errand-deleted' | 'verification-approved' | 'verification-rejected' | 'payment-approved' | 'payment-rejected';
   data: Record<string, string>;
 }
 
@@ -135,6 +135,25 @@ export const sendVerificationEmail = async (userId: string, approved: boolean, r
       },
     });
     if (error) console.warn('Verification email failed:', error.message);
+  } catch (e: any) {
+    console.warn('Email invoke error:', e.message);
+  }
+};
+
+export const sendPaymentStatusEmail = async (userId: string, approved: boolean, amount: number, reason?: string) => {
+  try {
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: {
+        userId,
+        template: approved ? 'payment-approved' : 'payment-rejected',
+        subject: approved ? 'Your payment has been approved' : 'Your payment has been rejected',
+        data: {
+          payment_amount: `\u20b1${amount.toLocaleString()}`,
+          reject_reason: reason ?? '',
+        },
+      },
+    });
+    if (error) console.warn('Payment status email failed:', error.message);
   } catch (e: any) {
     console.warn('Email invoke error:', e.message);
   }
