@@ -141,10 +141,13 @@ export default function AdminErrandDetailScreen() {
               </View>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-              <Ionicons name="person-outline" size={13} color="#9CA3AF" />
-              <Text style={{ fontSize: 12, color: '#6B7280' }}>Posted by {errand.poster_name ?? 'Unknown'}</Text>
-            </View>
+            <TouchableOpacity onPress={() => router.push(`/admin/account/${errand.user_id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }} activeOpacity={0.7}>
+              <Image
+                source={errand.poster_avatar ? { uri: errand.poster_avatar } : require('@/assets/images/default_profile.jpg')}
+                style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3F4F6' }}
+              />
+              <Text style={{ fontSize: 12, color: '#6B7280' }}>Posted by <Text style={{ fontWeight: '600', color: '#374151' }}>{errand.poster_name ?? 'Unknown'}</Text></Text>
+            </TouchableOpacity>
 
             <View style={{ height: 1, backgroundColor: '#F3F4F6', marginVertical: 16 }} />
 

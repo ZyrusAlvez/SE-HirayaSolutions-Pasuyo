@@ -12,6 +12,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
 
 export interface Errand {
   id: string;
+  user_id: string;
   title: string;
   poster_name: string | null;
   budget: number | null;
@@ -55,13 +56,20 @@ export default function ErrandCard({ errand }: { errand: Errand }) {
 
       <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
         <Pressable style={{ flex: 1 }} onPress={() => setMenuOpen(false)}>
-          <View style={{ position: 'absolute', top: menuPos.y, left: menuPos.x, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', minWidth: 140, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 6 }}>
+          <View style={{ position: 'absolute', top: menuPos.y, left: menuPos.x, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', minWidth: 160, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 6 }}>
             <TouchableOpacity
               onPress={() => { setMenuOpen(false); router.push(`/admin/errand/${errand.id}`); }}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}
             >
               <Ionicons name="information-circle-outline" size={14} color="#374151" />
               <Text style={{ fontSize: 12, color: '#374151' }}>More Info</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => { setMenuOpen(false); router.push(`/admin/account/${errand.user_id}`); }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}
+            >
+              <Ionicons name="person-outline" size={14} color="#374151" />
+              <Text style={{ fontSize: 12, color: '#374151' }}>About the Poster</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setMenuOpen(false)}

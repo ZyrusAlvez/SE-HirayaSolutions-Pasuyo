@@ -73,6 +73,7 @@ export interface VerificationProfile {
 
 export interface Errand {
   id: string;
+  user_id: string;
   title: string;
   poster_name: string | null;
   budget: number | null;
@@ -136,7 +137,7 @@ export const updateVerificationStatus = (id: string, approve: boolean) =>
 export const getAdminErrands = () =>
   getAdmin()
     .from('errands_with_profiles')
-    .select('id, title, poster_name, budget, status, is_remote, created_at, deadline');
+    .select('id, user_id, title, poster_name, budget, status, is_remote, created_at, deadline');
 
 export const getAdminLogs = () =>
   getAdmin()
