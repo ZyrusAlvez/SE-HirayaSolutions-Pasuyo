@@ -62,6 +62,14 @@ export interface VerificationProfile {
   address_province: string | null;
   address_city: string | null;
   address_barangay: string | null;
+  address_street: string | null;
+  address_house_no: string | null;
+  address_building: string | null;
+  address_unit: string | null;
+  address_floor: string | null;
+  address_block_lot: string | null;
+  address_phase_subdivision: string | null;
+  address_type: string | null;
   id_type: string | null;
   id_front_url: string | null;
   id_back_url: string | null;
@@ -69,6 +77,8 @@ export interface VerificationProfile {
   utility_bill_front_url: string | null;
   utility_bill_back_url: string | null;
   verification_submitted_at: string | null;
+  avatar_url: string | null;
+  created_at: string;
 }
 
 export interface Errand {
@@ -124,7 +134,7 @@ export const getUserEmail = async (id: string) => {
 export const getVerificationProfile = (id: string) =>
   getAdmin()
     .from('profiles')
-    .select('id, first_name, middle_name, last_name, suffix, gender, date_of_birth, address_province, address_city, address_barangay, id_type, id_front_url, id_back_url, utility_bill_type, utility_bill_front_url, utility_bill_back_url, verification_submitted_at')
+    .select('id, first_name, middle_name, last_name, suffix, gender, date_of_birth, address_province, address_city, address_barangay, address_street, address_house_no, address_building, address_unit, address_floor, address_block_lot, address_phase_subdivision, address_type, id_type, id_front_url, id_back_url, utility_bill_type, utility_bill_front_url, utility_bill_back_url, verification_submitted_at, avatar_url, created_at')
     .eq('id', id)
     .single();
 

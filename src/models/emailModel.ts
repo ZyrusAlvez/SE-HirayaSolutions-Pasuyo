@@ -3,7 +3,7 @@ import { supabase } from '@/utils/supabase';
 interface SendEmailParams {
   to: string;
   subject: string;
-  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done' | 'account-restored' | 'account-suspended' | 'errand-deleted';
+  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done' | 'account-restored' | 'account-suspended' | 'errand-deleted' | 'verification-approved' | 'verification-rejected';
   data: Record<string, string>;
 }
 
@@ -119,6 +119,22 @@ export const sendErrandDeletedEmail = async (
       },
     });
     if (error) console.warn('Errand deleted email failed:', error.message);
+  } catch (e: any) {
+    console.warn('Email invoke error:', e.message);
+  }
+};
+
+export const sendVerificationEmail = async (userId: string, approved: boolean, reason?: string) => {
+  try {
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: {
+        userId,
+        template: approved ? 'verification-approved' : 'verification-rejected',
+        subject: approved ? 'Your verification has been approved' : 'Your verification has been rejected',
+        data: { reject_reason: reason ?? '' },
+      },
+    });
+    if (error) console.warn('Verification email failed:', error.message);
   } catch (e: any) {
     console.warn('Email invoke error:', e.message);
   }

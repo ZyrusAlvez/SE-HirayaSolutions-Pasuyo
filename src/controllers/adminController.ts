@@ -1,7 +1,7 @@
 import * as adminModel from '../models/adminModel';
 import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus } from '../models/adminModel';
 import { postNotification } from './notificationController';
-import { sendAccountRestoredEmail, sendAccountSuspendedEmail, sendErrandDeletedEmail } from '../models/emailModel';
+import { sendAccountRestoredEmail, sendAccountSuspendedEmail, sendErrandDeletedEmail, sendVerificationEmail } from '../models/emailModel';
 
 export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
 
@@ -85,7 +85,7 @@ export const updateUserActiveStatus = async (id: string, suspend: boolean, reaso
   }
 };
 
-export const updateVerificationStatus = async (id: string, approve: boolean): Promise<Result> => {
+export const updateVerificationStatus = async (id: string, approve: boolean, reason?: string): Promise<Result> => {
   try {
     const { error } = await adminModel.updateVerificationStatus(id, approve);
     if (error) return { success: false, error: error.message };
@@ -95,13 +95,14 @@ export const updateVerificationStatus = async (id: string, approve: boolean): Pr
       approve ? 'Verification Approved' : 'Verification Rejected',
       approve
         ? 'Your identity has been verified. You now have full access to Pasuyo.'
-        : 'Your verification request was rejected. Please resubmit with valid documents.',
+        : `Your verification request was rejected. Reason: ${reason || 'Does not meet requirements'}. Please resubmit with valid documents.`,
       '/profile',
     );
+    sendVerificationEmail(id, approve, reason);
     await adminModel.postAdminLog(
       approve ? 'APPROVED_VERIFICATION' : 'REJECTED_VERIFICATION',
       id,
-      `Admin ${approve ? 'approved' : 'rejected'} verification for user ${id}`,
+      `Admin ${approve ? 'approved' : 'rejected'} verification for user ${id}${reason ? `. Reason: ${reason}` : ''}`,
     );
     return { success: true, error: '' };
   } catch {
