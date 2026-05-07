@@ -10,6 +10,9 @@ const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
   REJECTED_VERIFICATION: { bg: '#FEE2E2', text: '#DC2626' },
   SUSPENDED_USER:        { bg: '#FEE2E2', text: '#DC2626' },
   RESTORED_USER:         { bg: '#DBEAFE', text: '#1D4ED8' },
+  APPROVED_PAYMENT:      { bg: '#DCFCE7', text: '#15803D' },
+  REJECTED_PAYMENT:      { bg: '#FEE2E2', text: '#DC2626' },
+  DELETED_ERRAND:        { bg: '#FEE2E2', text: '#DC2626' },
 };
 
 export default function AdminLogsScreen() {
