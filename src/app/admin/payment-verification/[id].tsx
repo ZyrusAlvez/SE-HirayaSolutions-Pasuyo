@@ -20,11 +20,25 @@ export default function PaymentDetailScreen() {
   const [selectedReason, setSelectedReason] = useState(PAYMENT_REJECTION_REASONS[0]);
   const [customReason, setCustomReason] = useState('');
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [reviewerName, setReviewerName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
-    getPaymentDetail(id).then(result => {
-      if (result.success) setPayment(result.data);
+    getPaymentDetail(id).then(async result => {
+      if (result.success) {
+        setPayment(result.data);
+        if (result.data.reviewed_by) {
+          const { getProfileNames, getUserEmail } = await import('@/models/adminModel');
+          const { data: profiles } = await getProfileNames([result.data.reviewed_by]);
+          const p = (profiles ?? [])[0];
+          const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') : '';
+          if (name) { setReviewerName(name); }
+          else {
+            const { data: auth } = await getUserEmail(result.data.reviewed_by);
+            setReviewerName(auth?.displayName || 'Admin');
+          }
+        }
+      }
       setLoading(false);
     });
   }, [id]);
@@ -199,25 +213,38 @@ export default function PaymentDetailScreen() {
           )}
         </View>
 
-        {/* Action Buttons */}
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
-          <TouchableOpacity
-            onPress={() => setRejectVisible(true)}
-            disabled={acting}
-            activeOpacity={0.85}
-            style={{ borderWidth: 1.5, borderColor: '#EF4444', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 16 }}
-          >
-            <Text style={{ color: '#EF4444', fontWeight: '600', fontSize: 13 }}>Reject</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setApproveVisible(true)}
-            disabled={acting}
-            activeOpacity={0.85}
-            style={{ backgroundColor: ACCENT, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 16 }}
-          >
-            <Text style={{ color: 'white', fontWeight: '700', fontSize: 13 }}>Approve</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Review Info (for already reviewed) */}
+        {payment.status !== 'pending' && (
+          <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#F3F4F6' }}>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 8 }}>Review Details</Text>
+            <InfoRow label="Decision" value={payment.status.charAt(0).toUpperCase() + payment.status.slice(1)} highlight color={payment.status === 'approved' ? '#22C55E' : '#EF4444'} />
+            {reviewerName && <InfoRow label="Reviewed By" value={reviewerName} />}
+            {payment.reviewed_at && <InfoRow label="Reviewed At" value={new Date(payment.reviewed_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })} />}
+            {payment.admin_note && <InfoRow label="Reason" value={payment.admin_note} />}
+          </View>
+        )}
+
+        {/* Action Buttons (only for pending) */}
+        {payment.status === 'pending' && (
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
+            <TouchableOpacity
+              onPress={() => setRejectVisible(true)}
+              disabled={acting}
+              activeOpacity={0.85}
+              style={{ borderWidth: 1.5, borderColor: '#EF4444', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 16 }}
+            >
+              <Text style={{ color: '#EF4444', fontWeight: '600', fontSize: 13 }}>Reject</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setApproveVisible(true)}
+              disabled={acting}
+              activeOpacity={0.85}
+              style={{ backgroundColor: ACCENT, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 16 }}
+            >
+              <Text style={{ color: 'white', fontWeight: '700', fontSize: 13 }}>Approve</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       <ImageViewer
@@ -230,11 +257,11 @@ export default function PaymentDetailScreen() {
   );
 }
 
-function InfoRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function InfoRow({ label, value, highlight, color }: { label: string; value: string; highlight?: boolean; color?: string }) {
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' }}>
       <Text style={{ fontSize: 12, color: '#9CA3AF', minWidth: 110 }}>{label}</Text>
-      <Text style={{ fontSize: 12, color: highlight ? '#D97706' : '#1F2937', fontWeight: highlight ? '700' : '500', textAlign: 'right', flex: 1, marginLeft: 12 }}>{value}</Text>
+      <Text style={{ fontSize: 12, color: highlight ? (color ?? '#D97706') : '#1F2937', fontWeight: highlight ? '700' : '500', textAlign: 'right', flex: 1, marginLeft: 12 }}>{value}</Text>
     </View>
   );
 }

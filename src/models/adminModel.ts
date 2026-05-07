@@ -240,7 +240,6 @@ export const getPendingPayments = () =>
   getAdmin()
     .from('service_fee_payments')
     .select('id, user_id, amount, reference_no, screenshot_url, status, created_at')
-    .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
 export const getPaymentDetail = (id: string) =>
