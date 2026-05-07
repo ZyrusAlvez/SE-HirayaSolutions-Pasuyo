@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal, Pressable, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getPaymentDetail, updatePaymentStatus, getAdminUnpaidTotal } from '@/controllers/adminController';
@@ -273,6 +273,12 @@ export default function PaymentDetailScreen() {
         onClose={() => setViewerIndex(null)}
         onIndexChange={setViewerIndex}
       />
+
+      {acting && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+          <ActivityIndicator size="large" color={ACCENT} />
+        </View>
+      )}
     </View>
   );
 }

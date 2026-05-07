@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getUserDetail, getUserActivity, getAdminUnpaidTotal } from '@/controllers/adminController';
-import type { ActivityItem } from '@/controllers/adminController';
+import { getUserDetail, getUserActivity, getAdminUnpaidTotal, getUserReportsAgainst } from '@/controllers/adminController';
+import type { ActivityItem, ErrandReport } from '@/controllers/adminController';
 import VerificationBadge from '@/view/components/VerificationBadge';
 import ImageViewer from '@/view/components/ImageViewer';
 import Dropdown from '@/view/components/Dropdown';
@@ -52,6 +52,7 @@ export default function UserDetailScreen() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [unpaidTotal, setUnpaidTotal] = useState<number | null>(null);
+  const [reports, setReports] = useState<ErrandReport[]>([]);
 
   const loadActivity = useCallback(async (pageNum: number, reset: boolean) => {
     if (!id) return;
@@ -75,6 +76,9 @@ export default function UserDetailScreen() {
     });
     getAdminUnpaidTotal(id).then(result => {
       if (result.success) setUnpaidTotal(result.data);
+    });
+    getUserReportsAgainst(id).then(result => {
+      if (result.success) setReports(result.data);
     });
   }, [id]);
 
@@ -191,6 +195,36 @@ export default function UserDetailScreen() {
           )}
         </View>
 
+        {/* Reports Against User */}
+        {reports.length > 0 && (
+          <View style={{ margin: 16, marginBottom: 0, backgroundColor: 'white', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#F3F4F6' }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 16 }}>Reports ({reports.length})</Text>
+            {reports.map((report, i) => (
+              <View key={report.id} style={{ flexDirection: 'row', gap: 10, paddingBottom: i < reports.length - 1 ? 14 : 0, marginBottom: i < reports.length - 1 ? 14 : 0, borderBottomWidth: i < reports.length - 1 ? 1 : 0, borderBottomColor: '#F3F4F6' }}>
+                <TouchableOpacity onPress={() => router.push(`/admin/account/${report.reporter_id}`)} activeOpacity={0.7}>
+                  <Image
+                    source={report.reporter_avatar ? { uri: report.reporter_avatar } : DEFAULT_AVATAR}
+                    style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6' }}
+                  />
+                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <TouchableOpacity onPress={() => router.push(`/admin/account/${report.reporter_id}`)} activeOpacity={0.7}>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827' }}>{report.reporter_name}</Text>
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 12, color: '#374151', marginTop: 2 }}>{report.reason}</Text>
+                  {report.details && (
+                    <Text style={{ fontSize: 11, color: '#6B7280', fontStyle: 'italic', marginTop: 2 }} numberOfLines={2}>"{report.details}"</Text>
+                  )}
+                  <Text style={{ fontSize: 10, color: '#9CA3AF', marginTop: 4 }}>
+                    {new Date(report.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Section 2: Activity Log */}
         <View style={{ marginTop: 16, paddingHorizontal: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8, marginBottom: 16, zIndex: 100 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151' }}>Activity Log</Text>

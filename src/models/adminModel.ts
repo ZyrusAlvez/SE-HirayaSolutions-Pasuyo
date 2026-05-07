@@ -252,6 +252,33 @@ export const getApprovedPaymentsTotal = async (userId: string): Promise<number> 
   return (data ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
 };
 
+export const getAdminReports = () =>
+  getAdmin()
+    .from('reports')
+    .select('id, reporter_id, reported_id, type, reason, details, created_at, errand_id, file_urls')
+    .order('created_at', { ascending: false });
+
+export const getErrandReports = (errandId: string) =>
+  getAdmin()
+    .from('reports')
+    .select('id, reporter_id, reason, details, created_at, file_urls')
+    .eq('errand_id', errandId)
+    .order('created_at', { ascending: false });
+
+export const getUserReportsAgainst = (userId: string) =>
+  getAdmin()
+    .from('reports')
+    .select('id, reporter_id, reason, details, created_at, file_urls')
+    .eq('reported_id', userId)
+    .eq('type', 'user')
+    .order('created_at', { ascending: false });
+
+export const getReporterProfiles = (ids: string[]) =>
+  getAdmin()
+    .from('profiles')
+    .select('id, first_name, last_name, avatar_url')
+    .in('id', ids);
+
 export const getPendingPayments = () =>
   getAdmin()
     .from('service_fee_payments')
@@ -271,6 +298,12 @@ export const updatePaymentStatus = (id: string, status: 'approved' | 'rejected',
     .update({ status, reviewed_by: adminId, reviewed_at: new Date().toISOString(), admin_note: adminNote ?? null })
     .eq('id', id);
 
+export const deleteUserReports = (userId: string) =>
+  getAdmin()
+    .from('reports')
+    .delete()
+    .eq('reported_id', userId);
+
 export const getAdminErrandDetail = (id: string) =>
   getAdmin()
     .from('errands_with_profiles')
@@ -283,6 +316,12 @@ export const deleteAdminErrand = (id: string) =>
     .from('errands')
     .delete()
     .eq('id', id);
+
+export const deleteErrandReports = (errandId: string) =>
+  getAdmin()
+    .from('reports')
+    .delete()
+    .eq('errand_id', errandId);
 
 export const getProfileNames = (ids: string[]) =>
   getAdmin()

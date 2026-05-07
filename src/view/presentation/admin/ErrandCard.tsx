@@ -25,7 +25,7 @@ export interface Errand {
   _effectiveStatus?: string;
 }
 
-export default function ErrandCard({ errand, onDelete }: { errand: Errand; onDelete?: () => void }) {
+export default function ErrandCard({ errand, onDelete, onLoadingChange }: { errand: Errand; onDelete?: () => void; onLoadingChange?: (loading: boolean) => void }) {
   const displayStatus = errand._effectiveStatus ?? errand.status;
   const style = STATUS_STYLES[displayStatus] ?? { bg: 'bg-gray-100', text: 'text-gray-600' };
   const [menuOpen, setMenuOpen] = useState(false);
@@ -47,7 +47,9 @@ export default function ErrandCard({ errand, onDelete }: { errand: Errand; onDel
     const reason = selectedReason === 'Other' ? customReason.trim() : selectedReason;
     if (!reason) return;
     setDeleteVisible(false);
+    onLoadingChange?.(true);
     const result = await deleteErrandAdmin(errand.id, reason);
+    onLoadingChange?.(false);
     if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
     toast({ title: 'Errand deleted.', preset: 'done' });
     onDelete?.();
