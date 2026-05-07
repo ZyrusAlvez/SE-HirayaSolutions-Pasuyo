@@ -50,19 +50,29 @@ export default function ReportsScreen() {
 
   const filtered = useMemo(() => {
     let list = reports.filter(r => r.type === tab);
+    // Group by reported entity
+    const grouped: Record<string, { key: string; reported_name: string; reported_id: string; errand_id: string | null; reason: string; count: number; latest: string }> = {};
+    for (const r of list) {
+      const key = tab === 'errand' ? (r.errand_id ?? r.reported_id) : r.reported_id;
+      if (!grouped[key]) {
+        grouped[key] = { key, reported_name: r.reported_name, reported_id: r.reported_id, errand_id: r.errand_id, reason: r.reason, count: 0, latest: r.created_at };
+      }
+      grouped[key].count++;
+      if (r.created_at > grouped[key].latest) {
+        grouped[key].latest = r.created_at;
+        grouped[key].reason = r.reason;
+      }
+    }
+    let entries = Object.values(grouped);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(r =>
-        r.reporter_name.toLowerCase().includes(q) ||
-        r.reported_name.toLowerCase().includes(q) ||
-        r.reason.toLowerCase().includes(q)
-      );
+      entries = entries.filter(e => e.reported_name.toLowerCase().includes(q) || e.reason.toLowerCase().includes(q));
     }
-    list.sort((a, b) => {
-      const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    entries.sort((a, b) => {
+      const diff = new Date(b.latest).getTime() - new Date(a.latest).getTime();
       return sort === 'newest' ? diff : -diff;
     });
-    return list;
+    return entries;
   }, [reports, tab, search, sort]);
 
   return (
@@ -97,35 +107,20 @@ export default function ReportsScreen() {
       {/* List */}
       <FlatList
         data={filtered}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.key}
         renderItem={({ item }) => {
           return (
-            <View style={{ backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#F3F4F6' }}>
-              {/* Top row: reported name + kebab */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }} numberOfLines={1}>{item.reported_name}</Text>
-                </View>
-                {tab === 'errand' && item.errand_id && (
-                  <KebabMenu actions={[
-                    { label: 'More Info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/errand/${item.errand_id}`) },
-                    { label: 'Delete Errand', icon: 'trash-outline', onPress: () => {} },
-                  ]} />
-                )}
+            <View style={{ backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#F3F4F6', flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }} numberOfLines={1}>{item.reported_name}</Text>
+                <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{item.count} {item.count === 1 ? 'report' : 'reports'}</Text>
               </View>
-
-              {/* Reason */}
-              <Text style={{ fontSize: 13, color: '#374151', lineHeight: 18, marginBottom: 10 }}>{item.reason}</Text>
-
-              {/* Details if any */}
-              {item.details && (
-                <Text style={{ fontSize: 12, color: '#6B7280', fontStyle: 'italic', marginBottom: 10 }} numberOfLines={2}>"{item.details}"</Text>
+              {tab === 'errand' && item.errand_id && (
+                <KebabMenu actions={[
+                  { label: 'More Info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/errand/${item.errand_id}`) },
+                  { label: 'Delete Errand', icon: 'trash-outline', onPress: () => {} },
+                ]} />
               )}
-
-              {/* Footer: reporter + date */}
-              <Text style={{ fontSize: 11, color: '#9CA3AF' }}>
-                by {item.reporter_name} · {new Date(item.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
-              </Text>
             </View>
           );
         }}
