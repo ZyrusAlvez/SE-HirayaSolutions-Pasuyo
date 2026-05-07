@@ -2,9 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getUserDetail, getUserActivity } from '@/controllers/adminController';
+import { getUserDetail, getUserActivity, getAdminUnpaidTotal } from '@/controllers/adminController';
 import type { ActivityItem } from '@/controllers/adminController';
-import { getUnpaidServiceFeeTotalForUser } from '@/controllers/serviceFeeController';
 import VerificationBadge from '@/view/components/VerificationBadge';
 import ImageViewer from '@/view/components/ImageViewer';
 import Dropdown from '@/view/components/Dropdown';
@@ -74,7 +73,7 @@ export default function UserDetailScreen() {
       if (result.success && result.data) setUser(result.data);
       setLoading(false);
     });
-    getUnpaidServiceFeeTotalForUser(id).then(result => {
+    getAdminUnpaidTotal(id).then(result => {
       if (result.success) setUnpaidTotal(result.data);
     });
   }, [id]);

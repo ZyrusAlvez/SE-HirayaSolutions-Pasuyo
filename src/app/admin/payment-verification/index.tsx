@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { getPendingPayments } from '@/controllers/adminController';
 import type { PendingPayment } from '@/controllers/adminController';
 import Dropdown from '@/view/components/Dropdown';
@@ -27,7 +28,7 @@ export default function PaymentVerificationScreen() {
   const [payments, setPayments] = useState<PendingPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<FilterKey>('All');
+  const [filter, setFilter] = useState<FilterKey>('Pending');
   const [sort, setSort] = useState<SortKey>('newest');
   const [refreshing, setRefreshing] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -45,6 +46,8 @@ export default function PaymentVerificationScreen() {
   }, []);
 
   useEffect(() => { loadPayments(); }, []);
+
+  useFocusEffect(useCallback(() => { loadPayments(); }, []));
 
   const toggle = (id: string) => setOpenDropdown(prev => prev === id ? null : id);
 
@@ -104,33 +107,37 @@ export default function PaymentVerificationScreen() {
         renderItem={({ item }) => {
           const color = STATUS_COLORS[item.status] ?? '#6B7280';
           return (
-            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#F3F4F6' }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>{item.user_name}</Text>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>
-                  {new Date(item.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </Text>
+            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#F3F4F6' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>{item.user_name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                    <Text style={{ fontSize: 11, color: '#9CA3AF' }}>
+                      {new Date(item.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </Text>
+                    <View style={{ backgroundColor: color + '1A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
+                      <Text style={{ fontSize: 9, fontWeight: '700', color }}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
+                    </View>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: '#D97706' }}>₱{item.amount.toLocaleString()}</Text>
+                {item.status === 'pending' ? (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => router.push(`/admin/payment-verification/${item.id}`)}
+                    style={{ backgroundColor: ACCENT, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}>Verify</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => router.push(`/admin/payment-verification/${item.id}`)}
+                  >
+                    <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+                  </TouchableOpacity>
+                )}
               </View>
-              <Text style={{ fontSize: 14, fontWeight: '700', color: '#D97706' }}>₱{item.amount.toLocaleString()}</Text>
-              <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color }}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
-              </View>
-              {item.status === 'pending' ? (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => router.push(`/admin/payment-verification/${item.id}`)}
-                  style={{ backgroundColor: ACCENT, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 }}
-                >
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}>Verify</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => router.push(`/admin/payment-verification/${item.id}`)}
-                >
-                  <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
-                </TouchableOpacity>
-              )}
             </View>
           );
         }}

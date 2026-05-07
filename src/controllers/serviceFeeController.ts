@@ -23,7 +23,7 @@ const getUnpaidTotal = async (userId: string): Promise<number> => {
     model.getPaidAmount(userId),
   ]);
   const totalOwed = calcTotalOwed(errands ?? []);
-  return Math.max(totalOwed - paidAmount, 0);
+  return totalOwed - paidAmount;
 };
 
 export const checkServiceFeeLimit = async (): Promise<{ allowed: boolean; error?: string }> => {

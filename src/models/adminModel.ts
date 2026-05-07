@@ -236,6 +236,22 @@ export const getAdminErrandEvents = (errandId: string) =>
     .eq('errand_id', errandId)
     .order('created_at', { ascending: true });
 
+export const getCompletedAcceptedErrands = (userId: string) =>
+  getAdmin()
+    .from('errands_with_profiles')
+    .select('id, budget')
+    .eq('accepted_by', userId)
+    .eq('status', 'Completed');
+
+export const getApprovedPaymentsTotal = async (userId: string): Promise<number> => {
+  const { data } = await getAdmin()
+    .from('service_fee_payments')
+    .select('amount')
+    .eq('user_id', userId)
+    .eq('status', 'approved');
+  return (data ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
+};
+
 export const getPendingPayments = () =>
   getAdmin()
     .from('service_fee_payments')

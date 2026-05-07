@@ -214,6 +214,23 @@ export const getAdminErrandDetail = async (id: string): Promise<Result<any>> => 
   }
 };
 
+const SERVICE_FEE_RATE = 0.10;
+
+export const getAdminUnpaidTotal = async (userId: string): Promise<Result<number>> => {
+  try {
+    const [{ data: errands }, paidAmount] = await Promise.all([
+      adminModel.getCompletedAcceptedErrands(userId),
+      adminModel.getApprovedPaymentsTotal(userId),
+    ]);
+    const totalOwed = (errands ?? [])
+      .filter((e: any) => e.budget != null && e.budget > 0)
+      .reduce((sum: number, e: any) => sum + Math.round(e.budget * SERVICE_FEE_RATE * 100) / 100, 0);
+    return { success: true, error: '', data: totalOwed - paidAmount };
+  } catch {
+    return { success: false, error: 'Failed to calculate balance' };
+  }
+};
+
 export type AdminErrandEvent = {
   id: string;
   errand_id: string;

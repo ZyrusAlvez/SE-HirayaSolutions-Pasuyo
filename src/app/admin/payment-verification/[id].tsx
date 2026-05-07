@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, Modal, Pressable, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getPaymentDetail, updatePaymentStatus } from '@/controllers/adminController';
+import { getPaymentDetail, updatePaymentStatus, getAdminUnpaidTotal } from '@/controllers/adminController';
 import { PAYMENT_REJECTION_REASONS } from '@/controllers/reportController';
 import ImageViewer from '@/view/components/ImageViewer';
+import ServiceFeeLimitBar from '@/view/components/ServiceFeeLimitBar';
 import { toast } from '@/utils/toast';
 
 const ACCENT = '#FEA405';
@@ -21,17 +22,31 @@ export default function PaymentDetailScreen() {
   const [customReason, setCustomReason] = useState('');
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [reviewerName, setReviewerName] = useState<string | null>(null);
+  const [unpaidTotal, setUnpaidTotal] = useState<number | null>(null);
+  const [userStatus, setUserStatus] = useState<string>('unverified');
 
   useEffect(() => {
     if (!id) return;
     getPaymentDetail(id).then(async result => {
       if (result.success) {
         setPayment(result.data);
+        // Load service fee balance
+        getAdminUnpaidTotal(result.data.user_id).then(r => {
+          if (r.success) setUnpaidTotal(r.data);
+        });
+        // Load user verification status
+        const { getProfileNames } = await import('@/models/adminModel');
+        const { data: profiles } = await getProfileNames([result.data.user_id]);
+        // Check status from profiles table
+        const { getUserDetail } = await import('@/models/adminModel');
+        const { data: userProfile } = await getUserDetail(result.data.user_id);
+        if (userProfile?.status) setUserStatus(userProfile.status);
+        // Get reviewer name if reviewed
         if (result.data.reviewed_by) {
-          const { getProfileNames, getUserEmail } = await import('@/models/adminModel');
-          const { data: profiles } = await getProfileNames([result.data.reviewed_by]);
-          const p = (profiles ?? [])[0];
-          const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') : '';
+          const { getUserEmail } = await import('@/models/adminModel');
+          const { data: rProfiles } = await getProfileNames([result.data.reviewed_by]);
+          const rp = (rProfiles ?? [])[0];
+          const name = rp ? [rp.first_name, rp.last_name].filter(Boolean).join(' ') : '';
           if (name) { setReviewerName(name); }
           else {
             const { data: auth } = await getUserEmail(result.data.reviewed_by);
@@ -189,6 +204,11 @@ export default function PaymentDetailScreen() {
             <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
           </TouchableOpacity>
         </View>
+
+        {/* Service Fee Limit */}
+        {unpaidTotal != null && (
+          <ServiceFeeLimitBar totalFees={unpaidTotal} isVerified={userStatus === 'verified'} isAdmin />
+        )}
 
         {/* Payment Details */}
         <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#F3F4F6' }}>
