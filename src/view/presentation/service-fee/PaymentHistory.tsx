@@ -95,12 +95,16 @@ interface Props {
 }
 
 export default function PaymentHistory({ payments }: Props) {
-  if (payments.length === 0) return null;
-
   return (
     <View style={{ gap: 10 }}>
       <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827' }}>Payment History</Text>
-      {payments.map(p => <PaymentCard key={p.id} payment={p} />)}
+      {payments.length === 0 ? (
+        <View style={{ backgroundColor: 'white', borderRadius: 12, padding: 24, alignItems: 'center' }}>
+          <Text style={{ fontSize: 13, color: '#9CA3AF' }}>No transactions yet.</Text>
+        </View>
+      ) : (
+        payments.map(p => <PaymentCard key={p.id} payment={p} />)
+      )}
     </View>
   );
 }
