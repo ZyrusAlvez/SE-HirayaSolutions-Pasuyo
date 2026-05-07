@@ -265,6 +265,14 @@ export const getErrandReports = (errandId: string) =>
     .eq('errand_id', errandId)
     .order('created_at', { ascending: false });
 
+export const getUserReportsAgainst = (userId: string) =>
+  getAdmin()
+    .from('reports')
+    .select('id, reporter_id, reason, details, created_at, file_urls')
+    .eq('reported_id', userId)
+    .eq('type', 'user')
+    .order('created_at', { ascending: false });
+
 export const getReporterProfiles = (ids: string[]) =>
   getAdmin()
     .from('profiles')

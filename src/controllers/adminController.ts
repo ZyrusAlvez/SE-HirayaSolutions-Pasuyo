@@ -443,6 +443,41 @@ export const getErrandReports = async (errandId: string): Promise<Result<ErrandR
   }
 };
 
+export const getUserReportsAgainst = async (userId: string): Promise<Result<ErrandReport[]>> => {
+  try {
+    const { data, error } = await adminModel.getUserReportsAgainst(userId);
+    if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch reports' };
+    const reporterIds = [...new Set((data as any[]).map(r => r.reporter_id))];
+    let reporters: Record<string, { name: string; avatar: string | null }> = {};
+    if (reporterIds.length > 0) {
+      const { data: profiles } = await adminModel.getReporterProfiles(reporterIds);
+      (profiles ?? []).forEach((p: any) => {
+        reporters[p.id] = {
+          name: [p.first_name, p.last_name].filter(Boolean).join(' ') || '',
+          avatar: p.avatar_url,
+        };
+      });
+      const missing = reporterIds.filter(id => !reporters[id]?.name);
+      for (const uid of missing) {
+        const { data: authData } = await adminModel.getUserEmail(uid);
+        reporters[uid] = { name: authData?.displayName || 'Unknown', avatar: reporters[uid]?.avatar ?? null };
+      }
+    }
+    const reports = (data as any[]).map(r => ({
+      id: r.id,
+      reporter_id: r.reporter_id,
+      reporter_name: reporters[r.reporter_id]?.name ?? 'Unknown',
+      reporter_avatar: reporters[r.reporter_id]?.avatar ?? null,
+      reason: r.reason,
+      details: r.details,
+      created_at: r.created_at,
+    }));
+    return { success: true, error: '', data: reports };
+  } catch {
+    return { success: false, error: 'Failed to fetch reports' };
+  }
+};
+
 export const getLogsSubscription = (callback: () => void) =>
   adminModel.getAdminLogsSubscription(callback);
 
