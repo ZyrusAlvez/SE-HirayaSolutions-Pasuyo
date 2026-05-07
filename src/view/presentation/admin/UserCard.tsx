@@ -88,7 +88,7 @@ export default function UserCard({ user, onRefresh }: Props) {
         )}
       </View>
       <KebabMenu actions={[
-        { label: 'More info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/user/${user.id}`) },
+        { label: 'More info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/account/${user.id}`) },
         { label: 'Suspend', icon: 'ban-outline', onPress: () => setSuspendVisible(true), disabled: user.status === 'suspended' },
         { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => setRestoreVisible(true), disabled: user.status !== 'suspended' },
       ]} />

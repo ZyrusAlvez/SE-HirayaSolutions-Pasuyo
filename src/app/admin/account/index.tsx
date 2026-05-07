@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getUsers, FullUserProfile } from '../../controllers/adminController';
-import { getAllActivity, getAllMessages, getAllReports } from '../../models/adminModel';
-import UserCard from '../../view/presentation/admin/UserCard';
-import VerificationCard, { PendingUser } from '../../view/presentation/admin/VerificationCard';
-import AccountsChartsPanel from '../../view/presentation/admin/AccountsChartsPanel';
-import { AccountsListSkeleton, AccountsChartSkeleton } from '../../view/presentation/admin/AccountsSkeleton';
-import Dropdown from '../../view/components/Dropdown';
+import { getUsers, FullUserProfile } from '@/controllers/adminController';
+import { getAllActivity, getAllMessages, getAllReports } from '@/models/adminModel';
+import UserCard from '@/view/presentation/admin/UserCard';
+import VerificationCard, { PendingUser } from '@/view/presentation/admin/VerificationCard';
+import AccountsChartsPanel from '@/view/presentation/admin/AccountsChartsPanel';
+import { AccountsListSkeleton, AccountsChartSkeleton } from '@/view/presentation/admin/AccountsSkeleton';
+import Dropdown from '@/view/components/Dropdown';
 
 const ACCENT = '#FEA405';
 const WIDE_BREAKPOINT = 900;

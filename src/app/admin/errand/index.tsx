@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getErrands, Errand } from '../../controllers/adminController';
-import ErrandCard from '../../view/presentation/admin/ErrandCard';
-import Dropdown from '../../view/components/Dropdown';
+import { getErrands, Errand } from '@/controllers/adminController';
+import ErrandCard from '@/view/presentation/admin/ErrandCard';
+import Dropdown from '@/view/components/Dropdown';
 
 const ACCENT = '#FEA405';
 const WIDE_BREAKPOINT = 900;
