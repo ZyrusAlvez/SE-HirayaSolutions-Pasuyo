@@ -359,7 +359,6 @@ export type AdminReport = {
   type: 'user' | 'errand';
   reason: string;
   details: string | null;
-  status: string;
   created_at: string;
   errand_id: string | null;
   file_urls: string[] | null;

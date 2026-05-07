@@ -6,6 +6,7 @@ import { getReports } from '@/controllers/adminController';
 import type { AdminReport } from '@/controllers/adminController';
 import Dropdown from '@/view/components/Dropdown';
 import TabToggle from '@/view/components/TabToggle';
+import KebabMenu from '@/view/components/KebabMenu';
 
 const ACCENT = '#FEA405';
 
@@ -15,8 +16,6 @@ type SortKey = 'newest' | 'oldest';
 const SORT_OPTIONS: SortKey[] = ['newest', 'oldest'];
 const SORT_LABELS: Record<string, string> = { newest: 'Newest', oldest: 'Oldest' };
 const SORT_ICONS: Record<string, string> = { newest: 'arrow-down-outline', oldest: 'arrow-up-outline' };
-
-const STATUS_COLORS: Record<string, string> = { pending: '#F59E0B', resolved: '#22C55E', dismissed: '#6B7280' };
 
 const TABS = [
   { key: 'errand', label: 'Errand Reports', icon: 'document-text-outline' },
@@ -100,23 +99,33 @@ export default function ReportsScreen() {
         data={filtered}
         keyExtractor={item => item.id}
         renderItem={({ item }) => {
-          const color = STATUS_COLORS[item.status] ?? '#6B7280';
           return (
-            <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#F3F4F6' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827', flex: 1 }} numberOfLines={1}>
-                  {item.reported_name}
-                </Text>
-                <View style={{ backgroundColor: color + '1A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
-                  <Text style={{ fontSize: 9, fontWeight: '700', color }}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
+            <View style={{ backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#F3F4F6' }}>
+              {/* Top row: reported name + kebab */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }} numberOfLines={1}>{item.reported_name}</Text>
                 </View>
+                {tab === 'errand' && item.errand_id && (
+                  <KebabMenu actions={[
+                    { label: 'More Info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/errand/${item.errand_id}`) },
+                    { label: 'Delete Errand', icon: 'trash-outline', onPress: () => {} },
+                  ]} />
+                )}
               </View>
-              <Text style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}>{item.reason}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 11, color: '#9CA3AF' }}>
-                  Reported by {item.reporter_name} · {new Date(item.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </Text>
-              </View>
+
+              {/* Reason */}
+              <Text style={{ fontSize: 13, color: '#374151', lineHeight: 18, marginBottom: 10 }}>{item.reason}</Text>
+
+              {/* Details if any */}
+              {item.details && (
+                <Text style={{ fontSize: 12, color: '#6B7280', fontStyle: 'italic', marginBottom: 10 }} numberOfLines={2}>"{item.details}"</Text>
+              )}
+
+              {/* Footer: reporter + date */}
+              <Text style={{ fontSize: 11, color: '#9CA3AF' }}>
+                by {item.reporter_name} · {new Date(item.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
+              </Text>
             </View>
           );
         }}
