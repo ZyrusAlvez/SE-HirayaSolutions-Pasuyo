@@ -273,6 +273,9 @@ export const deleteErrandAdmin = async (errandId: string, reason: string): Promi
     const { error } = await adminModel.deleteAdminErrand(errandId);
     if (error) return { success: false, error: error.message };
 
+    // Clean up reports for this errand
+    await adminModel.deleteErrandReports(errandId);
+
     const errandInfo = { title: errand.title, description: errand.description, budget: errand.budget };
 
     // Notify poster

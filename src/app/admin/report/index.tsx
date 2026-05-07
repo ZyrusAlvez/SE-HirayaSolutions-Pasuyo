@@ -136,6 +136,12 @@ export default function ReportsScreen() {
                   { label: 'Delete Errand', icon: 'trash-outline', onPress: () => { setDeleteTarget(item); setDeleteVisible(true); } },
                 ]} />
               )}
+              {tab === 'user' && (
+                <KebabMenu actions={[
+                  { label: 'More Info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/account/${item.reported_id}`) },
+                  { label: 'Suspend', icon: 'ban-outline', onPress: () => {} },
+                ]} />
+              )}
             </View>
           );
         }}

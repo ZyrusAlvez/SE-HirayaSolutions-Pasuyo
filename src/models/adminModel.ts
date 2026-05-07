@@ -303,6 +303,12 @@ export const deleteAdminErrand = (id: string) =>
     .delete()
     .eq('id', id);
 
+export const deleteErrandReports = (errandId: string) =>
+  getAdmin()
+    .from('reports')
+    .delete()
+    .eq('errand_id', errandId);
+
 export const getProfileNames = (ids: string[]) =>
   getAdmin()
     .from('profiles')
