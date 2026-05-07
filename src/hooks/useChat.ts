@@ -31,9 +31,11 @@ export function useChat(targetUserId?: string) {
   const selectedIdRef = useRef(selectedId);
   const currentUserIdRef = useRef(currentUserId);
   const isChatActiveRef = useRef(isChatActive);
+  const messagesRef = useRef(messages);
   selectedIdRef.current = selectedId;
   currentUserIdRef.current = currentUserId;
   isChatActiveRef.current = isChatActive;
+  messagesRef.current = messages;
 
   // Init: auth, target user, load conversations
   useEffect(() => {
@@ -170,7 +172,14 @@ export function useChat(targetUserId?: string) {
         const selId = selectedIdRef.current;
         const uid = currentUserIdRef.current;
 
-        if (msg.sender_id === uid && msg.conversation_id === selId) return;
+        if (msg.sender_id === uid && msg.conversation_id === selId) {
+          // Allow system messages (e.g. errand_reviewed) that weren't optimistically added
+          let isSystemMsg = false;
+          try { isSystemMsg = !!JSON.parse(msg.content)?.type; } catch {}
+          if (!isSystemMsg) return;
+          // Deduplicate: skip if content already exists locally (optimistic add from onCancelErrand/onMarkDone)
+          if (messagesRef.current.some((m) => m.content === msg.content && m.id !== msg.id)) return;
+        }
 
         if (msg.conversation_id === selId) {
           setMessages((prev) => [...prev, msg]);
