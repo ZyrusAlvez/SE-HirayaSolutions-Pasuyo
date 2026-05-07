@@ -3,7 +3,7 @@ import { supabase } from '@/utils/supabase';
 interface SendEmailParams {
   to: string;
   subject: string;
-  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done' | 'account-restored' | 'account-suspended';
+  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done' | 'account-restored' | 'account-suspended' | 'errand-deleted';
   data: Record<string, string>;
 }
 
@@ -94,6 +94,31 @@ export const sendAccountRestoredEmail = async (userId: string) => {
       },
     });
     if (error) console.warn('Account restored email failed:', error.message);
+  } catch (e: any) {
+    console.warn('Email invoke error:', e.message);
+  }
+};
+
+export const sendErrandDeletedEmail = async (
+  userId: string,
+  errandInfo: { title: string; description?: string; budget?: number },
+  reason: string,
+) => {
+  try {
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: {
+        userId,
+        template: 'errand-deleted',
+        subject: 'Your errand has been removed by an admin',
+        data: {
+          errand_title: errandInfo.title,
+          errand_description: errandInfo.description ?? '',
+          errand_budget: errandInfo.budget != null ? `\u20b1${errandInfo.budget.toLocaleString()}` : '',
+          delete_reason: reason,
+        },
+      },
+    });
+    if (error) console.warn('Errand deleted email failed:', error.message);
   } catch (e: any) {
     console.warn('Email invoke error:', e.message);
   }

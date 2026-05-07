@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Image, Modal, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, Image, Modal, TouchableOpacity, ScrollView, TextInput, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
@@ -7,17 +7,8 @@ import VerificationBadge from '../../components/VerificationBadge';
 import KebabMenu from '../../components/KebabMenu';
 import ConfirmModal from '../../components/ConfirmModal';
 import { updateUserActiveStatus } from '../../../controllers/adminController';
-
-const SUSPEND_REASONS = [
-  'Violation of platform rules',
-  'Fraudulent activity',
-  'Harassment or abusive behavior',
-  'Spam or misleading content',
-  'Multiple user reports',
-  'Unpaid service fees',
-  'Fake or unverified identity',
-  'Other',
-];
+import { USER_REASONS } from '../../../controllers/reportController';
+import { toast } from '@/utils/toast';
 
 export interface UserProfile {
   id: string;
@@ -40,7 +31,7 @@ export default function UserCard({ user, onRefresh }: Props) {
   const [avatarError, setAvatarError] = useState(false);
   const [suspendVisible, setSuspendVisible] = useState(false);
   const [restoreVisible, setRestoreVisible] = useState(false);
-  const [selectedReason, setSelectedReason] = useState(SUSPEND_REASONS[0]);
+  const [selectedReason, setSelectedReason] = useState(USER_REASONS[0]);
   const [customReason, setCustomReason] = useState('');
   const fullName = user.display_name || 'No name set';
   const joinedDate = new Date(user.created_at).toLocaleDateString('en-PH', {
@@ -51,13 +42,17 @@ export default function UserCard({ user, onRefresh }: Props) {
     const reason = selectedReason === 'Other' ? customReason.trim() : selectedReason;
     if (!reason) return;
     setSuspendVisible(false);
-    await updateUserActiveStatus(user.id, true, reason);
+    const result = await updateUserActiveStatus(user.id, true, reason);
+    if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
+    toast({ title: 'Account suspended.', preset: 'done' });
     onRefresh?.();
   };
 
   const handleRestore = async () => {
     setRestoreVisible(false);
-    await updateUserActiveStatus(user.id, false);
+    const result = await updateUserActiveStatus(user.id, false);
+    if (!result.success) { toast({ title: result.error, preset: 'error' }); return; }
+    toast({ title: 'Account restored.', preset: 'done' });
     onRefresh?.();
   };
 
@@ -95,15 +90,17 @@ export default function UserCard({ user, onRefresh }: Props) {
 
       {/* Suspend Modal with Reason */}
       <Modal visible={suspendVisible} transparent animationType="fade" onRequestClose={() => setSuspendVisible(false)}>
-        <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }} activeOpacity={1} onPress={() => setSuspendVisible(false)}>
-          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} style={{ backgroundColor: '#fff', borderRadius: 16, width: 320, maxHeight: 460, padding: 24, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 10 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 4 }}>Suspend Account</Text>
-            <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 19, marginBottom: 16 }}>
-              Select a reason for suspending {fullName}.
-            </Text>
+        <Pressable style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)', padding: 24 }} onPress={() => setSuspendVisible(false)}>
+          <Pressable onPress={(e) => e.stopPropagation()} style={{ backgroundColor: '#fff', borderRadius: 16, width: '100%', maxWidth: 360, maxHeight: '80%' }}>
+            <View style={{ padding: 24, paddingBottom: 0 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 4 }}>Suspend Account</Text>
+              <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 19, marginBottom: 16 }}>
+                Select a reason for suspending {fullName}.
+              </Text>
+            </View>
 
-            <ScrollView style={{ maxHeight: 280, marginBottom: 16 }}>
-              {SUSPEND_REASONS.map((reason) => (
+            <ScrollView style={{ paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: 8 }} showsVerticalScrollIndicator={true}>
+              {USER_REASONS.map((reason) => (
                 <TouchableOpacity
                   key={reason}
                   activeOpacity={0.7}
@@ -130,7 +127,7 @@ export default function UserCard({ user, onRefresh }: Props) {
               )}
             </ScrollView>
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 10, padding: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
               <TouchableOpacity onPress={() => setSuspendVisible(false)} activeOpacity={0.7} style={{ flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', alignItems: 'center' }}>
                 <Text style={{ fontSize: 13, fontWeight: '600', color: '#6B7280' }}>Cancel</Text>
               </TouchableOpacity>
@@ -138,8 +135,8 @@ export default function UserCard({ user, onRefresh }: Props) {
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Suspend</Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </Pressable>
+        </Pressable>
       </Modal>
 
       {/* Restore Modal */}

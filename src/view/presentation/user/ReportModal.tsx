@@ -1,27 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Pressable, ScrollView, ActivityIndicator, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { submitReport, checkExistingReport, MAX_REPORT_FILES, MAX_REPORT_FILE_SIZE } from '@/controllers/reportController';
+import { submitReport, checkExistingReport, MAX_REPORT_FILES, MAX_REPORT_FILE_SIZE, USER_REASONS, ERRAND_REASONS } from '@/controllers/reportController';
 import type { ReportType, ReportFile } from '@/controllers/reportController';
 import { toast } from '@/utils/toast';
-
-const USER_REASONS = [
-  'Scam or fraud',
-  'Did not complete the errand',
-  'Harassment or abusive behavior',
-  'Fake or misleading profile',
-  'Inappropriate or offensive content',
-  'Other',
-];
-
-const ERRAND_REASONS = [
-  'Scam or fraudulent errand',
-  'Misleading description or budget',
-  'Inappropriate or offensive content',
-  'Illegal activity',
-  'Spam or duplicate posting',
-  'Other',
-];
 
 interface Props {
   visible: boolean;

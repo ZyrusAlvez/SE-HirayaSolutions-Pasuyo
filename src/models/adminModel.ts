@@ -233,6 +233,12 @@ export const getAdminErrandDetail = (id: string) =>
     .eq('id', id)
     .single();
 
+export const deleteAdminErrand = (id: string) =>
+  getAdmin()
+    .from('errands')
+    .delete()
+    .eq('id', id);
+
 export const getProfileNames = (ids: string[]) =>
   getAdmin()
     .from('profiles')

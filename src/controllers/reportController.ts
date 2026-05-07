@@ -10,6 +10,27 @@ export type ReportFile = { uri: string; name: string; mimeType: string; size?: n
 export const MAX_REPORT_FILES = 5;
 export const MAX_REPORT_FILE_SIZE = 5 * 1024 * 1024;
 
+export const USER_REASONS = [
+  'Scam or fraud',
+  'Did not complete the errand',
+  'Harassment or abusive behavior',
+  'Fake or misleading profile',
+  'Inappropriate or offensive content',
+  'Spam or misleading content',
+  'Multiple user reports',
+  'Unpaid service fees',
+  'Other',
+];
+
+export const ERRAND_REASONS = [
+  'Scam or fraudulent errand',
+  'Misleading description or budget',
+  'Inappropriate or offensive content',
+  'Illegal activity',
+  'Spam or duplicate posting',
+  'Other',
+];
+
 export const checkExistingReport = async (
   reportedId: string,
   type: ReportType,

@@ -1,7 +1,7 @@
 import * as adminModel from '../models/adminModel';
 import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus } from '../models/adminModel';
 import { postNotification } from './notificationController';
-import { sendAccountRestoredEmail, sendAccountSuspendedEmail } from '../models/emailModel';
+import { sendAccountRestoredEmail, sendAccountSuspendedEmail, sendErrandDeletedEmail } from '../models/emailModel';
 
 export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
 
@@ -154,6 +154,41 @@ export const getAdminErrandHistory = async (errandId: string): Promise<Result<{ 
     return { success: true, error: '', data: { events, actorNames } };
   } catch {
     return { success: false, error: 'Failed to fetch history' };
+  }
+};
+
+export const deleteErrandAdmin = async (errandId: string, reason: string): Promise<Result> => {
+  try {
+    const { data: errand, error: fetchErr } = await adminModel.getAdminErrandDetail(errandId);
+    if (fetchErr || !errand) return { success: false, error: 'Errand not found' };
+
+    const { error } = await adminModel.deleteAdminErrand(errandId);
+    if (error) return { success: false, error: error.message };
+
+    const errandInfo = { title: errand.title, description: errand.description, budget: errand.budget };
+
+    // Notify poster
+    await postNotification(
+      errand.user_id,
+      'Errand Removed',
+      `Your errand "${errand.title}" has been removed by an admin. Reason: ${reason}`,
+    );
+    sendErrandDeletedEmail(errand.user_id, errandInfo, reason);
+
+    // Notify runner if accepted
+    if (errand.accepted_by) {
+      await postNotification(
+        errand.accepted_by,
+        'Errand Removed',
+        `The errand "${errand.title}" you accepted has been removed by an admin. Reason: ${reason}`,
+      );
+      sendErrandDeletedEmail(errand.accepted_by, errandInfo, reason);
+    }
+
+    await adminModel.postAdminLog('DELETED_ERRAND', errand.user_id, `Admin deleted errand "${errand.title}". Reason: ${reason}`);
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Failed to delete errand' };
   }
 };
 

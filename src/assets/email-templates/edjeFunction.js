@@ -218,6 +218,55 @@ const TEMPLATES: Record<string, string> = {
 </body>
 </html>`,
 
+  "errand-deleted": `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Errand Removed</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #F9FAFB; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .wrapper { max-width: 480px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+    .header { padding: 32px 40px 24px; text-align: center; border-bottom: 1px solid #F3F4F6; }
+    .body { padding: 40px; }
+    .body h2 { color: #111827; font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+    .body p { color: #6B7280; font-size: 14px; line-height: 1.7; margin: 0 0 24px; }
+    .errand-card { background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+    .errand-card .description { color: #6B7280; font-size: 13px; line-height: 1.5; margin: 6px 0 0; }
+    .reason-label { font-size: 12px; font-weight: 600; color: #991B1B; margin: 10px 0 0; }
+    .reason-value { font-size: 13px; color: #DC2626; margin: 2px 0 0; }
+    .footer { padding: 20px 40px; text-align: center; border-top: 1px solid #F3F4F6; }
+    .footer p { color: #9CA3AF; font-size: 11px; margin: 0; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <img src="https://pasuyo.xyz/assets/assets/logo/Pasuyo_full.fb4e4361aa1f53810293622e25f31490.png" alt="Pasuyo" style="height: 36px;" />
+    </div>
+    <div class="body">
+      <h2>Your Errand Has Been Removed</h2>
+      <p>An administrator has removed your errand from the platform.</p>
+      <div class="errand-card">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="font-size: 15px; font-weight: 700; color: #111827;">{{errand_title}}</td>
+            <td style="font-size: 14px; font-weight: 700; color: #D97706; text-align: right; white-space: nowrap; padding-left: 12px;">{{errand_budget}}</td>
+          </tr>
+        </table>
+        <p class="description">{{errand_description}}</p>
+        <p class="reason-label">Reason</p>
+        <p class="reason-value">{{delete_reason}}</p>
+      </div>
+      <p>If you believe this was a mistake, please contact support for assistance.</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 Pasuyo &middot; Hiraya Solutions<br/>This is an automated message, please do not reply.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+
   "account-suspended": `<!DOCTYPE html>
 <html lang="en">
 <head>

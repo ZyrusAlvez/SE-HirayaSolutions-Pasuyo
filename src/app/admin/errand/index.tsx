@@ -115,7 +115,7 @@ export default function AdminErrandsScreen() {
         <FlatList
           data={filtered}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => <ErrandCard errand={item} />}
+          renderItem={({ item }) => <ErrandCard errand={item} onDelete={loadErrands} />}
           contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
           showsVerticalScrollIndicator={true}
           numColumns={wide ? 2 : 1}
