@@ -1,7 +1,7 @@
 import * as adminModel from '../models/adminModel';
 import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus } from '../models/adminModel';
 import { postNotification } from './notificationController';
-import { sendAccountRestoredEmail, sendAccountSuspendedEmail, sendErrandDeletedEmail } from '../models/emailModel';
+import { sendAccountRestoredEmail, sendAccountSuspendedEmail, sendErrandDeletedEmail, sendVerificationEmail } from '../models/emailModel';
 
 export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
 
@@ -98,6 +98,7 @@ export const updateVerificationStatus = async (id: string, approve: boolean): Pr
         : 'Your verification request was rejected. Please resubmit with valid documents.',
       '/profile',
     );
+    sendVerificationEmail(id, approve);
     await adminModel.postAdminLog(
       approve ? 'APPROVED_VERIFICATION' : 'REJECTED_VERIFICATION',
       id,
