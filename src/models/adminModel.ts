@@ -252,6 +252,12 @@ export const getApprovedPaymentsTotal = async (userId: string): Promise<number> 
   return (data ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
 };
 
+export const getAdminReports = () =>
+  getAdmin()
+    .from('reports')
+    .select('id, reporter_id, reported_id, type, reason, details, status, created_at, errand_id, file_urls')
+    .order('created_at', { ascending: false });
+
 export const getPendingPayments = () =>
   getAdmin()
     .from('service_fee_payments')

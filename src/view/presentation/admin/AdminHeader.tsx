@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { label: 'Errands', route: '/admin/errand' },
   { label: 'Account Verification', route: '/admin/account-verification' },
   { label: 'Payment Verification', route: '/admin/payment-verification' },
-  { label: 'Reports', route: '/admin/reports' },
+  { label: 'Reports', route: '/admin/report' },
   { label: 'Logs', route: '/admin/logs' },
 ] as const;
 
