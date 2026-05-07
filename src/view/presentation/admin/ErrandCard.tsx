@@ -15,17 +15,19 @@ export interface Errand {
   status: string;
   is_remote: boolean;
   created_at: string;
+  _effectiveStatus?: string;
 }
 
 export default function ErrandCard({ errand }: { errand: Errand }) {
-  const style = STATUS_STYLES[errand.status] ?? { bg: 'bg-gray-100', text: 'text-gray-600' };
+  const displayStatus = errand._effectiveStatus ?? errand.status;
+  const style = STATUS_STYLES[displayStatus] ?? { bg: 'bg-gray-100', text: 'text-gray-600' };
 
   return (
-    <View className="bg-white rounded-2xl px-4 py-3 border border-gray-100 gap-1">
+    <View className="bg-white rounded-2xl px-4 py-3 border border-gray-100 gap-1" style={{ flex: 1 }}>
       <View className="flex-row items-center justify-between">
         <Text className="text-sm font-semibold text-gray-900 flex-1 mr-2" numberOfLines={1}>{errand.title}</Text>
         <View className={`px-2 py-1 rounded-full ${style.bg}`}>
-          <Text className={`text-xs font-medium ${style.text}`}>{errand.status}</Text>
+          <Text className={`text-xs font-medium ${style.text}`}>{displayStatus}</Text>
         </View>
       </View>
       <Text className="text-xs text-gray-500">by {errand.poster_name ?? '—'}</Text>

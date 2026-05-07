@@ -79,6 +79,7 @@ export interface Errand {
   status: string;
   is_remote: boolean;
   created_at: string;
+  deadline: string | null;
 }
 
 export interface LogEntry {
@@ -135,7 +136,7 @@ export const updateVerificationStatus = (id: string, approve: boolean) =>
 export const getAdminErrands = () =>
   getAdmin()
     .from('errands_with_profiles')
-    .select('id, title, poster_name, budget, status, is_remote, created_at');
+    .select('id, title, poster_name, budget, status, is_remote, created_at, deadline');
 
 export const getAdminLogs = () =>
   getAdmin()

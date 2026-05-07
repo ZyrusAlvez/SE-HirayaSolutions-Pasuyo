@@ -35,7 +35,7 @@ export default function Dropdown<T extends string>({ value, options, labels, ico
       </TouchableOpacity>
 
       {open && (
-        <View style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', minWidth: 130, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 6, zIndex: 9999 }}>
+        <View style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', minWidth: 160, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 6, zIndex: 9999 }}>
           {options.map((opt, i) => {
             const optIcon = icons?.[opt];
             const optColor = iconColors?.[opt] ?? '#374151';
