@@ -99,6 +99,7 @@ export default function AdminErrandsScreen() {
       available={chartData.available}
       inProgress={chartData.inProgress}
       expired={chartData.expired}
+      errands={errandsWithStatus}
       chartWidth={chartWidth}
     />
   );
