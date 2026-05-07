@@ -10,6 +10,9 @@ const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
   REJECTED_VERIFICATION: { bg: '#FEE2E2', text: '#DC2626' },
   SUSPENDED_USER:        { bg: '#FEE2E2', text: '#DC2626' },
   RESTORED_USER:         { bg: '#DBEAFE', text: '#1D4ED8' },
+  APPROVED_PAYMENT:      { bg: '#DCFCE7', text: '#15803D' },
+  REJECTED_PAYMENT:      { bg: '#FEE2E2', text: '#DC2626' },
+  DELETED_ERRAND:        { bg: '#FEE2E2', text: '#DC2626' },
 };
 
 export default function AdminLogsScreen() {
@@ -38,6 +41,7 @@ export default function AdminLogsScreen() {
   const renderItem = ({ item }: { item: LogEntry }) => {
     const style = ACTION_STYLES[item.action] ?? { bg: '#F3F4F6', text: '#6B7280' };
     const date = new Date(item.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const isErrandAction = item.action === 'DELETED_ERRAND';
 
     return (
       <View className="bg-white rounded-2xl px-4 py-3 border border-gray-100 gap-1">
@@ -47,6 +51,13 @@ export default function AdminLogsScreen() {
           </View>
           <Text className="text-xs text-gray-400">{date}</Text>
         </View>
+        {(item.target_name || item.target_user_id) && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <Ionicons name={isErrandAction ? 'document-text-outline' : 'person-outline'} size={12} color="#6B7280" />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>{item.target_name ?? 'Unknown'}</Text>
+            <Text style={{ fontSize: 10, color: '#9CA3AF' }}>({item.target_user_id?.slice(0, 8)}...)</Text>
+          </View>
+        )}
         {item.details && <Text className="text-xs text-gray-600 mt-1">{item.details}</Text>}
       </View>
     );

@@ -100,6 +100,7 @@ export interface LogEntry {
   created_at: string;
   admin_id: string | null;
   target_user_id: string | null;
+  target_name?: string;
 }
 
 export interface AnalyticsData {
