@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
   'Available':   { bg: 'bg-green-100',  text: 'text-green-700'  },
@@ -26,6 +27,7 @@ export default function ErrandCard({ errand }: { errand: Errand }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const btnRef = useRef<View>(null);
+  const router = useRouter();
 
   const openMenu = () => {
     btnRef.current?.measureInWindow((x, y, width, height) => {
@@ -54,11 +56,17 @@ export default function ErrandCard({ errand }: { errand: Errand }) {
       <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
         <Pressable style={{ flex: 1 }} onPress={() => setMenuOpen(false)}>
           <View style={{ position: 'absolute', top: menuPos.y, left: menuPos.x, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', minWidth: 140, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 6 }}>
-            <TouchableOpacity onPress={() => setMenuOpen(false)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
+            <TouchableOpacity
+              onPress={() => { setMenuOpen(false); router.push(`/admin/errand/${errand.id}`); }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}
+            >
               <Ionicons name="information-circle-outline" size={14} color="#374151" />
               <Text style={{ fontSize: 12, color: '#374151' }}>More Info</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setMenuOpen(false)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10 }}>
+            <TouchableOpacity
+              onPress={() => setMenuOpen(false)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10 }}
+            >
               <Ionicons name="trash-outline" size={14} color="#EF4444" />
               <Text style={{ fontSize: 12, color: '#EF4444' }}>Delete Errand</Text>
             </TouchableOpacity>

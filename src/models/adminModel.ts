@@ -218,6 +218,26 @@ export const getAllReports = () =>
 export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
 
+export const getAdminErrandEvents = (errandId: string) =>
+  getAdmin()
+    .from('activity_log')
+    .select('id, errand_id, actor_id, event_type, metadata, created_at')
+    .eq('errand_id', errandId)
+    .order('created_at', { ascending: true });
+
+export const getAdminErrandDetail = (id: string) =>
+  getAdmin()
+    .from('errands_with_profiles')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+export const getProfileNames = (ids: string[]) =>
+  getAdmin()
+    .from('profiles')
+    .select('id, first_name, last_name')
+    .in('id', ids);
+
 export const postAdminLog = async (action: string, targetUserId: string, details: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   return getAdmin().from('admin_logs').insert({

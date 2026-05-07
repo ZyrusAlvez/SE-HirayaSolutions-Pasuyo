@@ -119,6 +119,44 @@ export const getErrands = async (): Promise<Result<Errand[]>> => {
   }
 };
 
+export const getAdminErrandDetail = async (id: string): Promise<Result<any>> => {
+  try {
+    const { data, error } = await adminModel.getAdminErrandDetail(id);
+    if (error || !data) return { success: false, error: error?.message ?? 'Errand not found' };
+    return { success: true, error: '', data };
+  } catch {
+    return { success: false, error: 'Failed to fetch errand' };
+  }
+};
+
+export type AdminErrandEvent = {
+  id: string;
+  errand_id: string;
+  actor_id: string;
+  event_type: string;
+  metadata: Record<string, any>;
+  created_at: string;
+};
+
+export const getAdminErrandHistory = async (errandId: string): Promise<Result<{ events: AdminErrandEvent[]; actorNames: Record<string, string> }>> => {
+  try {
+    const { data, error } = await adminModel.getAdminErrandEvents(errandId);
+    if (error) return { success: false, error: error.message };
+    const events = (data ?? []) as AdminErrandEvent[];
+    const actorIds = [...new Set(events.map(e => e.actor_id))];
+    let actorNames: Record<string, string> = {};
+    if (actorIds.length > 0) {
+      const { data: profiles } = await adminModel.getProfileNames(actorIds);
+      (profiles ?? []).forEach((p: any) => {
+        actorNames[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown';
+      });
+    }
+    return { success: true, error: '', data: { events, actorNames } };
+  } catch {
+    return { success: false, error: 'Failed to fetch history' };
+  }
+};
+
 const PAGE_SIZE = 30;
 
 export const getUserActivity = async (
