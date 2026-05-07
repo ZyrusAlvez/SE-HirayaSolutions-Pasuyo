@@ -236,6 +236,13 @@ export const getAdminErrandEvents = (errandId: string) =>
     .eq('errand_id', errandId)
     .order('created_at', { ascending: true });
 
+export const getPendingPayments = () =>
+  getAdmin()
+    .from('service_fee_payments')
+    .select('id, user_id, amount, reference_no, screenshot_url, status, created_at')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
 export const getAdminErrandDetail = (id: string) =>
   getAdmin()
     .from('errands_with_profiles')
@@ -251,8 +258,8 @@ export const deleteAdminErrand = (id: string) =>
 
 export const getProfileNames = (ids: string[]) =>
   getAdmin()
-    .from('profiles')
-    .select('id, first_name, last_name')
+    .from('admin_user_profiles')
+    .select('id, display_name, first_name, last_name')
     .in('id', ids);
 
 export const postAdminLog = async (action: string, targetUserId: string, details: string) => {

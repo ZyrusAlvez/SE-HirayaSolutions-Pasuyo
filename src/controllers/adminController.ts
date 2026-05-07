@@ -120,6 +120,36 @@ export const getErrands = async (): Promise<Result<Errand[]>> => {
   }
 };
 
+export type PendingPayment = {
+  id: string;
+  user_id: string;
+  amount: number;
+  reference_no: string;
+  screenshot_url: string;
+  status: string;
+  created_at: string;
+  user_name: string;
+};
+
+export const getPendingPayments = async (): Promise<Result<PendingPayment[]>> => {
+  try {
+    const { data, error } = await adminModel.getPendingPayments();
+    if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch payments' };
+    const userIds = [...new Set((data as any[]).map(p => p.user_id))];
+    let names: Record<string, string> = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await adminModel.getProfileNames(userIds);
+      (profiles ?? []).forEach((p: any) => {
+        names[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.display_name || 'Unknown';
+      });
+    }
+    const payments = (data as any[]).map(p => ({ ...p, user_name: names[p.user_id] ?? 'Unknown' }));
+    return { success: true, error: '', data: payments as PendingPayment[] };
+  } catch {
+    return { success: false, error: 'Failed to fetch payments' };
+  }
+};
+
 export const getAdminErrandDetail = async (id: string): Promise<Result<any>> => {
   try {
     const { data, error } = await adminModel.getAdminErrandDetail(id);
@@ -149,7 +179,7 @@ export const getAdminErrandHistory = async (errandId: string): Promise<Result<{ 
     if (actorIds.length > 0) {
       const { data: profiles } = await adminModel.getProfileNames(actorIds);
       (profiles ?? []).forEach((p: any) => {
-        actorNames[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown';
+        actorNames[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.display_name || 'Unknown';
       });
     }
     return { success: true, error: '', data: { events, actorNames } };
