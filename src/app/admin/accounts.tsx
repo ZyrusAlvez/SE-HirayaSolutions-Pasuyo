@@ -133,7 +133,7 @@ export default function AdminAccountsScreen() {
         keyExtractor={item => item.id}
         renderItem={({ item }) => filter === 'Pending'
           ? <VerificationCard user={item as unknown as PendingUser} />
-          : <UserCard user={item} />
+          : <UserCard user={item} onRefresh={loadUsers} />
         }
         contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
         showsVerticalScrollIndicator={true}

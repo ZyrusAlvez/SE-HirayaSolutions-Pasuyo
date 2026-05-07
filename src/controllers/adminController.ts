@@ -1,6 +1,7 @@
 import * as adminModel from '../models/adminModel';
 import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus } from '../models/adminModel';
 import { postNotification } from './notificationController';
+import { sendAccountRestoredEmail } from '../models/emailModel';
 
 export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
 
@@ -71,6 +72,7 @@ export const updateUserActiveStatus = async (id: string, suspend: boolean): Prom
         ? 'Your account has been suspended. Please contact support for more information.'
         : 'Your account has been restored. You can now access Pasuyo again.',
     );
+    if (!suspend) await sendAccountRestoredEmail(id);
     await adminModel.postAdminLog(
       suspend ? 'SUSPENDED_USER' : 'RESTORED_USER',
       id,

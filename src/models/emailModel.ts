@@ -3,7 +3,7 @@ import { supabase } from '@/utils/supabase';
 interface SendEmailParams {
   to: string;
   subject: string;
-  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done';
+  template: 'errand-accepted' | 'errand-cancelled' | 'errand-marked-done' | 'account-restored';
   data: Record<string, string>;
 }
 
@@ -62,6 +62,22 @@ export const sendErrandCancelledEmail = async (
     const { data, error } = await supabase.functions.invoke('send-email', { body });
     if (error) console.warn('Errand cancelled email failed:', error.message, error);
     else console.log('Errand cancelled email sent:', data);
+  } catch (e: any) {
+    console.warn('Email invoke error:', e.message);
+  }
+};
+
+export const sendAccountRestoredEmail = async (userId: string) => {
+  try {
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: {
+        userId,
+        template: 'account-restored',
+        subject: 'Your account has been restored',
+        data: {},
+      },
+    });
+    if (error) console.warn('Account restored email failed:', error.message);
   } catch (e: any) {
     console.warn('Email invoke error:', e.message);
   }

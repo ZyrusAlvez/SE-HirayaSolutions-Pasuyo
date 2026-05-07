@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import DEFAULT_AVATAR from '../../../assets/images/default_profile.jpg';
 import VerificationBadge from '../../components/VerificationBadge';
 import KebabMenu from '../../components/KebabMenu';
+import ConfirmModal from '../../components/ConfirmModal';
+import { updateUserActiveStatus } from '../../../controllers/adminController';
 
 export interface UserProfile {
   id: string;
@@ -18,11 +20,14 @@ export interface UserProfile {
 
 interface Props {
   user: UserProfile;
+  onRefresh?: () => void;
 }
 
-export default function UserCard({ user }: Props) {
+export default function UserCard({ user, onRefresh }: Props) {
   const router = useRouter();
   const [avatarError, setAvatarError] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'suspend' | 'restore'>('suspend');
   const fullName = user.display_name || 'No name set';
   const joinedDate = new Date(user.created_at).toLocaleDateString('en-PH', {
     year: 'numeric', month: 'short', day: 'numeric',
@@ -55,9 +60,25 @@ export default function UserCard({ user }: Props) {
       </View>
       <KebabMenu actions={[
         { label: 'More info', icon: 'information-circle-outline', onPress: () => router.push(`/admin/user/${user.id}`) },
-        { label: 'Suspend', icon: 'ban-outline', onPress: () => {}, disabled: user.status === 'suspended' },
-        { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => {}, disabled: user.status !== 'suspended' },
+        { label: 'Suspend', icon: 'ban-outline', onPress: () => { setConfirmAction('suspend'); setConfirmVisible(true); }, disabled: user.status === 'suspended' },
+        { label: 'Restore', icon: 'checkmark-circle-outline', onPress: () => { setConfirmAction('restore'); setConfirmVisible(true); }, disabled: user.status !== 'suspended' },
       ]} />
+
+      <ConfirmModal
+        visible={confirmVisible}
+        title={confirmAction === 'suspend' ? 'Suspend Account' : 'Restore Account'}
+        message={confirmAction === 'suspend'
+          ? `Are you sure you want to suspend ${fullName}? They will lose access to Pasuyo.`
+          : `Are you sure you want to restore ${fullName}'s account?`}
+        confirmLabel={confirmAction === 'suspend' ? 'Suspend' : 'Restore'}
+        destructive={confirmAction === 'suspend'}
+        onCancel={() => setConfirmVisible(false)}
+        onConfirm={async () => {
+          setConfirmVisible(false);
+          await updateUserActiveStatus(user.id, confirmAction === 'suspend');
+          onRefresh?.();
+        }}
+      />
     </View>
   );
 }
