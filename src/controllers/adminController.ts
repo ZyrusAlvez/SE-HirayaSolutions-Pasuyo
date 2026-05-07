@@ -350,7 +350,22 @@ export const getLogs = async (): Promise<Result<LogEntry[]>> => {
   try {
     const { data, error } = await adminModel.getAdminLogs();
     if (error || !data) return { success: false, error: error?.message ?? 'Failed to fetch logs' };
-    return { success: true, error: '', data: data as LogEntry[] };
+    const logs = data as LogEntry[];
+    const userIds = [...new Set(logs.map(l => l.target_user_id).filter(Boolean) as string[])];
+    let names: Record<string, string> = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await adminModel.getProfileNames(userIds);
+      (profiles ?? []).forEach((p: any) => {
+        names[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || '';
+      });
+      const missing = userIds.filter(id => !names[id]);
+      for (const uid of missing) {
+        const { data: authData } = await adminModel.getUserEmail(uid);
+        names[uid] = authData?.displayName || 'Unknown';
+      }
+    }
+    const enriched = logs.map(l => ({ ...l, target_name: l.target_user_id ? names[l.target_user_id] ?? 'Unknown' : undefined }));
+    return { success: true, error: '', data: enriched };
   } catch {
     return { success: false, error: 'Failed to fetch logs' };
   }
