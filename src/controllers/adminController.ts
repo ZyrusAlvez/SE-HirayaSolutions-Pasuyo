@@ -1,7 +1,8 @@
 import * as adminModel from '../models/adminModel';
 import type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus } from '../models/adminModel';
+import { supabase } from '../utils/supabase';
 import { postNotification } from './notificationController';
-import { sendAccountRestoredEmail, sendAccountSuspendedEmail, sendErrandDeletedEmail, sendVerificationEmail } from '../models/emailModel';
+import { sendAccountRestoredEmail, sendAccountSuspendedEmail, sendErrandDeletedEmail, sendVerificationEmail, sendPaymentStatusEmail } from '../models/emailModel';
 
 export type { FullUserProfile, UserDetail, VerificationProfile, Errand, LogEntry, AnalyticsData, AccountStatus };
 
@@ -140,13 +141,66 @@ export const getPendingPayments = async (): Promise<Result<PendingPayment[]>> =>
     if (userIds.length > 0) {
       const { data: profiles } = await adminModel.getProfileNames(userIds);
       (profiles ?? []).forEach((p: any) => {
-        names[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.display_name || 'Unknown';
+        names[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || '';
       });
+      // Resolve missing names from auth metadata
+      const missing = userIds.filter(id => !names[id]);
+      for (const uid of missing) {
+        const { data: authData } = await adminModel.getUserEmail(uid);
+        names[uid] = authData?.displayName || 'Unknown';
+      }
     }
     const payments = (data as any[]).map(p => ({ ...p, user_name: names[p.user_id] ?? 'Unknown' }));
     return { success: true, error: '', data: payments as PendingPayment[] };
   } catch {
     return { success: false, error: 'Failed to fetch payments' };
+  }
+};
+
+export const getPaymentDetail = async (id: string): Promise<Result<any>> => {
+  try {
+    const { data, error } = await adminModel.getPaymentDetail(id);
+    if (error || !data) return { success: false, error: error?.message ?? 'Payment not found' };
+    const { data: profiles } = await adminModel.getProfileNames([data.user_id]);
+    const p = (profiles ?? [])[0];
+    let user_name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') : '';
+    if (!user_name) {
+      const { data: authData } = await adminModel.getUserEmail(data.user_id);
+      user_name = authData?.displayName || 'Unknown';
+    }
+    return { success: true, error: '', data: { ...data, user_name } };
+  } catch {
+    return { success: false, error: 'Failed to fetch payment' };
+  }
+};
+
+export const updatePaymentStatus = async (id: string, approve: boolean, reason?: string): Promise<Result> => {
+  try {
+    const { data: payment } = await adminModel.getPaymentDetail(id);
+    if (!payment) return { success: false, error: 'Payment not found' };
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await adminModel.updatePaymentStatus(id, approve ? 'approved' : 'rejected', user.id, reason);
+    if (error) return { success: false, error: error.message };
+
+    await postNotification(
+      payment.user_id,
+      approve ? 'Payment Approved' : 'Payment Rejected',
+      approve
+        ? `Your service fee payment of ₱${payment.amount.toLocaleString()} has been approved.`
+        : `Your service fee payment of ₱${payment.amount.toLocaleString()} has been rejected. Reason: ${reason || 'Does not meet requirements'}.`,
+    );
+    sendPaymentStatusEmail(payment.user_id, approve, payment.amount, reason);
+    await adminModel.postAdminLog(
+      approve ? 'APPROVED_PAYMENT' : 'REJECTED_PAYMENT',
+      payment.user_id,
+      `Admin ${approve ? 'approved' : 'rejected'} payment of ₱${payment.amount} (ID: ${id})${reason ? `. Reason: ${reason}` : ''}`,
+    );
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Action failed' };
   }
 };
 
@@ -179,8 +233,13 @@ export const getAdminErrandHistory = async (errandId: string): Promise<Result<{ 
     if (actorIds.length > 0) {
       const { data: profiles } = await adminModel.getProfileNames(actorIds);
       (profiles ?? []).forEach((p: any) => {
-        actorNames[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.display_name || 'Unknown';
+        actorNames[p.id] = [p.first_name, p.last_name].filter(Boolean).join(' ') || '';
       });
+      const missing = actorIds.filter(id => !actorNames[id]);
+      for (const uid of missing) {
+        const { data: authData } = await adminModel.getUserEmail(uid);
+        actorNames[uid] = authData?.displayName || 'Unknown';
+      }
     }
     return { success: true, error: '', data: { events, actorNames } };
   } catch {

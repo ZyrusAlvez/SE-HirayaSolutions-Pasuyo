@@ -243,6 +243,19 @@ export const getPendingPayments = () =>
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
+export const getPaymentDetail = (id: string) =>
+  getAdmin()
+    .from('service_fee_payments')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+export const updatePaymentStatus = (id: string, status: 'approved' | 'rejected', adminId: string, adminNote?: string) =>
+  getAdmin()
+    .from('service_fee_payments')
+    .update({ status, reviewed_by: adminId, reviewed_at: new Date().toISOString(), admin_note: adminNote ?? null })
+    .eq('id', id);
+
 export const getAdminErrandDetail = (id: string) =>
   getAdmin()
     .from('errands_with_profiles')
@@ -258,8 +271,8 @@ export const deleteAdminErrand = (id: string) =>
 
 export const getProfileNames = (ids: string[]) =>
   getAdmin()
-    .from('admin_user_profiles')
-    .select('id, display_name, first_name, last_name')
+    .from('profiles')
+    .select('id, first_name, last_name')
     .in('id', ids);
 
 export const postAdminLog = async (action: string, targetUserId: string, details: string) => {
