@@ -73,12 +73,14 @@ export interface VerificationProfile {
 
 export interface Errand {
   id: string;
+  user_id: string;
   title: string;
   poster_name: string | null;
   budget: number | null;
   status: string;
   is_remote: boolean;
   created_at: string;
+  deadline: string | null;
 }
 
 export interface LogEntry {
@@ -135,7 +137,7 @@ export const updateVerificationStatus = (id: string, approve: boolean) =>
 export const getAdminErrands = () =>
   getAdmin()
     .from('errands_with_profiles')
-    .select('id, title, poster_name, budget, status, is_remote, created_at');
+    .select('id, user_id, title, poster_name, budget, status, is_remote, created_at, deadline');
 
 export const getAdminLogs = () =>
   getAdmin()
@@ -216,6 +218,32 @@ export const getAllReports = () =>
 
 export const getErrandsForAnalytics = () =>
   getAdmin().from('errands').select('created_at, status');
+
+export const getAdminErrandEvents = (errandId: string) =>
+  getAdmin()
+    .from('activity_log')
+    .select('id, errand_id, actor_id, event_type, metadata, created_at')
+    .eq('errand_id', errandId)
+    .order('created_at', { ascending: true });
+
+export const getAdminErrandDetail = (id: string) =>
+  getAdmin()
+    .from('errands_with_profiles')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+export const deleteAdminErrand = (id: string) =>
+  getAdmin()
+    .from('errands')
+    .delete()
+    .eq('id', id);
+
+export const getProfileNames = (ids: string[]) =>
+  getAdmin()
+    .from('profiles')
+    .select('id, first_name, last_name')
+    .in('id', ids);
 
 export const postAdminLog = async (action: string, targetUserId: string, details: string) => {
   const { data: { user } } = await supabase.auth.getUser();

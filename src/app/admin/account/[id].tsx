@@ -2,16 +2,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Platform, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getUserDetail, getUserActivity } from '../../../controllers/adminController';
-import type { ActivityItem } from '../../../controllers/adminController';
-import { getUnpaidServiceFeeTotalForUser } from '../../../controllers/serviceFeeController';
-import VerificationBadge from '../../../view/components/VerificationBadge';
-import ImageViewer from '../../../view/components/ImageViewer';
-import Dropdown from '../../../view/components/Dropdown';
-import UserDetailSkeleton from '../../../view/presentation/admin/UserDetailSkeleton';
-import ServiceFeeLimitBar from '../../../view/components/ServiceFeeLimitBar';
+import { getUserDetail, getUserActivity } from '@/controllers/adminController';
+import type { ActivityItem } from '@/controllers/adminController';
+import { getUnpaidServiceFeeTotalForUser } from '@/controllers/serviceFeeController';
+import VerificationBadge from '@/view/components/VerificationBadge';
+import ImageViewer from '@/view/components/ImageViewer';
+import Dropdown from '@/view/components/Dropdown';
+import UserDetailSkeleton from '@/view/presentation/admin/UserDetailSkeleton';
+import ServiceFeeLimitBar from '@/view/components/ServiceFeeLimitBar';
 
-const DEFAULT_AVATAR = require('../../../assets/images/default_profile.jpg');
+const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 const ACCENT = '#FEA405';
 
 const EVENT_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
@@ -79,7 +79,6 @@ export default function UserDetailScreen() {
     });
   }, [id]);
 
-  // Load activity when filter/sort changes
   useEffect(() => {
     loadActivity(0, true);
   }, [filter, sort]);
@@ -123,7 +122,6 @@ export default function UserDetailScreen() {
 
   return (
     <View style={[{ flex: 1, backgroundColor: '#F9FAFB' }, Platform.OS === 'web' && { maxWidth: 1000, width: '100%', alignSelf: 'center' as const }]}>
-      {/* Top bar */}
       <View style={{ backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingTop: Platform.OS !== 'web' ? 48 : 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -142,7 +140,6 @@ export default function UserDetailScreen() {
         }}
         scrollEventThrottle={400}
       >
-        {/* Section 1: User Information */}
         <View style={{ backgroundColor: 'white', margin: 16, marginBottom: 0, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#F3F4F6' }}>
           <View style={{ flexDirection: 'row', gap: 16, alignItems: 'flex-start' }}>
             <Image
@@ -174,7 +171,6 @@ export default function UserDetailScreen() {
             {user.verification_submitted_at && <InfoRow label="Verification Submitted" value={new Date(user.verification_submitted_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })} />}
           </View>
 
-          {/* Service Fee */}
           {unpaidTotal != null && (
             <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12 }}>
               <ServiceFeeLimitBar totalFees={unpaidTotal} isVerified={user.status === 'verified'} isAdmin />
@@ -196,34 +192,14 @@ export default function UserDetailScreen() {
           )}
         </View>
 
-        {/* Section 2: Activity Log */}
         <View style={{ marginTop: 16, paddingHorizontal: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 8, marginBottom: 16, zIndex: 100 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151' }}>Activity Log</Text>
             <View style={{ width: 1, height: 16, backgroundColor: '#E5E7EB', marginHorizontal: 4 }} />
             <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
-            <Dropdown
-              value={filter}
-              options={FILTER_OPTIONS}
-              labels={FILTER_LABELS}
-              icon="apps-outline"
-              icons={FILTER_ICONS}
-              iconColors={FILTER_COLORS}
-              open={openDropdown === 'filter'}
-              onToggle={() => toggle('filter')}
-              onChange={(v) => setFilter(v as FilterKey)}
-            />
+            <Dropdown value={filter} options={FILTER_OPTIONS} labels={FILTER_LABELS} icon="apps-outline" icons={FILTER_ICONS} iconColors={FILTER_COLORS} open={openDropdown === 'filter'} onToggle={() => toggle('filter')} onChange={(v) => setFilter(v as FilterKey)} />
             <Ionicons name="swap-vertical-outline" size={14} color="#9CA3AF" />
-            <Dropdown
-              value={sort}
-              options={SORT_OPTIONS}
-              labels={SORT_LABELS}
-              icon="time-outline"
-              icons={SORT_ICONS}
-              open={openDropdown === 'sort'}
-              onToggle={() => toggle('sort')}
-              onChange={(v) => setSort(v as SortKey)}
-            />
+            <Dropdown value={sort} options={SORT_OPTIONS} labels={SORT_LABELS} icon="time-outline" icons={SORT_ICONS} open={openDropdown === 'sort'} onToggle={() => toggle('sort')} onChange={(v) => setSort(v as SortKey)} />
             {filter !== 'All' && (
               <TouchableOpacity onPress={() => setFilter('All')} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
                 <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '600' }}>Clear</Text>

@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { logout } from '@/controllers/authController';
 
 const NAV_ITEMS = [
-  { label: 'Accounts', route: '/admin/accounts' },
-  { label: 'Errands', route: '/admin/errands' },
+  { label: 'Accounts', route: '/admin/account' },
+  { label: 'Errands', route: '/admin/errand' },
   { label: 'Account Verification', route: '/admin/account-verification' },
   { label: 'Payment Verification', route: '/admin/payment-verification' },
   { label: 'Reports', route: '/admin/reports' },
@@ -27,7 +27,7 @@ export default function AdminHeader() {
   const navItems = (
     <>
       {NAV_ITEMS.map(item => {
-        const active = currentRoute === item.route;
+        const active = currentRoute === item.route || currentRoute.startsWith(item.route + '/');
         return (
           <TouchableOpacity
             key={item.route}
