@@ -75,6 +75,7 @@ export const updateUserActiveStatus = async (id: string, suspend: boolean, reaso
     );
     if (suspend) await sendAccountSuspendedEmail(id, reason || 'Violation of platform rules');
     if (!suspend) await sendAccountRestoredEmail(id);
+    if (suspend) await adminModel.deleteUserReports(id);
     await adminModel.postAdminLog(
       suspend ? 'SUSPENDED_USER' : 'RESTORED_USER',
       id,

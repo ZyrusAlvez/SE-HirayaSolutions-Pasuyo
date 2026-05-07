@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getErrands, Errand } from '@/controllers/adminController';
 import ErrandCard from '@/view/presentation/admin/ErrandCard';
@@ -39,6 +39,7 @@ export default function AdminErrandsScreen() {
   const [sort, setSort] = useState<SortKey>('newest');
   const [refreshing, setRefreshing] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const loadErrands = async () => {
     const result = await getErrands();
@@ -144,7 +145,7 @@ export default function AdminErrandsScreen() {
       <FlatList
         data={filtered}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <ErrandCard errand={item} onDelete={loadErrands} />}
+        renderItem={({ item }) => <ErrandCard errand={item} onDelete={loadErrands} onLoadingChange={setActionLoading} />}
         contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
         showsVerticalScrollIndicator={true}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
@@ -172,6 +173,11 @@ export default function AdminErrandsScreen() {
         </View>
       ) : (
         listPanel
+      )}
+      {actionLoading && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+          <ActivityIndicator size="large" color={ACCENT} />
+        </View>
       )}
     </View>
   );

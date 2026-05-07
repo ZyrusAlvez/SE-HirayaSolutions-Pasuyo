@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getUsers, FullUserProfile } from '@/controllers/adminController';
 import { getAllActivity, getAllMessages, getAllReports } from '@/models/adminModel';
@@ -35,6 +35,7 @@ export default function AdminAccountsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [activities, setActivities] = useState<{ created_at: string }[]>([]);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const loadUsers = async () => {
     const result = await getUsers();
@@ -133,7 +134,7 @@ export default function AdminAccountsScreen() {
         keyExtractor={item => item.id}
         renderItem={({ item }) => filter === 'Pending'
           ? <VerificationCard user={item as unknown as PendingUser} />
-          : <UserCard user={item} onRefresh={loadUsers} />
+          : <UserCard user={item} onRefresh={loadUsers} onLoadingChange={setActionLoading} />
         }
         contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 16 }}
         showsVerticalScrollIndicator={true}
@@ -162,6 +163,11 @@ export default function AdminAccountsScreen() {
         </View>
       ) : (
         listPanel
+      )}
+      {actionLoading && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+          <ActivityIndicator size="large" color={ACCENT} />
+        </View>
       )}
     </View>
   );

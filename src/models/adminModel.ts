@@ -290,6 +290,12 @@ export const updatePaymentStatus = (id: string, status: 'approved' | 'rejected',
     .update({ status, reviewed_by: adminId, reviewed_at: new Date().toISOString(), admin_note: adminNote ?? null })
     .eq('id', id);
 
+export const deleteUserReports = (userId: string) =>
+  getAdmin()
+    .from('reports')
+    .delete()
+    .eq('reported_id', userId);
+
 export const getAdminErrandDetail = (id: string) =>
   getAdmin()
     .from('errands_with_profiles')
