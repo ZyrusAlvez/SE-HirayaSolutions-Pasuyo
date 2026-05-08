@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, Platform, StatusBar } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
@@ -76,15 +76,38 @@ export default function NotificationsPanel({ visible, onClose, onUnreadChange }:
   }, [visible]);
 
   const unreadCount = (notifications ?? []).filter(n => !n.is_read).length;
-  const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0;
-  const topOffset = Platform.OS === 'web' ? 52 : 100 + statusBarHeight;
+  const { width, height } = useWindowDimensions();
+  const isSmall = width < 500;
+  const panelWidth = isSmall ? width - 32 : 320;
+
+  if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose}>
-        <View
-          style={{ position: 'absolute', top: topOffset, right: 16, width: 320, maxHeight: 480, backgroundColor: 'white', borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8, overflow: 'hidden' }}
-        >
+    <>
+      <TouchableOpacity
+        style={{ position: 'fixed' as any, top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
+        activeOpacity={1}
+        onPress={onClose}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: '100%',
+          right: 0,
+          marginTop: 8,
+          width: panelWidth,
+          maxHeight: 480,
+          backgroundColor: 'white',
+          borderRadius: 16,
+          shadowColor: '#000',
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 8,
+          overflow: 'hidden',
+          zIndex: 999,
+        }}
+      >
           <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
               <View>
@@ -142,8 +165,7 @@ export default function NotificationsPanel({ visible, onClose, onUnreadChange }:
               />
             )}
           </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
+      </View>
+    </>
   );
 }
