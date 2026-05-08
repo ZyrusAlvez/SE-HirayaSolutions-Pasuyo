@@ -1,0 +1,463 @@
+import * as errandModel from '@/models/errandModel';
+import type { Errand, ErrandStatus, PinnedLocation, PostErrandParams } from '@/models/errandModel';
+import * as ImagePicker from 'expo-image-picker';
+import * as chatModel from '@/models/chatModel';
+import { postNotification } from '@/models/notificationModel';
+import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDoneEmail } from '@/models/emailModel';
+import { getDisplayProfile } from '@/models/profileModel';
+import { insertErrandEvent, getErrandEvents } from '@/models/errandEventModel';
+import type { ErrandEvent } from '@/models/errandEventModel';
+import { checkServiceFeeLimit } from '@/controllers/serviceFeeController';
+
+export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
+
+export const ACCEPTED_EXTENSIONS = ['JPG', 'JPEG', 'PNG', 'WebP'];
+export const MAX_FILE_SIZE_MB = 5;
+
+type Result<T> = { success: true; data: T } | { success: false; error: string };
+
+const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const inferMime = (asset: { mimeType?: string | null; fileName?: string | null; uri?: string | null }) => {
+  if (asset.mimeType) return asset.mimeType;
+  const ext = (asset.fileName ?? asset.uri ?? '').split('.').pop()?.toLowerCase() ?? '';
+  return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[ext] ?? '');
+};
+
+export const selectErrandImages = async (
+  remaining: number,
+): Promise<{ uris: string[]; errors: string[] }> => {
+  let result;
+  try {
+    result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsMultipleSelection: true, quality: 0.8 });
+  } catch {
+    return { uris: [], errors: ['Some files could not be read. Use JPG, PNG, or WebP.'] };
+  }
+  if (result.canceled) return { uris: [], errors: [] };
+
+  const errors: string[] = [];
+  const uris: string[] = [];
+  for (const asset of result.assets.slice(0, remaining)) {
+    const mime = inferMime(asset);
+    if (!ACCEPTED_MIME_TYPES.includes(mime))
+      errors.push(`"${asset.fileName ?? 'File'}" is not a supported type. Use JPG, PNG, or WebP.`);
+    else if (asset.fileSize && asset.fileSize > MAX_BYTES)
+      errors.push(`"${asset.fileName ?? 'File'}" exceeds the ${MAX_FILE_SIZE_MB}MB size limit.`);
+    else
+      uris.push(asset.uri);
+  }
+  if (result.assets.length > remaining)
+    errors.push(`Only ${remaining} more image${remaining === 1 ? '' : 's'} allowed. Extra selections were ignored.`);
+  return { uris, errors };
+};
+
+export const getErrandFullHistory = async (errandId: string): Promise<Result<ErrandEvent[]>> => {
+  try {
+    const { data, error } = await getErrandEvents(errandId);
+    if (error) return { success: false, error: 'Failed to load history' };
+    return { success: true, data: data ?? [] };
+  } catch {
+    return { success: false, error: 'Failed to load history' };
+  }
+};
+
+export const getErrand = async (id: string): Promise<Result<Errand>> => {
+  const { data, error } = await errandModel.getErrandById(id);
+  if (error || !data) return { success: false, error: 'Errand not found' };
+
+  if (data.status === 'Available' && data.deadline && new Date(data.deadline) < new Date()) {
+    data.status = 'Expired';
+  }
+
+  return { success: true, data: data as Errand };
+};
+
+export const getErrands = async (): Promise<Result<Errand[]>> => {
+  const { data, error } = await errandModel.getAvailableErrands();
+  if (error) return { success: false, error: 'Failed to fetch errands' };
+  return { success: true, data: (data ?? []) as Errand[] };
+};
+
+export type ErrandEditParams = {
+  title: string;
+  description: string;
+  isRemote: boolean;
+  budget: string;
+  deadline: Date | null;
+  images: string[];
+  addressDetails: string;
+  pinnedLocation: { lat: number; lng: number; name: string } | null;
+};
+
+export type ErrandUpdates = {
+  title: string;
+  description: string;
+  is_remote: boolean;
+  budget: number | null;
+  deadline: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  location_name: string | null;
+  address_details: string | null;
+  images: string[];
+};
+
+export const editErrand = async (
+  errandId: string,
+  params: ErrandEditParams,
+  status: string,
+): Promise<{ success: boolean; error: string; data?: ErrandUpdates }> => {
+  const { title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation } = params;
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be edited.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has been completed and cannot be edited.' };
+  if (!title.trim()) return { success: false, error: 'Title cannot be empty.' };
+  if (!description.trim()) return { success: false, error: 'Description cannot be empty.' };
+  if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
+
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data: original } = await errandModel.getErrandById(errandId);
+
+    const existingUrls = images.filter(uri => uri.startsWith('http'));
+    const newUris = images.filter(uri => !uri.startsWith('http'));
+    const uploadedUrls = newUris.length > 0 ? await errandModel.postImages(user.id, errandId, newUris) : [];
+    const imageUrls = [...existingUrls, ...uploadedUrls];
+
+    const updates = {
+      title: title.trim(),
+      description: description.trim(),
+      is_remote: isRemote,
+      budget: budget ? parseFloat(budget) : null,
+      deadline: deadline ? deadline.toISOString() : null,
+      location_lat: pinnedLocation?.lat ?? null,
+      location_lng: pinnedLocation?.lng ?? null,
+      location_name: pinnedLocation?.name ?? null,
+      address_details: addressDetails.trim() || null,
+      images: imageUrls,
+    };
+
+    const { error } = await errandModel.updateErrand(errandId, updates);
+    if (error) throw error;
+
+    // Build changes metadata
+    const changes: Record<string, { from: any; to: any }> = {};
+    if (original) {
+      if (original.title !== updates.title) changes.title = { from: original.title, to: updates.title };
+      if (original.description !== updates.description) changes.description = { from: original.description, to: updates.description };
+      if (original.is_remote !== updates.is_remote) changes.is_remote = { from: original.is_remote, to: updates.is_remote };
+      if (original.budget !== updates.budget) changes.budget = { from: original.budget, to: updates.budget };
+      if (original.deadline !== updates.deadline) changes.deadline = { from: original.deadline, to: updates.deadline };
+      if (original.location_name !== updates.location_name) changes.location = { from: original.location_name, to: updates.location_name };
+    }
+    await insertErrandEvent(errandId, user.id, 'edited_errand', { title: updates.title, changes });
+
+    return { success: true, error: '', data: updates };
+  } catch (e: any) {
+    return { success: false, error: e.message ?? 'Something went wrong' };
+  }
+};
+
+export const deleteErrand = async (id: string, status: string): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be deleted.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has been completed and cannot be deleted.' };
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data: errandData } = await errandModel.getErrandById(id);
+    await insertErrandEvent(id, user.id, 'deleted_errand', { title: errandData?.title ?? 'Unknown' });
+
+    const { error } = await errandModel.deleteErrand(id);
+    if (error) return { success: false, error: 'Failed to delete errand' };
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Failed to delete errand' };
+  }
+};
+
+export type DashboardErrand = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  status: string;
+  budget?: number;
+  deadline?: string;
+  is_remote: boolean;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  accepted_by?: string | null;
+  poster_name?: string;
+  poster_avatar?: string;
+  created_at: string;
+};
+
+export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardErrand[]; accepted: DashboardErrand[] }>> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [posted, accepted, cancelledIds] = await Promise.all([
+      errandModel.getPostedErrands(user.id),
+      errandModel.getAcceptedErrands(user.id),
+      errandModel.getCancelledErrandIds(user.id),
+    ]);
+
+    const acceptedData = (accepted.data ?? []) as DashboardErrand[];
+
+    const extraCancelledIds = [...cancelledIds].filter(id => !acceptedData.some(e => e.id === id));
+    let cancelledErrands: DashboardErrand[] = [];
+    if (extraCancelledIds.length > 0) {
+      const { data } = await errandModel.getCancelledErrands(extraCancelledIds);
+      cancelledErrands = ((data ?? []) as DashboardErrand[]).map(e => ({ ...e, status: 'Cancelled' }));
+    }
+
+    const allAccepted = [
+      ...acceptedData.map(e => (cancelledIds.has(e.id) && e.accepted_by !== user.id) ? { ...e, status: 'Cancelled' } : e),
+      ...cancelledErrands.filter(e => e.accepted_by !== user.id),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return {
+      success: true,
+      data: {
+        posted: ((posted.data ?? []) as DashboardErrand[]).map(e =>
+          e.status === 'Available' && e.deadline && new Date(e.deadline) < new Date() ? { ...e, status: 'Expired' } : e
+        ),
+        accepted: allAccepted,
+      },
+    };
+  } catch {
+    return { success: false, error: 'Failed to load dashboard' };
+  }
+};
+
+export const acceptErrand = async (
+  errandId: string,
+  status: string,
+  posterId: string,
+  errandInfo: { title: string; description: string; budget?: number },
+): Promise<{ success: boolean; error: string }> => {
+  if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
+  if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has already been completed.' };
+
+  const limitCheck = await checkServiceFeeLimit();
+  if (!limitCheck.allowed) return { success: false, error: limitCheck.error! };
+
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { error } = await errandModel.acceptErrand(errandId, user.id);
+    if (error) return { success: false, error: 'Failed to accept errand' };
+
+    const profile = await getDisplayProfile(user.id);
+    const acceptorName = profile.name ?? 'Someone';
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_accepted',
+        acceptedBy: user.id,
+        acceptedByName: acceptorName,
+        errandId,
+        title: errandInfo.title,
+        description: errandInfo.description,
+        budget: errandInfo.budget,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
+    sendErrandAcceptedEmail(posterId, errandInfo, user.id);
+
+    await insertErrandEvent(errandId, user.id, 'accepted', { title: errandInfo.title });
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const cancelAcceptedErrand = async (
+  errandId: string,
+  posterId: string,
+  errandTitle: string,
+  reason: string,
+  details: string | null,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [profile, { data: errandData }] = await Promise.all([
+      getDisplayProfile(user.id),
+      errandModel.getErrandById(errandId),
+    ]);
+    const cancellerName = profile.name ?? 'The runner';
+
+    const { error: cancelErr } = await errandModel.insertErrandCancellation(errandId, user.id, reason, details);
+    if (cancelErr) return { success: false, error: 'Failed to record cancellation' };
+
+    const { error: updateErr } = await errandModel.cancelErrand(errandId);
+    if (updateErr) return { success: false, error: 'Failed to cancel errand' };
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_cancelled',
+        cancelledBy: user.id,
+        errandId,
+        title: errandTitle,
+        reason,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(
+      posterId,
+      'Errand Cancelled',
+      `Your errand "${errandTitle}" has been cancelled by ${cancellerName}.`,
+      `/errand/${errandId}`,
+    );
+
+    sendErrandCancelledEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      cancellerName,
+      reason,
+      errandId,
+    );
+
+    await insertErrandEvent(errandId, user.id, 'cancelled', { title: errandTitle, reason, details });
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const markErrandAsDone = async (
+  errandId: string,
+  posterId: string,
+  errandTitle: string,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data: errandData } = await errandModel.getErrandById(errandId);
+    if (!errandData) return { success: false, error: 'Errand not found' };
+    if (errandData.status !== 'In Progress') return { success: false, error: 'Only errands that are in progress can be marked as done.' };
+    if (errandData.accepted_by !== user.id) return { success: false, error: 'Only the assigned runner can mark this errand as done.' };
+
+    const { error: updateErr } = await errandModel.markErrandDone(errandId);
+    if (updateErr) return { success: false, error: 'Failed to update errand status.' };
+
+    const profile = await getDisplayProfile(user.id);
+    const runnerName = profile.name ?? 'The runner';
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, posterId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_marked_done',
+        markedBy: user.id,
+        markedByName: runnerName,
+        errandId,
+        title: errandTitle,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    await postNotification(
+      posterId,
+      'Errand Completed',
+      `${runnerName} has marked your errand "${errandTitle}" as done.`,
+      `/chat?userId=${user.id}`,
+    );
+
+    sendErrandMarkedDoneEmail(
+      posterId,
+      { title: errandTitle, description: errandData?.description, budget: errandData?.budget },
+      runnerName,
+      user.id,
+    );
+
+    await insertErrandEvent(errandId, user.id, 'marked_done', { title: errandTitle });
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const submitErrandReview = async (
+  errandId: string,
+  reviewedId: string,
+  rating: number,
+  feedback: string | null,
+): Promise<{ success: boolean; error: string }> => {
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const [{ error }, { data: errandData }] = await Promise.all([
+      errandModel.insertErrandReview(errandId, user.id, reviewedId, rating, feedback),
+      errandModel.getErrandById(errandId),
+    ]);
+    if (error) return { success: false, error: error.message.includes('duplicate') ? 'You have already reviewed this errand' : 'Failed to submit review' };
+
+    await insertErrandEvent(errandId, user.id, 'reviewed', { rating, feedback, reviewed_id: reviewedId });
+
+    const { data: convo } = await chatModel.getOrCreateConversation(user.id, reviewedId);
+    if (convo) {
+      const systemContent = JSON.stringify({
+        type: 'errand_reviewed',
+        reviewerId: user.id,
+        reviewedId,
+        errandId,
+        rating,
+        feedback: feedback || null,
+        title: errandData?.title ?? null,
+      });
+      await chatModel.sendSystemMessage(convo.id, systemContent, user.id);
+    }
+
+    return { success: true, error: '' };
+  } catch {
+    return { success: false, error: 'Something went wrong' };
+  }
+};
+
+export const postErrand = async (
+  params: PostErrandParams,
+): Promise<{ success: true } | { success: false; error: string }> => {
+  const { title, description, isRemote, pinnedLocation, addressDetails, budget, deadline, images } = params;
+
+  if (!title.trim()) return { success: false, error: 'Please enter a title.' };
+  if (!description.trim()) return { success: false, error: 'Please enter a description.' };
+  if (!budget || !budget.trim()) return { success: false, error: 'Please enter a budget.' };
+  if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
+
+  try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: inserted, error: insertError } = await errandModel.postErrand({ ...params, userId: user.id });
+    if (insertError) throw insertError;
+
+    if (images.length > 0) {
+      const imageUrls = await errandModel.postImages(user.id, inserted.id, images);
+      await errandModel.updateErrandImages(inserted.id, imageUrls);
+    }
+
+    await insertErrandEvent(inserted.id, user.id, 'posted', { title: title.trim() });
+
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message ?? 'Something went wrong' };
+  }
+};
