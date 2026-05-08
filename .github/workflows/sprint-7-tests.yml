@@ -31,6 +31,7 @@ jobs:
         run: |
           mkdir -p supabase/migrations
           cp tests/automated/20260428133643_remote_schema.sql supabase/migrations/20260428133643_remote_schema.sql
+          cp tests/automated/20260508173406_remote_schema.sql supabase/migrations/20260508173406_remote_schema.sql
           cp tests/automated/seed.sql supabase/seed.sql
 
       - name: Start Supabase local stack

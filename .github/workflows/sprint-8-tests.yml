@@ -1,28 +1,22 @@
-name: Sprint 5 Automated Tests
+name: Sprint 8 Automated Tests
 
 on:
   push:
-    branches: [main, develop, tests/sprint-5]
+    branches: [main, develop, tests/sprint-8]
   pull_request:
-    branches: [main, develop, tests/sprint-5]
+    branches: [main, develop, tests/sprint-8]
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
-    env:
-      BASE_URL: http://localhost:8081
-      ASSET_IMAGE: assets/valid.jpg
-      ASSET_PDF: assets/valid.pdf
-      ASSET_LARGE: assets/large.jpg
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Write test .env
-        run: echo "${{ secrets.ENV_SPRINT5 }}" > tests/automated/sprint-5/.env
+        run: echo "${{ secrets.ENV_SPRINT8 }}" > tests/automated/sprint-8/.env
 
       # ── Supabase local setup ──────────────────────────────────────────
       - name: Setup Supabase CLI
@@ -72,11 +66,13 @@ jobs:
         run: |
           echo "Waiting for Expo to be ready..."
           for i in $(seq 1 40); do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 | grep -qE "^(200|304)"; then
-              echo "Expo is ready!"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 || echo "000")
+            if echo "$STATUS" | grep -qE "^(200|304|301|302)"; then
+              echo "Expo is ready (HTTP $STATUS)!"
+              sleep 5
               exit 0
             fi
-            echo "Attempt $i: not ready yet, waiting 10s..."
+            echo "Attempt $i: got HTTP $STATUS, waiting 10s..."
             sleep 10
           done
           echo "Expo failed to start in time"
@@ -90,20 +86,23 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies
-        run: pip install -r tests/automated/sprint-5/requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1
 
-      # ── Run Sprint 5 tests ────────────────────────────────────────────
-      - name: Run Sprint 5 tests
+      # ── Run Sprint 8 tests ────────────────────────────────────────────
+      - name: Keep Expo alive during tests
         run: |
-          python -m pytest tests/automated/sprint-5/ \
-            --ignore=tests/automated/sprint-5/create_errand.py \
-            --ignore=tests/automated/sprint-5/fill_verification.py \
-            --ignore=tests/automated/sprint-5/test_05_realtime_status.py \
-            --ignore=tests/automated/sprint-5/test_02_conversation_list.py \
-            -v --tb=short
+          while true; do
+            curl -s http://localhost:8081 > /dev/null 2>&1 || true
+            sleep 30
+          done &
+
+      - name: Run Sprint 8 tests
+        run: |
+          python -m pytest tests/automated/sprint-8/ \
+            -v --tb=short --timeout=120
 
       # ── Teardown ──────────────────────────────────────────────────────
       - name: Stop Supabase
