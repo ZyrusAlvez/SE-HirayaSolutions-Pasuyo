@@ -21,26 +21,31 @@ export default function SortBar({ sort, onSort, keys }: Props) {
   const toggle = (id: string) => setOpenId(prev => prev === id ? null : id);
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 8, zIndex: 10 }}>
-      <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>Sort:</Text>
-      <Dropdown
-        value={sort.key}
-        options={keys}
-        labels={LABELS}
-        icon="grid-outline"
-        open={openId === 'key'}
-        onToggle={() => toggle('key')}
-        onChange={(key) => onSort({ ...sort, key })}
-      />
-      <Dropdown
-        value={sort.dir}
-        options={['asc', 'desc'] as SortDir[]}
-        labels={DIR_LABELS}
-        icon={DIR_ICONS[sort.dir]}
-        open={openId === 'dir'}
-        onToggle={() => toggle('dir')}
-        onChange={(dir) => onSort({ ...sort, dir })}
-      />
+    <View style={{ paddingHorizontal: 10, paddingVertical: 10, gap: 6, zIndex: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500', width: 30 }}>Sort:</Text>
+        <Dropdown
+          value={sort.key}
+          options={keys}
+          labels={LABELS}
+          icon="grid-outline"
+          open={openId === 'key'}
+          onToggle={() => toggle('key')}
+          onChange={(key) => onSort({ ...sort, key })}
+        />
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500', width: 30 }}>By:</Text>
+        <Dropdown
+          value={sort.dir}
+          options={['asc', 'desc'] as SortDir[]}
+          labels={DIR_LABELS}
+          icon={DIR_ICONS[sort.dir]}
+          open={openId === 'dir'}
+          onToggle={() => toggle('dir')}
+          onChange={(dir) => onSort({ ...sort, dir })}
+        />
+      </View>
     </View>
   );
 }
