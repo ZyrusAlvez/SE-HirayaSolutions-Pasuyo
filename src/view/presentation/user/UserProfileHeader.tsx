@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Image, Pressable, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable, Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import ReportModal from '@/view/presentation/user/ReportModal';
@@ -12,6 +12,8 @@ interface Props {
 export default function UserProfileHeader({ userName, userId }: Props) {
   const router = useRouter();
   const isWeb = Platform.OS === 'web';
+  const { width } = useWindowDimensions();
+  const isSmall = width < 768;
   const [reportHover, setReportHover] = useState(false);
   const [reportVisible, setReportVisible] = useState(false);
 
@@ -22,9 +24,11 @@ export default function UserProfileHeader({ userName, userId }: Props) {
           <Pressable onPress={() => router.back()} style={{ padding: 8 }}>
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
-          <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginLeft: 4 }}>
-            {userName ? `${userName}'s Profile` : 'User Profile'}
-          </Text>
+          {!isSmall && (
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginLeft: 4 }}>
+              {userName ? `${userName}'s Profile` : 'User Profile'}
+            </Text>
+          )}
         </View>
         <View style={styles.logoWrap}>
           <Pressable onPress={() => router.push('/')} style={{ alignItems: 'center' }}>

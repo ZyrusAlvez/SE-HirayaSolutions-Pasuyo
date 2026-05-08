@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Platform, RefreshControl } from 'react-native';
+import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getLogs, getLogsSubscription, removeLogsSubscription, LogEntry } from '../../controllers/adminController';
-import AdminNavBar from '../../view/presentation/admin/AdminNavBar';
 
 const ACCENT = '#FEA405';
 
@@ -11,6 +10,9 @@ const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
   REJECTED_VERIFICATION: { bg: '#FEE2E2', text: '#DC2626' },
   SUSPENDED_USER:        { bg: '#FEE2E2', text: '#DC2626' },
   RESTORED_USER:         { bg: '#DBEAFE', text: '#1D4ED8' },
+  APPROVED_PAYMENT:      { bg: '#DCFCE7', text: '#15803D' },
+  REJECTED_PAYMENT:      { bg: '#FEE2E2', text: '#DC2626' },
+  DELETED_ERRAND:        { bg: '#FEE2E2', text: '#DC2626' },
 };
 
 export default function AdminLogsScreen() {
@@ -39,6 +41,7 @@ export default function AdminLogsScreen() {
   const renderItem = ({ item }: { item: LogEntry }) => {
     const style = ACTION_STYLES[item.action] ?? { bg: '#F3F4F6', text: '#6B7280' };
     const date = new Date(item.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const isErrandAction = item.action === 'DELETED_ERRAND';
 
     return (
       <View className="bg-white rounded-2xl px-4 py-3 border border-gray-100 gap-1">
@@ -48,6 +51,13 @@ export default function AdminLogsScreen() {
           </View>
           <Text className="text-xs text-gray-400">{date}</Text>
         </View>
+        {(item.target_name || item.target_user_id) && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <Ionicons name={isErrandAction ? 'document-text-outline' : 'person-outline'} size={12} color="#6B7280" />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>{item.target_name ?? 'Unknown'}</Text>
+            <Text style={{ fontSize: 10, color: '#9CA3AF' }}>({item.target_user_id?.slice(0, 8)}...)</Text>
+          </View>
+        )}
         {item.details && <Text className="text-xs text-gray-600 mt-1">{item.details}</Text>}
       </View>
     );
@@ -55,12 +65,6 @@ export default function AdminLogsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View className={`bg-white border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-2'} pb-3 px-6 flex-row items-center justify-between`}>
-        <View>
-          <Text className="text-xl font-bold text-gray-900">Action Logs</Text>
-          <Text className="text-xs text-gray-400 mt-0.5">{logs.length} total entries</Text>
-        </View>
-      </View>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -83,7 +87,6 @@ export default function AdminLogsScreen() {
         />
       )}
 
-      <AdminNavBar />
     </View>
   );
 }

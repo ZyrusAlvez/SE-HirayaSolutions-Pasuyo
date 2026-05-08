@@ -5,6 +5,9 @@ import * as chatModel from '@/models/chatModel';
 import { postNotification } from '@/models/notificationModel';
 import { sendErrandAcceptedEmail, sendErrandCancelledEmail, sendErrandMarkedDoneEmail } from '@/models/emailModel';
 import { getDisplayProfile } from '@/models/profileModel';
+import { insertErrandEvent, getErrandEvents } from '@/models/errandEventModel';
+import type { ErrandEvent } from '@/models/errandEventModel';
+import { checkServiceFeeLimit } from '@/controllers/serviceFeeController';
 
 export type { Errand, ErrandStatus, PinnedLocation, PostErrandParams };
 
@@ -47,6 +50,16 @@ export const selectErrandImages = async (
   if (result.assets.length > remaining)
     errors.push(`Only ${remaining} more image${remaining === 1 ? '' : 's'} allowed. Extra selections were ignored.`);
   return { uris, errors };
+};
+
+export const getErrandFullHistory = async (errandId: string): Promise<Result<ErrandEvent[]>> => {
+  try {
+    const { data, error } = await getErrandEvents(errandId);
+    if (error) return { success: false, error: 'Failed to load history' };
+    return { success: true, data: data ?? [] };
+  } catch {
+    return { success: false, error: 'Failed to load history' };
+  }
 };
 
 export const getErrand = async (id: string): Promise<Result<Errand>> => {
@@ -97,6 +110,7 @@ export const editErrand = async (
 ): Promise<{ success: boolean; error: string; data?: ErrandUpdates }> => {
   const { title, description, isRemote, budget, deadline, images, addressDetails, pinnedLocation } = params;
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be edited.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has been completed and cannot be edited.' };
   if (!title.trim()) return { success: false, error: 'Title cannot be empty.' };
   if (!description.trim()) return { success: false, error: 'Description cannot be empty.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
@@ -104,6 +118,8 @@ export const editErrand = async (
   try {
     const { data: { user } } = await errandModel.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data: original } = await errandModel.getErrandById(errandId);
 
     const existingUrls = images.filter(uri => uri.startsWith('http'));
     const newUris = images.filter(uri => !uri.startsWith('http'));
@@ -126,6 +142,18 @@ export const editErrand = async (
     const { error } = await errandModel.updateErrand(errandId, updates);
     if (error) throw error;
 
+    // Build changes metadata
+    const changes: Record<string, { from: any; to: any }> = {};
+    if (original) {
+      if (original.title !== updates.title) changes.title = { from: original.title, to: updates.title };
+      if (original.description !== updates.description) changes.description = { from: original.description, to: updates.description };
+      if (original.is_remote !== updates.is_remote) changes.is_remote = { from: original.is_remote, to: updates.is_remote };
+      if (original.budget !== updates.budget) changes.budget = { from: original.budget, to: updates.budget };
+      if (original.deadline !== updates.deadline) changes.deadline = { from: original.deadline, to: updates.deadline };
+      if (original.location_name !== updates.location_name) changes.location = { from: original.location_name, to: updates.location_name };
+    }
+    await insertErrandEvent(errandId, user.id, 'edited_errand', { title: updates.title, changes });
+
     return { success: true, error: '', data: updates };
   } catch (e: any) {
     return { success: false, error: e.message ?? 'Something went wrong' };
@@ -134,7 +162,14 @@ export const editErrand = async (
 
 export const deleteErrand = async (id: string, status: string): Promise<{ success: boolean; error: string }> => {
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted and cannot be deleted.' };
+  if (status === 'Completed') return { success: false, error: 'This errand has been completed and cannot be deleted.' };
   try {
+    const { data: { user } } = await errandModel.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data: errandData } = await errandModel.getErrandById(id);
+    await insertErrandEvent(id, user.id, 'deleted_errand', { title: errandData?.title ?? 'Unknown' });
+
     const { error } = await errandModel.deleteErrand(id);
     if (error) return { success: false, error: 'Failed to delete errand' };
     return { success: true, error: '' };
@@ -188,7 +223,9 @@ export const getDashboardErrands = async (): Promise<Result<{ posted: DashboardE
     return {
       success: true,
       data: {
-        posted: (posted.data ?? []) as DashboardErrand[],
+        posted: ((posted.data ?? []) as DashboardErrand[]).map(e =>
+          e.status === 'Available' && e.deadline && new Date(e.deadline) < new Date() ? { ...e, status: 'Expired' } : e
+        ),
         accepted: allAccepted,
       },
     };
@@ -206,6 +243,9 @@ export const acceptErrand = async (
   if (status === 'In Progress') return { success: false, error: 'This errand has already been accepted.' };
   if (status === 'Expired') return { success: false, error: 'This errand has expired.' };
   if (status === 'Completed') return { success: false, error: 'This errand has already been completed.' };
+
+  const limitCheck = await checkServiceFeeLimit();
+  if (!limitCheck.allowed) return { success: false, error: limitCheck.error! };
 
   try {
     const { data: { user } } = await errandModel.getUser();
@@ -233,6 +273,8 @@ export const acceptErrand = async (
 
     await postNotification(posterId, 'Errand Accepted', `Your errand "${errandInfo.title}" has been accepted.`, `/chat?userId=${user.id}`);
     sendErrandAcceptedEmail(posterId, errandInfo, user.id);
+
+    await insertErrandEvent(errandId, user.id, 'accepted', { title: errandInfo.title });
 
     return { success: true, error: '' };
   } catch {
@@ -290,6 +332,8 @@ export const cancelAcceptedErrand = async (
       errandId,
     );
 
+    await insertErrandEvent(errandId, user.id, 'cancelled', { title: errandTitle, reason, details });
+
     return { success: true, error: '' };
   } catch {
     return { success: false, error: 'Something went wrong' };
@@ -342,6 +386,8 @@ export const markErrandAsDone = async (
       user.id,
     );
 
+    await insertErrandEvent(errandId, user.id, 'marked_done', { title: errandTitle });
+
     return { success: true, error: '' };
   } catch {
     return { success: false, error: 'Something went wrong' };
@@ -363,6 +409,8 @@ export const submitErrandReview = async (
       errandModel.getErrandById(errandId),
     ]);
     if (error) return { success: false, error: error.message.includes('duplicate') ? 'You have already reviewed this errand' : 'Failed to submit review' };
+
+    await insertErrandEvent(errandId, user.id, 'reviewed', { rating, feedback, reviewed_id: reviewedId });
 
     const { data: convo } = await chatModel.getOrCreateConversation(user.id, reviewedId);
     if (convo) {
@@ -391,6 +439,7 @@ export const postErrand = async (
 
   if (!title.trim()) return { success: false, error: 'Please enter a title.' };
   if (!description.trim()) return { success: false, error: 'Please enter a description.' };
+  if (!budget || !budget.trim()) return { success: false, error: 'Please enter a budget.' };
   if (!isRemote && !pinnedLocation) return { success: false, error: 'Please pin a location for onsite errands.' };
 
   try {
@@ -404,6 +453,8 @@ export const postErrand = async (
       const imageUrls = await errandModel.postImages(user.id, inserted.id, images);
       await errandModel.updateErrandImages(inserted.id, imageUrls);
     }
+
+    await insertErrandEvent(inserted.id, user.id, 'posted', { title: title.trim() });
 
     return { success: true };
   } catch (e: any) {

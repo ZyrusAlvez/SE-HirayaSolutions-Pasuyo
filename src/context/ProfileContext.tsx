@@ -27,7 +27,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       const { data } = await getHeaderProfile(user.id);
       if (data?.avatar_url) setAvatarUrl({ uri: data.avatar_url });
       setVerificationStatus(
-        data?.verified ? 'verified' : data?.pending_verification ? 'pending' : 'not_verified'
+        data?.status === 'verified' ? 'verified' : data?.status === 'pending' ? 'pending' : 'not_verified'
       );
     };
 

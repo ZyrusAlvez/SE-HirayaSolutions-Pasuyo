@@ -42,7 +42,7 @@ export const getUserRole = (userId: string) =>
   supabase.from('profiles').select('role').eq('id', userId).single();
 
 export const getUserActiveAndRole = (userId: string) =>
-  supabase.from('profiles').select('role, is_active').eq('id', userId).maybeSingle();
+  supabase.from('profiles').select('role, status').eq('id', userId).maybeSingle();
 
 export const getSession = () => supabase.auth.getSession();
 

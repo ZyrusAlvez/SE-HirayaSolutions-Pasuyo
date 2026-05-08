@@ -5,7 +5,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import * as Location from 'expo-location';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { toast } from '../utils/toast';
 import { postErrand } from '../controllers/errandController';
@@ -17,11 +16,15 @@ import Deadline from '../view/presentation/post-errand/Deadline';
 import ImageUploader from '../view/presentation/post-errand/ImageUploader';
 import LocationMap from '../view/presentation/post-errand/LocationMap';
 import AddressDetails from '../view/presentation/post-errand/AddressDetails';
+import Header from '../view/components/Header';
+import NavBar from '../view/components/NavBar';
+import { useProfile } from '../context/ProfileContext';
 
 const ACCENT = '#FEA405';
 
 export default function PostErrandScreen() {
   const router = useRouter();
+  const { avatarUrl, verificationStatus } = useProfile();
   const { width } = useWindowDimensions();
   const isLarge = width >= 768;
 
@@ -76,12 +79,7 @@ export default function PostErrandScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View className={`bg-white px-6 pb-4 flex-row items-center border-b border-gray-100 ${Platform.OS !== 'web' ? 'pt-12' : 'pt-4'}`}>
-        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/')} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-900">Post an Errand</Text>
-      </View>
+      <Header avatarUrl={avatarUrl} verificationStatus={verificationStatus} />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View style={{ alignSelf: 'center', width: '100%', maxWidth: isLarge ? 640 : undefined, paddingHorizontal: 24, paddingTop: 16 }}>
@@ -152,6 +150,7 @@ export default function PostErrandScreen() {
         pinnedLocation={pinnedLocation}
         onPin={handlePin}
       />
+      <NavBar />
     </KeyboardAvoidingView>
   );
 }

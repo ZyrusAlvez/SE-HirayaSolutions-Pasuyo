@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 import { usePathname } from 'expo-router';
 import { loadConversations, loadMessages, handleSendMessage, handleSendFile, markAsRead, startConversation, Conversation, Message } from '@/controllers/chatController';
 import { cancelAcceptedErrand, markErrandAsDone } from '@/controllers/errandController';
-import { subscribeToMessages, subscribeToTyping, broadcastTyping } from '@/models/chatModel';
+import { subscribeToMessages, subscribeToTyping, broadcastTyping, subscribeToConversations } from '@/models/chatModel';
 import { getLastSeen } from '@/models/presenceModel';
 import { usePresence } from '@/context/PresenceContext';
 import { supabase } from '@/utils/supabase';
@@ -31,9 +31,11 @@ export function useChat(targetUserId?: string) {
   const selectedIdRef = useRef(selectedId);
   const currentUserIdRef = useRef(currentUserId);
   const isChatActiveRef = useRef(isChatActive);
+  const messagesRef = useRef(messages);
   selectedIdRef.current = selectedId;
   currentUserIdRef.current = currentUserId;
   isChatActiveRef.current = isChatActive;
+  messagesRef.current = messages;
 
   // Init: auth, target user, load conversations
   useEffect(() => {
@@ -170,7 +172,14 @@ export function useChat(targetUserId?: string) {
         const selId = selectedIdRef.current;
         const uid = currentUserIdRef.current;
 
-        if (msg.sender_id === uid && msg.conversation_id === selId) return;
+        if (msg.sender_id === uid && msg.conversation_id === selId) {
+          // Allow system messages (e.g. errand_reviewed) that weren't optimistically added
+          let isSystemMsg = false;
+          try { isSystemMsg = !!JSON.parse(msg.content)?.type; } catch {}
+          if (!isSystemMsg) return;
+          // Deduplicate: skip if content already exists locally (optimistic add from onCancelErrand/onMarkDone)
+          if (messagesRef.current.some((m) => m.content === msg.content && m.id !== msg.id)) return;
+        }
 
         if (msg.conversation_id === selId) {
           setMessages((prev) => [...prev, msg]);
@@ -216,6 +225,36 @@ export function useChat(targetUserId?: string) {
         }
       },
     );
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUserId]);
+
+  // Realtime: conversation list updates
+  useEffect(() => {
+    if (!currentUserId) return;
+    const channel = subscribeToConversations(currentUserId, (payload) => {
+      const updated = payload.new as any;
+      if (!updated?.id) return;
+      // If this conversation already exists, update it in place
+      setConversations((prev) => {
+        const exists = prev.find((c) => c.id === updated.id);
+        if (exists) {
+          return prev
+            .map((c) => c.id === updated.id ? {
+              ...c,
+              last_message: updated.last_message ?? c.last_message,
+              last_message_at: updated.last_message_at ?? c.last_message_at,
+              last_message_sender_id: updated.last_message_sender_id ?? c.last_message_sender_id,
+              last_message_is_read: updated.last_message_is_read ?? c.last_message_is_read,
+            } : c)
+            .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+        }
+        // New conversation — reload all to get profile data
+        loadConversations(currentUserId).then((result) => {
+          if (result.success) setConversations(result.data);
+        });
+        return prev;
+      });
+    });
     return () => { supabase.removeChannel(channel); };
   }, [currentUserId]);
 
@@ -283,8 +322,6 @@ export function useChat(targetUserId?: string) {
 
   const onCancelErrand = useCallback(async (errandId: string, title: string, reason: string, details: string | null): Promise<boolean> => {
     if (!selectedId || !currentUserId || !otherUserId) return false;
-    const result = await cancelAcceptedErrand(errandId, otherUserId, title, reason, details);
-    if (!result.success) return false;
 
     const systemContent = JSON.stringify({ type: 'errand_cancelled', cancelledBy: currentUserId, errandId, title, reason });
     const cancelMsg: Message = {
@@ -304,13 +341,17 @@ export function useChat(targetUserId?: string) {
         )
         .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
     );
+
+    const result = await cancelAcceptedErrand(errandId, otherUserId, title, reason, details);
+    if (!result.success) {
+      setMessages((prev) => prev.filter((m) => m.id !== cancelMsg.id));
+      return false;
+    }
     return true;
   }, [selectedId, currentUserId, otherUserId]);
 
   const onMarkDone = useCallback(async (errandId: string, title: string): Promise<boolean> => {
     if (!selectedId || !currentUserId || !otherUserId) return false;
-    const result = await markErrandAsDone(errandId, otherUserId, title);
-    if (!result.success) return false;
 
     const systemContent = JSON.stringify({ type: 'errand_marked_done', markedBy: currentUserId, errandId, title });
     const doneMsg: Message = {
@@ -330,6 +371,12 @@ export function useChat(targetUserId?: string) {
         )
         .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime())
     );
+
+    const result = await markErrandAsDone(errandId, otherUserId, title);
+    if (!result.success) {
+      setMessages((prev) => prev.filter((m) => m.id !== doneMsg.id));
+      return false;
+    }
     return true;
   }, [selectedId, currentUserId, otherUserId]);
 

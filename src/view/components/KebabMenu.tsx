@@ -7,6 +7,7 @@ export interface KebabAction {
   icon: string;
   testID?: string;
   onPress: () => void;
+  disabled?: boolean;
 }
 
 interface Props {
@@ -37,9 +38,9 @@ export default function KebabMenu({ actions }: Props) {
               <TouchableOpacity
                 key={action.label}
                 testID={action.testID}
-                onPress={() => { setVisible(false); action.onPress(); }}
-                activeOpacity={0.7}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: i < actions.length - 1 ? 1 : 0, borderBottomColor: '#F3F4F6' }}
+                onPress={() => { if (!action.disabled) { setVisible(false); action.onPress(); } }}
+                activeOpacity={action.disabled ? 1 : 0.7}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: i < actions.length - 1 ? 1 : 0, borderBottomColor: '#F3F4F6', opacity: action.disabled ? 0.35 : 1 }}
               >
                 <Ionicons name={action.icon as any} size={13} color="#374151" />
                 <Text style={{ fontSize: 12, color: '#374151', fontWeight: '500' }}>{action.label}</Text>

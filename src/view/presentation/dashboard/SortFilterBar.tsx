@@ -41,61 +41,57 @@ export default function SortFilterBar({ statusOptions, statusFilter, onStatusCha
   const sortKeys: SortKey[] = showDistance ? ['deadline', 'budget', 'distance'] : ['deadline', 'budget'];
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 8, zIndex: 10, flexWrap: 'wrap', rowGap: 8 }}>
-      <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
-      <Dropdown
-        testID="filter-status"
-        value={statusFilter ?? 'All'}
-        options={allStatusOptions}
-        labels={statusLabels}
-        icon="ellipse"
-        icons={STATUS_ICONS}
-        iconColors={STATUS_COLORS}
-        open={openId === 'status'}
-        onToggle={() => toggle('status')}
-        onChange={(v) => onStatusChange(v === 'All' ? null : v)}
-      />
-      <Dropdown
-        testID="filter-type"
-        value={typeFilter ?? 'All'}
-        options={TYPE_OPTIONS}
-        labels={TYPE_LABELS}
-        icon="apps-outline"
-        icons={TYPE_ICONS}
-        open={openId === 'type'}
-        onToggle={() => toggle('type')}
-        onChange={(v) => onTypeChange(v === 'All' ? null : v)}
-      />
-      <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
-      <Ionicons name="swap-vertical-outline" size={14} color="#9CA3AF" />
-      <Dropdown
-        testID="sort-key"
-        value={sort.key}
-        options={sortKeys}
-        labels={SORT_LABELS}
-        icon="chevron-expand-outline"
-        icons={SORT_ICONS}
-        open={openId === 'sortKey'}
-        onToggle={() => toggle('sortKey')}
-        onChange={(key) => onSortChange({ ...sort, key })}
-      />
-      <TouchableOpacity
-        testID="sort-dir"
-        onPress={() => onSortChange({ ...sort, dir: sort.dir === 'asc' ? 'desc' : 'asc' })}
-        activeOpacity={0.7}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}
-      >
-        <Ionicons name={sort.dir === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'} size={13} color="#FEA405" />
-        <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>{sort.dir === 'asc' ? 'Low → High' : 'High → Low'}</Text>
-      </TouchableOpacity>
-      {(statusFilter || typeFilter) && (
-        <>
-          <View style={{ width: 1, height: 20, backgroundColor: '#E5E7EB' }} />
-          <TouchableOpacity testID="sort-clear" onPress={() => { onStatusChange(null); onTypeChange(null); setOpenId(null); }} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+    <View style={{ paddingHorizontal: 20, gap: 8, zIndex: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Ionicons name="funnel-outline" size={14} color="#9CA3AF" />
+        <Dropdown
+          value={statusFilter ?? 'All'}
+          options={allStatusOptions}
+          labels={statusLabels}
+          icon="ellipse"
+          icons={STATUS_ICONS}
+          iconColors={STATUS_COLORS}
+          open={openId === 'status'}
+          onToggle={() => toggle('status')}
+          onChange={(v) => onStatusChange(v === 'All' ? null : v)}
+        />
+        <Dropdown
+          value={typeFilter ?? 'All'}
+          options={TYPE_OPTIONS}
+          labels={TYPE_LABELS}
+          icon="apps-outline"
+          icons={TYPE_ICONS}
+          open={openId === 'type'}
+          onToggle={() => toggle('type')}
+          onChange={(v) => onTypeChange(v === 'All' ? null : v)}
+        />
+        {(statusFilter || typeFilter) && (
+          <TouchableOpacity onPress={() => { onStatusChange(null); onTypeChange(null); setOpenId(null); }} activeOpacity={0.7} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
             <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '600' }}>Clear</Text>
           </TouchableOpacity>
-        </>
-      )}
+        )}
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Ionicons name="swap-vertical-outline" size={14} color="#9CA3AF" />
+        <Dropdown
+          value={sort.key}
+          options={sortKeys}
+          labels={SORT_LABELS}
+          icon="chevron-expand-outline"
+          icons={SORT_ICONS}
+          open={openId === 'sortKey'}
+          onToggle={() => toggle('sortKey')}
+          onChange={(key) => onSortChange({ ...sort, key })}
+        />
+        <TouchableOpacity
+          onPress={() => onSortChange({ ...sort, dir: sort.dir === 'asc' ? 'desc' : 'asc' })}
+          activeOpacity={0.7}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}
+        >
+          <Ionicons name={sort.dir === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'} size={13} color="#FEA405" />
+          <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>{sort.dir === 'asc' ? 'Low → High' : 'High → Low'}</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

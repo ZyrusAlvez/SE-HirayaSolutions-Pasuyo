@@ -10,6 +10,7 @@ import KebabMenu from '@/view/components/KebabMenu';
 import type { KebabAction } from '@/view/components/KebabMenu';
 import ConfirmModal from '@/view/components/ConfirmModal';
 import CancelErrandModal from '@/view/presentation/chat/CancelErrandModal';
+import ErrandHistoryModal from '@/view/presentation/service-fee/ErrandHistoryModal';
 
 const DEFAULT_AVATAR = require('@/assets/images/default_profile.jpg');
 
@@ -26,6 +27,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showMarkDoneConfirm, setShowMarkDoneConfirm] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const color = STATUS_COLORS[errand.status] ?? '#6B7280';
   const avatar = errand.poster_avatar && errand.poster_avatar !== 'default'
     ? { uri: errand.poster_avatar }
@@ -44,6 +46,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
       if (errand.status === 'In Progress') { toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' }); return; }
       router.push(`/errand/${errand.id}?edit=true`);
     }},
+    { label: 'History', icon: 'time-outline', onPress: () => setShowHistory(true) },
     { label: 'Delete', icon: 'trash-outline', onPress: () => setShowDeleteConfirm(true) },
     { label: 'Share', icon: 'share-outline', onPress: handleShare },
   ];
@@ -53,6 +56,7 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
   const acceptedActions: KebabAction[] = [
     ...(canActOnAccepted ? [{ label: 'Mark as Done', icon: 'checkmark-circle-outline', onPress: () => setShowMarkDoneConfirm(true) }] : []),
     { label: `Chat with ${errand.poster_name ?? 'Client'}`, icon: 'chatbubble-outline', onPress: () => router.push(`/chat?userId=${errand.user_id}`) },
+    { label: 'History', icon: 'time-outline', onPress: () => setShowHistory(true) },
     ...(canActOnAccepted ? [{ label: 'Cancel Errand', icon: 'close-circle-outline', onPress: () => setShowCancelModal(true) }] : []),
     { label: 'Share', icon: 'share-outline', onPress: handleShare },
   ];
@@ -134,6 +138,13 @@ export default function ErrandRow({ errand, search = '', tab = 'posted', onDelet
           setShowCancelModal(false);
           onDelete?.();
         }}
+      />
+      <ErrandHistoryModal
+        visible={showHistory}
+        errandId={errand.id}
+        errandTitle={errand.title}
+        onClose={() => setShowHistory(false)}
+        mode={tab === 'posted' ? 'full' : 'actor'}
       />
     </TouchableOpacity>
   );
