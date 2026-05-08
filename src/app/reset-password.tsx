@@ -137,6 +137,7 @@ export default function ResetPasswordScreen() {
                 </View>
               ) : (
                 <TouchableOpacity
+                  testID="resend-code-btn"
                   className="bg-gray-100 border border-gray-200 px-4 rounded-2xl justify-center"
                   onPress={() => sendCode(email)}
                   disabled={loading || !email}

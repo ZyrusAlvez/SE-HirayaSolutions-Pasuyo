@@ -285,6 +285,7 @@ export default function ChatThread({ messages, currentUserId, otherUserId, other
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setReportHover(true)}
             onMouseLeave={() => setReportHover(false)}
+            testID="report-btn"
             style={{ padding: 6 }}
           >
             <Ionicons name="flag-outline" size={22} color="#EF4444" />

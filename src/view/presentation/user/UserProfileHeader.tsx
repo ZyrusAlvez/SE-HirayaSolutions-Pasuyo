@@ -45,6 +45,7 @@ export default function UserProfileHeader({ userName, userId }: Props) {
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setReportHover(true)}
             onMouseLeave={() => setReportHover(false)}
+            testID="report-btn"
             style={{ padding: 8 }}
           >
             <Ionicons name="flag-outline" size={22} color="#EF4444" />
