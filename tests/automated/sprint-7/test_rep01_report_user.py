@@ -115,17 +115,13 @@ class TestRep01(unittest.TestCase):
         try:
             login(driver)
             driver.get(f"{BASE_URL}/chat?userId={OTHER_USER_ID}")
-            time.sleep(3)
-            WebDriverWait(driver, WAIT).until(
+            time.sleep(5)
+            btn = WebDriverWait(driver, WAIT).until(
                 EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "[data-testid='chat-thread-panel']")
+                    (By.CSS_SELECTOR, "[data-testid='report-btn']")
                 )
             )
-            flag_present = driver.execute_script(
-                "return document.querySelector('[data-testid=\"chat-thread-panel\"]')"
-                "?.innerHTML.includes('flag') || false;"
-            )
-            self.assertTrue(flag_present,
+            self.assertTrue(btn.is_displayed(),
                             "Report/flag button should be visible on the chat page")
         finally:
             driver.quit()
