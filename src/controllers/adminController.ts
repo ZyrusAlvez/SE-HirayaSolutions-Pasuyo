@@ -383,6 +383,7 @@ export type AdminReport = {
   file_urls: string[] | null;
   reporter_name: string;
   reported_name: string;
+  errand_title: string | null;
 };
 
 export const getReports = async (): Promise<Result<AdminReport[]>> => {
@@ -402,10 +403,18 @@ export const getReports = async (): Promise<Result<AdminReport[]>> => {
         names[uid] = authData?.displayName || 'Unknown';
       }
     }
+    // Fetch errand titles for errand reports
+    const errandIds = [...new Set((data as any[]).map(r => r.errand_id).filter(Boolean))];
+    let errandTitles: Record<string, string> = {};
+    if (errandIds.length > 0) {
+      const { data: errands } = await adminModel.getErrandTitles(errandIds);
+      (errands ?? []).forEach((e: any) => { errandTitles[e.id] = e.title; });
+    }
     const reports = (data as any[]).map(r => ({
       ...r,
       reporter_name: names[r.reporter_id] ?? 'Unknown',
       reported_name: names[r.reported_id] ?? 'Unknown',
+      errand_title: r.errand_id ? (errandTitles[r.errand_id] ?? null) : null,
     }));
     return { success: true, error: '', data: reports as AdminReport[] };
   } catch {

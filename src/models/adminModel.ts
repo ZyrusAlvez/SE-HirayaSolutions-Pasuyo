@@ -324,6 +324,12 @@ export const deleteErrandReports = (errandId: string) =>
     .delete()
     .eq('errand_id', errandId);
 
+export const getErrandTitles = (ids: string[]) =>
+  getAdmin()
+    .from('errands_with_profiles')
+    .select('id, title')
+    .in('id', ids);
+
 export const getProfileNames = (ids: string[]) =>
   getAdmin()
     .from('profiles')

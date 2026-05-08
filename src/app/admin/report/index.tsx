@@ -80,11 +80,11 @@ export default function ReportsScreen() {
 
   const filtered = useMemo(() => {
     let list = reports.filter(r => r.type === tab);
-    const grouped: Record<string, { key: string; reported_name: string; reported_id: string; errand_id: string | null; reason: string; count: number; latest: string }> = {};
+    const grouped: Record<string, { key: string; reported_name: string; reported_id: string; errand_id: string | null; errand_title: string | null; reason: string; count: number; latest: string }> = {};
     for (const r of list) {
       const key = tab === 'errand' ? (r.errand_id ?? r.reported_id) : r.reported_id;
       if (!grouped[key]) {
-        grouped[key] = { key, reported_name: r.reported_name, reported_id: r.reported_id, errand_id: r.errand_id, reason: r.reason, count: 0, latest: r.created_at };
+        grouped[key] = { key, reported_name: r.reported_name, reported_id: r.reported_id, errand_id: r.errand_id, errand_title: r.errand_title, reason: r.reason, count: 0, latest: r.created_at };
       }
       grouped[key].count++;
       if (r.created_at > grouped[key].latest) {
@@ -95,7 +95,10 @@ export default function ReportsScreen() {
     let entries = Object.values(grouped);
     if (search.trim()) {
       const q = search.toLowerCase();
-      entries = entries.filter(e => e.reported_name.toLowerCase().includes(q) || e.reason.toLowerCase().includes(q));
+      entries = entries.filter(e => {
+        const label = (tab === 'errand' ? e.errand_title : e.reported_name) ?? e.reported_name;
+        return label.toLowerCase().includes(q) || e.reason.toLowerCase().includes(q);
+      });
     }
     entries.sort((a, b) => sort === 'most' ? b.count - a.count : a.count - b.count);
     return entries;
@@ -134,7 +137,7 @@ export default function ReportsScreen() {
         renderItem={({ item }) => (
           <View style={{ backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#F3F4F6', flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }} numberOfLines={1}>{item.reported_name}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }} numberOfLines={1}>{tab === 'errand' ? (item.errand_title ?? 'Untitled Errand') : item.reported_name}</Text>
               <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{item.count} {item.count === 1 ? 'report' : 'reports'}</Text>
             </View>
             {tab === 'errand' && item.errand_id && (
@@ -176,7 +179,7 @@ export default function ReportsScreen() {
       <ReasonModal
         visible={deleteVisible}
         title="Delete Errand"
-        description={`Select a reason for deleting "${deleteTarget?.reported_name}".`}
+        description={`Select a reason for deleting "${deleteTarget?.errand_title || deleteTarget?.reported_name}".`}
         reasons={ERRAND_REASONS}
         confirmLabel="Delete"
         onClose={() => setDeleteVisible(false)}
