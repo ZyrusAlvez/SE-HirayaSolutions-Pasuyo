@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getUserProfile } from '@/controllers/profileController';
@@ -7,6 +7,7 @@ import type { UserProfile } from '@/controllers/profileController';
 import VerificationBadge from '@/view/components/VerificationBadge';
 import UserProfileHeader from '@/view/presentation/user/UserProfileHeader';
 import UserInfoCard from '@/view/presentation/user/UserInfoCard';
+import UserProfileSkeleton from '@/view/presentation/user/UserProfileSkeleton';
 import ErrandActivityCard from '@/view/presentation/profile/ErrandActivityCard';
 
 const DEFAULT_AVATAR = require('../../assets/images/default_profile.jpg');
@@ -30,8 +31,11 @@ export default function UserProfileScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#FEA405" />
+      <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+        <UserProfileHeader />
+        <ScrollView contentContainerStyle={{ alignItems: isLarge ? 'center' : undefined, paddingBottom: 48 }}>
+          <UserProfileSkeleton contentWidth={contentWidth} isLarge={isLarge} />
+        </ScrollView>
       </View>
     );
   }

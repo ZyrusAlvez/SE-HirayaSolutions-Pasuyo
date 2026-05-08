@@ -24,9 +24,8 @@ function buildMapHtml(lat: number, lng: number, isNative: boolean) {
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <style>
     body{margin:0}#map{height:100vh;width:100vw}
-    @keyframes pulse{0%{transform:scale(1);opacity:0.8}100%{transform:scale(2.5);opacity:0}}
-    .user-dot-ring{position:absolute;inset:0;border-radius:50%;background:rgba(254,164,5,0.3);animation:pulse 1.8s ease-out infinite}
-    .user-dot-core{position:absolute;inset:4px;border-radius:50%;background:#FEA405;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3)}
+    .yellow-marker{width:25px;height:41px;position:relative}
+    .yellow-marker svg{width:25px;height:41px}
   </style>
 </head>
 <body>
@@ -34,8 +33,8 @@ function buildMapHtml(lat: number, lng: number, isNative: boolean) {
 <script>
   const map = L.map('map').setView([${lat}, ${lng}], 15);
   L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',{attribution:'© CartoDB'}).addTo(map);
-  const dotIcon = L.divIcon({className:'',html:'<div style="position:relative;width:24px;height:24px"><div class="user-dot-ring"></div><div class="user-dot-core"></div></div>',iconSize:[24,24],iconAnchor:[12,12],popupAnchor:[0,-14]});
-  let marker = L.marker([${lat}, ${lng}], {draggable:true, icon:dotIcon}).addTo(map);
+  const yellowIcon = L.divIcon({className:'yellow-marker',html:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41"><path d="M12.5 0C5.6 0 0 5.6 0 12.5 0 21.9 12.5 41 12.5 41S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z" fill="#FEA405"/><circle cx="12.5" cy="12.5" r="5" fill="#fff"/></svg>',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[0,-34]});
+  let marker = L.marker([${lat}, ${lng}], {draggable:true, icon:yellowIcon}).addTo(map);
 
   function sendLocation(lat, lng) {
     fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lng)
