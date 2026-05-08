@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, useWindowDimensions } from 'react-native';
 import Dropdown from '@/view/components/Dropdown';
 
 export type SortKey = 'deadline' | 'budget' | 'distance';
@@ -19,9 +19,11 @@ const DIR_ICONS: Record<SortDir, string> = { asc: 'arrow-up-outline', desc: 'arr
 export default function SortBar({ sort, onSort, keys }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const toggle = (id: string) => setOpenId(prev => prev === id ? null : id);
+  const { width } = useWindowDimensions();
+  const isLarge = width >= 768;
 
   return (
-    <View style={{ paddingHorizontal: 10, paddingVertical: 10, gap: 6, zIndex: 10 }}>
+    <View style={{ paddingHorizontal: 10, paddingVertical: 10, gap: 6, zIndex: 10, flexDirection: isLarge ? 'row' : 'column' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
         <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500', width: 30 }}>Sort:</Text>
         <Dropdown
@@ -35,7 +37,7 @@ export default function SortBar({ sort, onSort, keys }: Props) {
         />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500', width: 30 }}>By:</Text>
+        {!isLarge && <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500', width: 30 }}>By:</Text>}
         <Dropdown
           value={sort.dir}
           options={['asc', 'desc'] as SortDir[]}
