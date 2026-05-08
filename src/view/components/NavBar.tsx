@@ -48,7 +48,7 @@ export default function NavBar() {
         <Text className={`text-xs mt-1 ${isActive('/dashboard') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Errands</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} activeOpacity={0.7} onPress={() => handleNavigation('/service-fee')}>
+      <TouchableOpacity testID="nav-service-fee" style={{ flex: 1, alignItems: 'center' }} activeOpacity={0.7} onPress={() => handleNavigation('/service-fee')}>
         <Ionicons name="pricetag-outline" size={24} color={isActive('/service-fee') ? '#FEA405' : '#9CA3AF'} />
         <Text className={`text-xs mt-1 ${isActive('/service-fee') ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>Fees</Text>
       </TouchableOpacity>

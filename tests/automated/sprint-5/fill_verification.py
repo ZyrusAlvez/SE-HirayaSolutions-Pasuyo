@@ -24,8 +24,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 #  CONFIGURE THESE BEFORE RUNNING                                     #
 # ------------------------------------------------------------------ #
 BASE_URL    = "http://localhost:8081"
-EMAIL       = "sampleemail6@gmail.com"
-PASSWORD    = "SampleEmail@6"
+EMAIL       = "sampleemail1@gmail.com"
+PASSWORD    = "Sample_Email@1"
 ASSETS_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
 FRONT_IMAGE = os.path.join(ASSETS_DIR, "valid.jpg")
 BACK_IMAGE  = os.path.join(ASSETS_DIR, "valid.jpg")
