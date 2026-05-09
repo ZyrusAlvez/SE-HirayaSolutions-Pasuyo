@@ -10,6 +10,7 @@ interface AddressDropdownProps {
   items: { code: string; name: string }[];
   loading: boolean;
   disabled?: boolean;
+  testID?: string;
 }
 
 export default function AddressDropdown({
@@ -19,7 +20,8 @@ export default function AddressDropdown({
   onSelect,
   items,
   loading,
-  disabled = false
+  disabled = false,
+  testID,
 }: AddressDropdownProps) {
   const [visible, setVisible] = useState(false);
 
@@ -27,6 +29,7 @@ export default function AddressDropdown({
     <View className="mb-4">
       <Text className="text-xs text-gray-500 mb-1 ml-1">{label} *</Text>
       <TouchableOpacity
+        testID={testID}
         className={`bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 flex-row items-center justify-between ${
           disabled ? 'opacity-50' : ''
         }`}
@@ -57,6 +60,7 @@ export default function AddressDropdown({
               {items.map((item) => (
                 <TouchableOpacity
                   key={item.code}
+                  testID={testID ? `${testID}-option-${items.indexOf(item)}` : undefined}
                   className="py-4 border-b border-gray-100"
                   onPress={() => {
                     onSelect(item);

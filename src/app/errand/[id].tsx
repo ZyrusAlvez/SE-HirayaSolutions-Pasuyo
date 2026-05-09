@@ -138,20 +138,21 @@ export default function ErrandDetailScreen() {
           />
 
           {!isOwner && (
-            <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+            <View style={{ gap: 10, marginTop: 4 }}>
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => {
                   if (isGuest) router.push(`/signup?redirect=/errand/${errand.id}`);
                   else router.push(`/chat?userId=${errand.user_id}`);
                 }}
-                style={{ flex: 1, borderRadius: 16, paddingVertical: 12, alignItems: 'center', borderWidth: 2, borderColor: ACCENT }}
+                style={{ borderRadius: 16, paddingVertical: 12, alignItems: 'center', borderWidth: 2, borderColor: ACCENT }}
               >
-                <Text style={{ color: '#111827', fontWeight: '700', fontSize: 14 }}>
+                <Text style={{ color: '#111827', fontWeight: '700', fontSize: 14 }} numberOfLines={1}>
                   Chat with {errand.poster_name ?? 'poster'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID="accept-errand-btn"
                 activeOpacity={0.85}
                 disabled={accepting}
                 onPress={async () => {
@@ -169,7 +170,7 @@ export default function ErrandDetailScreen() {
                   setErrand(prev => prev ? { ...prev, status: 'In Progress' as const, accepted_by: currentUserId } : prev);
                   router.push(`/chat?userId=${errand.user_id}`);
                 }}
-                style={{ flex: 1, backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center', opacity: accepting ? 0.6 : 1 }}
+                style={{ backgroundColor: ACCENT, borderRadius: 16, paddingVertical: 12, alignItems: 'center', opacity: accepting ? 0.6 : 1 }}
               >
                 <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>{accepting ? 'Accepting...' : 'Accept Errand'}</Text>
               </TouchableOpacity>

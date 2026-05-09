@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { editErrand } from '@/controllers/errandController';
 import { toast } from '@/utils/toast';
 import TextInput from '@/view/components/TextInput';
@@ -51,6 +52,24 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
   );
   const [showMap, setShowMap] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const mapInitRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      const loc = await Location.getCurrentPositionAsync({});
+      setCurrentLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+    })();
+  }, []);
+
+  const handleOpenMap = () => {
+    if (!mapInitRef.current) {
+      mapInitRef.current = pinnedLocation ?? currentLocation ?? { lat: 14.5995, lng: 120.9842 };
+    }
+    setShowMap(true);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -78,7 +97,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
   };
 
   return (
-    <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
+    <View testID="edit-errand-sheet" style={{ backgroundColor: 'white', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>Edit Errand</Text>
         <TouchableOpacity onPress={onCancel}>
@@ -86,14 +105,14 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
         </TouchableOpacity>
       </View>
 
-      <TextInput label="Title" required placeholder="e.g. Deliver documents to Makati" value={title} onChangeText={setTitle} />
-      <TextInput label="Description" required placeholder="Describe the task in detail..." value={description} onChangeText={setDescription} multiline numberOfLines={4} textAlignVertical="top" style={{ minHeight: 100 }} />
+      <TextInput testID="edit-errand-title" label="Title" required placeholder="e.g. Deliver documents to Makati" value={title} onChangeText={setTitle} />
+      <TextInput testID="edit-errand-description" label="Description" required placeholder="Describe the task in detail..." value={description} onChangeText={setDescription} multiline numberOfLines={4} textAlignVertical="top" style={{ minHeight: 100 }} />
 
       <TaskType isRemote={isRemote} onChange={setIsRemote} />
 
       {!isRemote && (
         <>
-          <LocationPicker pinnedLocation={pinnedLocation} onPress={() => setShowMap(true)} />
+          <LocationPicker pinnedLocation={pinnedLocation} onPress={handleOpenMap} />
           <AddressDetails value={addressDetails} onChange={setAddressDetails} />
         </>
       )}
@@ -103,6 +122,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
       <ImageUploader images={images} errors={imageErrors} onChange={setImages} onErrors={setImageErrors} />
 
       <TouchableOpacity
+        testID="edit-errand-save"
         onPress={handleSave}
         disabled={saving}
         style={{ backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 8 }}
@@ -117,7 +137,7 @@ export default function EditErrandSheet({ errand, onSaved, onCancel }: Props) {
       <LocationMap
         visible={showMap}
         onClose={() => setShowMap(false)}
-        initialCoords={pinnedLocation}
+        initialCoords={mapInitRef.current}
         pinnedLocation={pinnedLocation}
         onPin={(lat, lng, name) => setPinnedLocation({ lat, lng, name })}
       />

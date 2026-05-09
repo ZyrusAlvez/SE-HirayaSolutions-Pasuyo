@@ -12,6 +12,7 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Search b
     <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, backgroundColor: '#F3F4F6', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, gap: 8 }}>
       <Ionicons name="search-outline" size={16} color="#9CA3AF" />
       <TextInput
+        testID="search-input"
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

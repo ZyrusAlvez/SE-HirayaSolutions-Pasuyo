@@ -57,10 +57,11 @@ export default function MarkDoneModal({ visible, errandTitle, description, budge
 
             {/* Actions */}
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <TouchableOpacity onPress={onClose} activeOpacity={0.8} style={{ flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', alignItems: 'center' }}>
+              <TouchableOpacity testID="mark-done-back-btn" onPress={onClose} activeOpacity={0.8} style={{ flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', alignItems: 'center' }}>
                 <Text style={{ fontSize: 14, fontWeight: '600', color: '#6B7280' }}>Go Back</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID="mark-done-confirm-btn"
                 onPress={handleConfirm}
                 disabled={submitting}
                 activeOpacity={0.8}

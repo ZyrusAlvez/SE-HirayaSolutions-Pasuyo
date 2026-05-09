@@ -67,6 +67,7 @@ export default function ErrandDetailHeader({ isRemote, errandId, posterId, isGue
             // @ts-ignore — web-only hover props
             onMouseEnter={() => setReportHover(true)}
             onMouseLeave={() => setReportHover(false)}
+            testID="report-errand-btn"
             style={{ padding: 4 }}
           >
             <Ionicons name="flag-outline" size={20} color="#EF4444" />

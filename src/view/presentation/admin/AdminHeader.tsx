@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, TouchableOpacity, Image, Text, Platform, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, TouchableOpacity, Image, Text, Platform, StyleSheet, useWindowDimensions, Modal } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { logout } from '@/controllers/authController';
@@ -23,6 +23,7 @@ export default function AdminHeader() {
   const { width } = useWindowDimensions();
   const compact = width < BREAKPOINT;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signOutVisible, setSignOutVisible] = useState(false);
 
   const navItems = (
     <>
@@ -41,7 +42,7 @@ export default function AdminHeader() {
           </TouchableOpacity>
         );
       })}
-      <TouchableOpacity onPress={() => logout()} activeOpacity={0.7} style={compact && styles.menuItem}>
+      <TouchableOpacity onPress={() => setSignOutVisible(true)} activeOpacity={0.7} style={compact && styles.menuItem}>
         <Text style={[styles.navText, { color: '#EF4444' }]}>Sign out</Text>
       </TouchableOpacity>
     </>
@@ -69,6 +70,23 @@ export default function AdminHeader() {
       {compact && menuOpen && (
         <View style={styles.dropdown}>{navItems}</View>
       )}
+
+      <Modal visible={signOutVisible} transparent animationType="fade" onRequestClose={() => setSignOutVisible(false)}>
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>Sign Out</Text>
+            <Text style={styles.modalDesc}>Are you sure you want to sign out?</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity onPress={() => setSignOutVisible(false)} style={styles.cancelBtn} activeOpacity={0.7}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setSignOutVisible(false); logout(); }} style={styles.confirmBtn} activeOpacity={0.7}>
+                <Text style={styles.confirmText}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -125,5 +143,58 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     paddingVertical: 10,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modal: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxWidth: 340,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  modalDesc: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  cancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  confirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+  },
+  confirmText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
   },
 });

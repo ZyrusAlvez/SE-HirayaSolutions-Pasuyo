@@ -38,6 +38,7 @@ export default function ServiceFeeList({ isVerified, unpaidTotal, payments, load
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => router.push('/pay-service-fee')}
+            testID="pay-service-fee-btn"
             style={{ backgroundColor: '#34D399', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, width: '100%', maxWidth: 560, alignItems: 'center' }}
           >
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' }}>Pay Service Fee</Text>

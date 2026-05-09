@@ -14,7 +14,7 @@ function SkeletonBox({ style }: { style?: StyleProp<ViewStyle> }) {
   return <Animated.View style={[{ backgroundColor: '#E5E7EB', borderRadius: 8 }, style, { opacity }]} />;
 }
 
-export default function ChatSkeleton() {
+export default function ChatSkeleton({ testID }: { testID?: string }) {
   const bubbles = [
     { align: 'flex-start', width: '60%' },
     { align: 'flex-end', width: '45%' },
@@ -25,7 +25,7 @@ export default function ChatSkeleton() {
   ] as const;
 
   return (
-    <View style={{ flex: 1, padding: 16, gap: 10, justifyContent: 'flex-end' }}>
+    <View testID={testID} style={{ flex: 1, padding: 16, gap: 10, justifyContent: 'flex-end' }}>
       {bubbles.map((b, i) => (
         <View key={i} style={{ alignItems: b.align }}>
           <SkeletonBox style={{ height: 36, width: b.width, borderRadius: 12 }} />

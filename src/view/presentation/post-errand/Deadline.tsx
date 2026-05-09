@@ -120,6 +120,7 @@ export default function Deadline({ value, onChange }: Props) {
       )}
 
       <TouchableOpacity
+        testID="deadline-picker-btn"
         onPress={handleOpen}
         className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 flex-row items-center"
       >
@@ -209,7 +210,7 @@ export default function Deadline({ value, onChange }: Props) {
                   </View>
                 </View>
 
-                <TouchableOpacity onPress={handleConfirmTime} className="rounded-2xl py-3 items-center" style={{ backgroundColor: ACCENT }}>
+                <TouchableOpacity testID="deadline-confirm-btn" onPress={handleConfirmTime} className="rounded-2xl py-3 items-center" style={{ backgroundColor: ACCENT }}>
                   <Text className="text-white font-bold text-base">Confirm</Text>
                 </TouchableOpacity>
               </>

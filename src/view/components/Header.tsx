@@ -27,7 +27,7 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
   }, [avatarUrl]);
 
   return (
-    <View className={`bg-white border-b border-gray-100 ${!isWeb ? 'pt-12' : 'pt-2'}`}>
+    <View className={`bg-white border-b border-gray-100 ${!isWeb ? 'pt-12' : 'pt-2'}`} style={{ zIndex: 999 }}>
       <View style={[styles.inner, isWeb && { paddingBottom: 8 }]}>
         <TouchableOpacity onPress={() => router.push('/')} activeOpacity={0.7}>
           <Image
@@ -37,17 +37,19 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
           />
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
-          <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} onUnreadChange={setUnreadCount} />
-          <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7} style={{ marginRight: 8 }}>
-            <View>
-              <Ionicons name="notifications-outline" size={22} color="#6B7280" />
-              {unreadCount > 0 && (
-                <View style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
-                  <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
+          <View style={{ position: 'relative', zIndex: 999 }}>
+            <TouchableOpacity testID="notifications-bell" onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7}>
+              <View>
+                <Ionicons name="notifications-outline" size={22} color="#6B7280" />
+                {unreadCount > 0 && (
+                  <View style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
+                    <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+            <NotificationsPanel visible={showNotifications} onClose={() => setShowNotifications(false)} onUnreadChange={setUnreadCount} />
+          </View>
           <TouchableOpacity onPress={() => router.push('/profile')} activeOpacity={0.7}>
             <View style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#FACC15', alignItems: 'center', justifyContent: 'center' }}>
               <Image

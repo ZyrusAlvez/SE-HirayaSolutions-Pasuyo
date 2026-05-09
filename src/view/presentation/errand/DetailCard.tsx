@@ -50,8 +50,8 @@ export default function ErrandDetailCard({
     }}>
       {/* Title + status */}
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <Text style={{ fontSize: 20, fontWeight: '800', color: '#111827', flex: 1 }}>{title}</Text>
-        <View style={{ backgroundColor: badgeColor + '1A', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginTop: 2 }}>
+        <Text testID="detail-title" style={{ fontSize: 20, fontWeight: '800', color: '#111827', flex: 1 }}>{title}</Text>
+        <View testID="detail-status-badge" style={{ backgroundColor: badgeColor + '1A', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginTop: 2 }}>
           <Text style={{ fontSize: 11, fontWeight: '700', color: badgeColor }}>{status}</Text>
         </View>
       </View>
@@ -60,7 +60,7 @@ export default function ErrandDetailCard({
 
       {/* Description */}
       <SectionLabel text="Description" />
-      <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22 }}>{description}</Text>
+      <Text testID="detail-description" style={{ fontSize: 14, color: '#374151', lineHeight: 22 }}>{description}</Text>
 
       {/* Budget + Deadline */}
       {(budget != null || deadline) && (

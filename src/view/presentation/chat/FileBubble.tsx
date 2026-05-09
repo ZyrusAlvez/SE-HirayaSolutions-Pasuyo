@@ -51,7 +51,7 @@ type Props = {
 export default function FileBubble({ item, isMe, onImagePress }: Props) {
   if (item.file_type?.startsWith('image/')) {
     return (
-      <Pressable onPress={onImagePress}>
+      <Pressable testID={`file-bubble-image-${item.id}`} onPress={onImagePress}>
         <Image source={{ uri: item.file_url! }} style={{ width: 200, height: 200, borderRadius: 12 }} resizeMode="cover" />
       </Pressable>
     );
@@ -62,7 +62,7 @@ export default function FileBubble({ item, isMe, onImagePress }: Props) {
   const iconName = (FILE_EXT_ICONS[ext] || 'document') as any;
 
   return (
-    <Pressable onPress={() => item.file_url && handleDownload(item.file_url, item.file_name || 'file')} style={{ width: 220 }}>
+    <Pressable testID={`file-bubble-${item.id}`} onPress={() => item.file_url && handleDownload(item.file_url, item.file_name || 'file')} style={{ width: 220 }}>
       <View style={{
         borderRadius: 14,
         borderWidth: 1,

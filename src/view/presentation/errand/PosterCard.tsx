@@ -23,7 +23,7 @@ export default function ErrandPosterCard({ userId, name, avatar, rating, isVerif
       shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
     }}>
-      <Pressable onPress={() => userId && router.push(`/user/${userId}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+      <Pressable testID="poster-card-link" onPress={() => userId && router.push(`/user/${userId}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
         <Image
           source={avatar && avatar !== 'default' ? { uri: avatar } : DEFAULT_AVATAR}
           style={{ width: 42, height: 42, borderRadius: 21 }}

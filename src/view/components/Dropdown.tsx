@@ -12,15 +12,17 @@ interface Props<T extends string> {
   open: boolean;
   onToggle: () => void;
   onChange: (v: T) => void;
+  testID?: string;
 }
 
-export default function Dropdown<T extends string>({ value, options, labels, icon, iconColor = '#FEA405', icons, iconColors, open, onToggle, onChange }: Props<T>) {
+export default function Dropdown<T extends string>({ value, options, labels, icon, iconColor = '#FEA405', icons, iconColors, open, onToggle, onChange, testID }: Props<T>) {
   const activeIcon = icons?.[value] ?? icon;
   const activeColor = iconColors?.[value] ?? iconColor;
 
   return (
     <View style={{ position: 'relative', zIndex: open ? 999 : 1 }}>
       <TouchableOpacity
+        testID={testID}
         onPress={onToggle}
         activeOpacity={0.7}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: open ? '#FEA405' : '#E5E7EB', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}
@@ -43,6 +45,7 @@ export default function Dropdown<T extends string>({ value, options, labels, ico
             return (
               <TouchableOpacity
                 key={opt}
+                testID={testID ? `${testID}-option-${opt.toLowerCase().replace(/\s+/g, '-')}` : undefined}
                 onPress={() => { onChange(opt); onToggle(); }}
                 activeOpacity={0.7}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: i < options.length - 1 ? 1 : 0, borderBottomColor: '#F3F4F6' }}

@@ -1,6 +1,6 @@
 import { supabase } from '@/utils/supabase';
 
-export type ErrandStatus = 'Available' | 'Expired' | 'In Progress' | 'Completed';
+export type ErrandStatus = 'Available' | 'Expired' | 'In Progress' | 'Completed' | 'Cancelled';
 
 export type Errand = {
   id: string;
@@ -84,6 +84,12 @@ export const getAvailableErrands = () =>
 
 export const deleteErrand = (id: string) =>
   supabase.from('errands').delete().eq('id', id);
+
+// export const cancelErrand = (id: string) =>
+//   supabase.from('errands').update({ status: 'Cancelled' }).eq('id', id);
+
+export const getErrandRunner = (id: string) =>
+  supabase.from('errands').select('runner_id').eq('id', id).single();
 
 export const updateErrand = (id: string, updates: Record<string, any>) =>
   supabase.from('errands').update(updates).eq('id', id);

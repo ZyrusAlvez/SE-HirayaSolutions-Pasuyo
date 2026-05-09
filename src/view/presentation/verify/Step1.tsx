@@ -29,6 +29,7 @@ export default function Step1({
       <Text className="text-gray-600 mb-6">Enter your details as they appear on your ID</Text>
       
       <TextInput
+        testID="step1-first-name"
         label="First Name"
         required
         placeholder="Juan"
@@ -38,6 +39,7 @@ export default function Step1({
       />
 
       <TextInput
+        testID="step1-middle-name"
         label="Middle Name"
         placeholder="Santos"
         value={middleName}
@@ -46,6 +48,7 @@ export default function Step1({
       />
 
       <TextInput
+        testID="step1-last-name"
         label="Last Name"
         required
         placeholder="Dela Cruz"
@@ -55,6 +58,7 @@ export default function Step1({
       />
 
       <TextInput
+        testID="step1-suffix"
         label="Suffix"
         placeholder="Jr., Sr., III (optional)"
         value={suffix}
@@ -68,6 +72,7 @@ export default function Step1({
           {(['Male', 'Female', 'Prefer not'] as const).map((g) => (
             <TouchableOpacity
               key={g}
+              testID={`step1-gender-${g.toLowerCase().replace(' ', '-')}`}
               className={`flex-1 py-3 rounded-2xl border ${
                 gender === g ? 'bg-[#FEA405] border-[#FEA405]' : 'bg-gray-50 border-gray-200'
               }`}
@@ -83,6 +88,7 @@ export default function Step1({
       </View>
 
       <DateInput
+        testID="step1-dob-input"
         label="Date of Birth"
         required
         value={dateOfBirth}

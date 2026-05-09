@@ -144,6 +144,7 @@ export default function ReportModal({ visible, userName, reportedId, errandId, t
                 return (
                   <TouchableOpacity
                     key={reason}
+                    testID={`report-reason-${reason.toLowerCase().replace(/ /g, '-')}`}
                     onPress={() => setSelected(active ? null : reason)}
                     activeOpacity={0.7}
                     style={{
@@ -233,6 +234,7 @@ export default function ReportModal({ visible, userName, reportedId, errandId, t
                 onPress={handleSubmit}
                 disabled={!selected || submitting}
                 activeOpacity={0.8}
+                testID="report-submit-btn"
                 style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: !selected ? '#FCA5A5' : '#EF4444', alignItems: 'center' }}
               >
                 {submitting

@@ -33,16 +33,19 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
     ? { uri: errand.poster_avatar }
     : DEFAULT_AVATAR;
 
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+
   const handleShare = async () => {
     const url = Platform.OS === 'web'
       ? `${window.location.origin}/errand/${errand.id}`
       : `https://pasuyo.app/errand/${errand.id}`;
     await Clipboard.setStringAsync(url);
+    setShareUrl(url);
     toast({ title: 'Link copied to clipboard', preset: 'done' });
   };
 
   const postedActions: KebabAction[] = [
-    { label: 'Edit', icon: 'create-outline', onPress: () => {
+    { label: 'Edit', icon: 'create-outline', testID: 'kebab-edit', onPress: () => {
       if (errand.status === 'In Progress') { toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' }); return; }
       router.push(`/errand/${errand.id}?edit=true`);
     }},
@@ -65,6 +68,7 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
 
   return (
     <TouchableOpacity
+      testID={`errand-card-${errand.id}`}
       activeOpacity={0.7}
       onPress={() => router.push(`/errand/${errand.id}`)}
       style={{
@@ -74,14 +78,14 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
       {/* Header: status + kebab */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <View style={{ backgroundColor: color + '1A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-          <Text style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
+          <Text testID="errand-card-status" style={{ fontSize: 10, fontWeight: '700', color }}>{errand.status}</Text>
         </View>
         <KebabMenu actions={actions} />
       </View>
 
       {/* Title + description */}
-      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 2 }} numberOfLines={1}>{errand.title}</Text>
-      <Text style={{ fontSize: 12, color: '#9CA3AF', lineHeight: 17 }} numberOfLines={2}>{errand.description}</Text>
+      <Text testID="errand-card-title" style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 2 }} numberOfLines={1}>{errand.title}</Text>
+      <Text testID="errand-card-description" style={{ fontSize: 12, color: '#9CA3AF', lineHeight: 17 }} numberOfLines={2}>{errand.description}</Text>
 
       {/* Meta: type + budget */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 }}>
@@ -104,6 +108,9 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
 
       <ConfirmModal
         visible={showDeleteConfirm}
+        testID="delete-confirm-modal"
+        confirmTestID="delete-confirm-btn"
+        cancelTestID="delete-cancel-btn"
         title="Delete Errand"
         message="Are you sure you want to delete this errand? This action cannot be undone."
         confirmLabel="Delete"
@@ -119,6 +126,9 @@ export default function ErrandCard({ errand, search = '', tab = 'posted', onDele
       />
       <ConfirmModal
         visible={showMarkDoneConfirm}
+        testID="mark-done-modal"
+        confirmTestID="mark-done-confirm-btn"
+        cancelTestID="mark-done-back-btn"
         title="Mark as Done"
         message={`Mark "${errand.title}" as completed?`}
         confirmLabel="Mark Done"

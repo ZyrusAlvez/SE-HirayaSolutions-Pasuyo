@@ -29,11 +29,13 @@ export default function Step3({
   const UploadSlot = ({
     label,
     uri,
+    testID,
     onPress,
     onRemove,
   }: {
     label: string;
     uri: string | null;
+    testID: string;
     onPress: () => void;
     onRemove: () => void;
   }) => (
@@ -42,6 +44,7 @@ export default function Step3({
         {label} <Text className="text-red-500">*</Text>
       </Text>
       <TouchableOpacity
+        testID={testID}
         className="border-2 border-dashed border-gray-300 rounded-2xl items-center justify-center overflow-hidden"
         style={{ height: 130 }}
         onPress={onPress}
@@ -78,6 +81,7 @@ export default function Step3({
           {(['Water', 'Electricity', 'Internet'] as const).map((type) => (
             <TouchableOpacity
               key={type}
+              testID={`step3-bill-${type.toLowerCase()}`}
               className={`flex-1 py-3 rounded-2xl border ${
                 utilityBillType === type ? 'bg-[#FEA405] border-[#FEA405]' : 'bg-gray-100 border-gray-100'
               }`}
@@ -103,12 +107,14 @@ export default function Step3({
             <UploadSlot
               label="Front"
               uri={utilityBillFrontUri}
+              testID="step3-front-upload-btn"
               onPress={() => pickImage('front')}
               onRemove={() => setUtilityBillFrontUri(null)}
             />
             <UploadSlot
               label="Back"
               uri={utilityBillBackUri}
+              testID="step3-back-upload-btn"
               onPress={() => pickImage('back')}
               onRemove={() => setUtilityBillBackUri(null)}
             />
