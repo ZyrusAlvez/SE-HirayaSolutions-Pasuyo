@@ -14,9 +14,9 @@ function SkeletonBox({ style }: { style?: StyleProp<ViewStyle> }) {
   return <Animated.View style={[{ backgroundColor: '#E5E7EB', borderRadius: 8 }, style, { opacity }]} />;
 }
 
-export default function ConversationSkeleton() {
+export default function ConversationSkeleton({ testID }: { testID?: string }) {
   return (
-    <View style={{ flex: 1 }}>
+    <View testID={testID} style={{ flex: 1 }}>
       {Array.from({ length: 8 }).map((_, i) => (
         <View key={i} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16, gap: 12 }}>
           <SkeletonBox style={{ width: 40, height: 40, borderRadius: 20 }} />

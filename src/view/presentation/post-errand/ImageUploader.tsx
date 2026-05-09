@@ -42,6 +42,7 @@ export default function ImageUploader({ images, errors, onChange, onErrors }: Pr
         ))}
         {remaining > 0 && (
           <TouchableOpacity
+            testID="image-upload-btn"
             onPress={pickImages}
             className="w-20 h-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl items-center justify-center"
           >

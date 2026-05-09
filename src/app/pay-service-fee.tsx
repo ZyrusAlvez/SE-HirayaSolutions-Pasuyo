@@ -194,6 +194,7 @@ export default function PayServiceFeeScreen() {
           onPress={handleSubmit}
           disabled={!canSubmit}
           activeOpacity={0.7}
+          testID="submit-payment-btn"
           style={{ marginTop: 24, backgroundColor: canSubmit ? '#34D399' : '#D1D5DB', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
         >
           {submitting ? (

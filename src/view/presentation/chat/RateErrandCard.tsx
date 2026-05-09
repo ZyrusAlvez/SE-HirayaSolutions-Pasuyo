@@ -16,7 +16,7 @@ function Stars({ rating, onSelect }: { rating: number; onSelect?: (r: number) =>
   return (
     <View style={{ flexDirection: 'row', gap: 4 }}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <TouchableOpacity key={i} onPress={() => onSelect?.(i)} disabled={!onSelect} activeOpacity={0.7}>
+        <TouchableOpacity key={i} testID={`star-btn-${i}`} onPress={() => onSelect?.(i)} disabled={!onSelect} activeOpacity={0.7}>
           <Ionicons name={i <= rating ? 'star' : 'star-outline'} size={24} color={i <= rating ? '#FEA405' : '#D1D5DB'} />
         </TouchableOpacity>
       ))}
@@ -68,13 +68,14 @@ export default function RateErrandCard({ errandId, reviewedId, workerName, curre
   }
 
   return (
-    <View style={{ marginVertical: 12, alignItems: 'center' }}>
+    <View testID="rate-errand-card" style={{ marginVertical: 12, alignItems: 'center' }}>
       <View style={{ backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 12, padding: 16, width: '85%', maxWidth: 320, alignItems: 'center' }}>
         <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827', marginBottom: 10 }}>Rate {workerName}'s work</Text>
         <Stars rating={rating} onSelect={setRating} />
         {rating > 0 && (
           <View style={{ width: '100%', marginTop: 12 }}>
             <TextInput
+              testID="rate-feedback-input"
               value={feedback}
               onChangeText={setFeedback}
               placeholder="Leave a comment (optional)"
@@ -87,6 +88,7 @@ export default function RateErrandCard({ errandId, reviewedId, workerName, curre
               }}
             />
             <TouchableOpacity
+              testID="rate-submit-btn"
               onPress={handleSubmit}
               disabled={submitting}
               activeOpacity={0.8}

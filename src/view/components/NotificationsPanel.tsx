@@ -140,6 +140,7 @@ export default function NotificationsPanel({ visible, onClose, onUnreadChange }:
                 ListFooterComponent={loadingMore ? <Text style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 12, paddingVertical: 12 }}>Loading...</Text> : null}
                 renderItem={({ item }) => (
                   <TouchableOpacity
+                    testID={`notification-item-${item.id}`}
                     activeOpacity={0.7}
                     onPress={() => markAsRead(item.id, item.action ?? undefined)}
                     style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F9FAFB', backgroundColor: item.is_read ? 'white' : '#FFF7ED' }}

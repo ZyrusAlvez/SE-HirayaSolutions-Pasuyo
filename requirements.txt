@@ -1,0 +1,5 @@
+selenium 
+webdriver-manager 
+python-dotenv 
+pytest
+pytest-timeout

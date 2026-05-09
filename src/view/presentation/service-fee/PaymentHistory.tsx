@@ -20,7 +20,7 @@ function PaymentCard({ payment }: { payment: ServiceFeePayment }) {
   return (
     <View style={{ backgroundColor: 'white', borderRadius: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 3, elevation: 1 }}>
       {/* Header */}
-      <TouchableOpacity activeOpacity={0.7} onPress={() => setExpanded(v => !v)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 }}>
+      <TouchableOpacity testID="payment-card-toggle" activeOpacity={0.7} onPress={() => setExpanded(v => !v)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 }}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>₱{Number(payment.amount).toLocaleString()}</Text>
           <Text style={{ fontSize: 11, color: '#9CA3AF' }}>{date} · {time}</Text>

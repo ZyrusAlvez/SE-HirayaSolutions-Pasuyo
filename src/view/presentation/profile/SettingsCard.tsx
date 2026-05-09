@@ -29,6 +29,7 @@ export default function SettingsCard({ contentWidth, isLarge, verificationStatus
 
       {verificationStatus === 'not_verified' && (
         <TouchableOpacity
+          testID="verify-account-btn"
           onPress={onVerify}
           activeOpacity={0.7}
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FEA405', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14 }}

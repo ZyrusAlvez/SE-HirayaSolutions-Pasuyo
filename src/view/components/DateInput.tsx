@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   onChange: (date: Date) => void;
   maxDate?: Date;
   minDate?: Date;
+  testID?: string;
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -16,7 +17,7 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 const ACCENT = '#FEA405';
 
-export default function DateInput({ label, required, value, onChange, maxDate, minDate }: Props) {
+export default function DateInput({ label, required, value, onChange, maxDate, minDate, testID }: Props) {
   const today = new Date();
   const max = maxDate ?? today;
   const { width } = useWindowDimensions();
@@ -82,6 +83,7 @@ export default function DateInput({ label, required, value, onChange, maxDate, m
       )}
 
       <TouchableOpacity
+        testID={testID}
         onPress={handleOpen}
         className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 flex-row items-center"
         activeOpacity={0.7}
@@ -96,6 +98,17 @@ export default function DateInput({ label, required, value, onChange, maxDate, m
           </TouchableOpacity>
         )}
       </TouchableOpacity>
+
+      {Platform.OS === 'web' && (
+        <input
+          type="date"
+          data-testid={testID ? `${testID}-native` : undefined}
+          max={maxDate ? maxDate.toISOString().split('T')[0] : undefined}
+          min={minDate ? minDate.toISOString().split('T')[0] : undefined}
+          onChange={(e) => { if (e.target.value) onChange(new Date(e.target.value + 'T00:00:00')); }}
+          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
+        />
+      )}
 
       <Modal visible={show} transparent animationType="fade" onRequestClose={() => setShow(false)}>
         <TouchableOpacity

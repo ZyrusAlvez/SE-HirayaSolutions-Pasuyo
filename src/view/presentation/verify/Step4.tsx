@@ -33,15 +33,16 @@ export default function Step4({
   };
 
   const UploadSlot = ({
-    label, uri, onPress, onRemove,
+    label, uri, testID, onPress, onRemove,
   }: {
-    label: string; uri: string | null; onPress: () => void; onRemove: () => void;
+    label: string; uri: string | null; testID: string; onPress: () => void; onRemove: () => void;
   }) => (
     <View className="flex-1">
       <Text className="text-xs text-gray-500 mb-1 ml-1">
         {label} <Text className="text-red-500">*</Text>
       </Text>
       <TouchableOpacity
+        testID={testID}
         className="border-2 border-dashed border-gray-300 rounded-2xl items-center justify-center overflow-hidden"
         style={{ height: 130 }}
         onPress={onPress}
@@ -78,6 +79,7 @@ export default function Step4({
           return (
             <TouchableOpacity
               key={id.label}
+              testID={`id-type-${id.label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
               className={`flex-row items-center px-4 py-3 rounded-2xl border ${
                 selected ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-100'
               }`}
@@ -117,12 +119,14 @@ export default function Step4({
             <UploadSlot
               label="Front"
               uri={idFrontUri}
+              testID="id-front-upload-btn"
               onPress={() => pickImage('front')}
               onRemove={() => setIdFrontUri(null)}
             />
             <UploadSlot
               label="Back"
               uri={idBackUri}
+              testID="id-back-upload-btn"
               onPress={() => pickImage('back')}
               onRemove={() => setIdBackUri(null)}
             />

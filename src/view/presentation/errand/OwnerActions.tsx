@@ -28,7 +28,7 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
       setDeleting(false);
     } else {
       setConfirmVisible(false);
-      toast({ title: 'Errand deleted', preset: 'done' });
+      toast({ title: 'Errand cancelled', preset: 'done' });
       router.canGoBack() ? router.back() : router.replace('/');
     }
   };
@@ -48,18 +48,20 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
           <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#FEF2F2', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
             <Ionicons name="trash-outline" size={20} color="#EF4444" />
           </View>
-          <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>Delete Errand</Text>
-          <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 20 }}>This action cannot be undone.</Text>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>Cancel Errand</Text>
+          <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 20 }}>This will cancel the errand and notify any assigned runner.</Text>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
             <TouchableOpacity
+              testID="cancel-errand-dismiss-btn"
               onPress={() => setConfirmVisible(false)}
               disabled={deleting}
               style={{ flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center' }}
               activeOpacity={0.8}
             >
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#6B7280' }}>Cancel</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#6B7280' }}>Go Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID="cancel-errand-confirm-btn"
               onPress={handleDelete}
               disabled={deleting}
               style={{ flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#EF4444', alignItems: 'center' }}
@@ -67,7 +69,7 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
             >
               {deleting
                 ? <ActivityIndicator size="small" color="white" />
-                : <Text style={{ fontSize: 13, fontWeight: '600', color: 'white' }}>Delete</Text>
+                : <Text style={{ fontSize: 13, fontWeight: '600', color: 'white' }}>Confirm</Text>
               }
             </TouchableOpacity>
           </View>
@@ -76,6 +78,7 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
     </Modal>
     <View style={{ flexDirection: 'row', gap: 8 }}>
       <TouchableOpacity
+        testID="edit-errand-btn"
         onPress={() => {
           if (!isEditing && status === 'In Progress') {
             toast({ title: 'This errand has already been accepted and cannot be edited.', preset: 'error' });
@@ -98,6 +101,7 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
       </TouchableOpacity>
 
       <TouchableOpacity
+        testID="cancel-errand-btn"
         onPress={() => {
           if (status === 'In Progress') {
             toast({ title: 'This errand has already been accepted and cannot be deleted.', preset: 'error' });
@@ -116,8 +120,8 @@ export default function OwnerActions({ errandId, status, isEditing, onEditToggle
         {deleting
           ? <ActivityIndicator size="small" color="#EF4444" />
           : <>
-              <Ionicons name="trash-outline" size={16} color="#EF4444" />
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#EF4444' }}>Delete</Text>
+              <Ionicons name="close-circle-outline" size={16} color="#EF4444" />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#EF4444' }}>Cancel</Text>
             </>
         }
       </TouchableOpacity>

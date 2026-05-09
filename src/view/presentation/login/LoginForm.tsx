@@ -40,6 +40,7 @@ export default function LoginForm({
 
       <View className="mb-4">
         <TextInput
+          testID="login-email"
           className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-base"
           placeholder="Email"
           placeholderTextColor="#9CA3AF"
@@ -54,6 +55,7 @@ export default function LoginForm({
 
       <PasswordInput
         ref={passwordRef}
+        testID="login-password"
         placeholder="Password"
         value={password}
         onChangeText={onPasswordChange}
@@ -87,6 +89,7 @@ export default function LoginForm({
       </TouchableOpacity>
 
       <TouchableOpacity
+        testID="login-btn"
         className="mt-6 bg-[#FEA405] py-4 rounded-2xl"
         onPress={onLogin}
         disabled={loading}

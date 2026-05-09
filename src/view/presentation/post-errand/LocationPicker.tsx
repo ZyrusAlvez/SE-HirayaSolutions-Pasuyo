@@ -13,6 +13,7 @@ export default function LocationPicker({ pinnedLocation, onPress }: Props) {
     <View className="mb-4">
       <Text className="text-xs text-gray-500 mb-1 ml-1">Location *</Text>
       <TouchableOpacity
+        testID="location-picker-btn"
         onPress={onPress}
         className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 flex-row items-center"
       >

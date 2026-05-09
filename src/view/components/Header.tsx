@@ -38,7 +38,7 @@ export default function Header({ avatarUrl, verificationStatus }: Props) {
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
           <View style={{ position: 'relative', zIndex: 999 }}>
-            <TouchableOpacity onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7}>
+            <TouchableOpacity testID="notifications-bell" onPress={() => setShowNotifications(v => !v)} activeOpacity={0.7}>
               <View>
                 <Ionicons name="notifications-outline" size={22} color="#6B7280" />
                 {unreadCount > 0 && (

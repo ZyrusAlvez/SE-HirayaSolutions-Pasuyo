@@ -1,0 +1,111 @@
+name: Sprint 5 Automated Tests
+
+on:
+  push:
+    branches: [main, develop, tests/sprint-5]
+  pull_request:
+    branches: [main, develop, tests/sprint-5]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: http://localhost:8081
+      ASSET_IMAGE: assets/valid.jpg
+      ASSET_PDF: assets/valid.pdf
+      ASSET_LARGE: assets/large.jpg
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write test .env
+        run: echo "${{ secrets.ENV_SPRINT5 }}" > tests/automated/sprint-5/.env
+
+      # ── Supabase local setup ──────────────────────────────────────────
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Initialize Supabase
+        run: supabase init
+
+      - name: Copy migration and seed files
+        run: |
+          mkdir -p supabase/migrations
+          cp tests/automated/20260428133643_remote_schema.sql supabase/migrations/20260428133643_remote_schema.sql
+          cp tests/automated/20260508173406_remote_schema.sql supabase/migrations/20260508173406_remote_schema.sql
+          cp tests/automated/seed.sql supabase/seed.sql
+
+      - name: Start Supabase local stack
+        run: supabase start
+
+      - name: Apply migrations and seed
+        run: supabase db reset --local --yes
+
+      # ── Frontend setup ────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./src
+
+      - name: Write frontend .env
+        run: |
+          ANON_KEY=$(supabase status --output json | jq -r '.anon_key')
+          SERVICE_KEY=$(supabase status --output json | jq -r '.service_role_key')
+          printf "EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\nEXPO_PUBLIC_SERVICE_ROLE_KEY=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com\n" "$ANON_KEY" "$SERVICE_KEY" > src/.env
+
+      - name: Start Expo web server
+        run: CI=1 npx expo start --web --port 8081 > /tmp/expo.log 2>&1 &
+        working-directory: ./src
+
+      - name: Wait for frontend to be ready
+        run: |
+          echo "Waiting for Expo to be ready..."
+          for i in $(seq 1 40); do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081 | grep -qE "^(200|304)"; then
+              echo "Expo is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: not ready yet, waiting 10s..."
+            sleep 10
+          done
+          echo "Expo failed to start in time"
+          cat /tmp/expo.log
+          exit 1
+
+      # ── Python / Selenium setup ───────────────────────────────────────
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r tests/automated/sprint-5/requirements.txt
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      # ── Run Sprint 5 tests ────────────────────────────────────────────
+      - name: Run Sprint 5 tests
+        run: |
+          python -m pytest tests/automated/sprint-5/ \
+            --ignore=tests/automated/sprint-5/create_errand.py \
+            --ignore=tests/automated/sprint-5/fill_verification.py \
+            --ignore=tests/automated/sprint-5/test_05_realtime_status.py \
+            --ignore=tests/automated/sprint-5/test_02_conversation_list.py \
+            -v --tb=short
+
+      # ── Teardown ──────────────────────────────────────────────────────
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop

@@ -24,6 +24,7 @@ export default function TabToggle({ tabs, activeKey, onTabChange }: Props) {
         return (
           <TouchableOpacity
             key={tab.key}
+            testID={`tab-${tab.key}`}
             onPress={() => onTabChange(tab.key)}
             activeOpacity={0.8}
             style={{
